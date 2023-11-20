@@ -1,7 +1,7 @@
-#include <iostream>
+#include "LeviathanCore.h"
 
 int main()
 {
-	std::cout << "Hello World" << std::endl;
+	LeviathanCore::PrintHelloWorld();
 	std::cin.get();
 }
