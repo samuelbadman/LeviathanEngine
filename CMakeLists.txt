@@ -5,21 +5,18 @@ project("LeviathanEngine")
 set(BINARY_OUTPUT_DIRECTORY "Binary")
 set(EXECUTABLE_OUTPUT_BINARY_DIRECTORY "${BINARY_OUTPUT_DIRECTORY}/Executable/$<CONFIG>")
 set(LIBRARY_OUTPUT_BINARY_DIRECTORY "${BINARY_OUTPUT_DIRECTORY}/Library/$<CONFIG>")
-set(SHARED_PRECOMPILED_HEADERS_DIRECTORY "SharedPrecompiledHeaders")
+set(SHARED_PRECOMPILED_HEADERS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/SharedPrecompiledHeaders")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_BINARY_DIRECTORY}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_BINARY_DIRECTORY}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${EXECUTABLE_OUTPUT_BINARY_DIRECTORY}")
 
 # Build settings.
+set(CPP_STANDARD 23)
+set(ENABLE_STRICT_WARNINGS ON)
+
 # Only one platform build target should be set to ON at a time.
-set(BUILD_WIN32 ON)
-
-set(BUILD_HEADLESS OFF)
-
-# Build definitions.
-set(DEFINITION_BUILD_WIN32 "BUILD_WIN32")
-set(DEFINITION_BUILD_HEADLESS "BUILD_HEADLESS")
+set(BUILD_WIN32 OFF)
 
 # Adds the compile definition to project wide pre-processor definitions if the condition variable matches ON.
 function(add_compile_definition_if_enabled condition definition)
@@ -28,23 +25,30 @@ function(add_compile_definition_if_enabled condition definition)
 	endif()
 endfunction()
 
+# Build definitions.
+set(BUILD_WIN32_DEFINITION "LVTHN_BUILD_WIN32")
+set(BUILD_HEADLESS_DEFINITION "LVTHN_BUILD_HEADLESS")
+
 # Add project wide pre-processor definitions.
-add_compile_definition_if_enabled(BUILD_WIN32 DEFINITION_BUILD_WIN32)
-add_compile_definition_if_enabled(BUILD_HEADLESS DEFINITION_BUILD_HEADLESS)
+add_compile_definition_if_enabled(BUILD_WIN32 BUILD_WIN32_DEFINITION)
 
 # Adds a library target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
-# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES.
+# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES CPP_STANDARD ENABLE_STRICT_WARNING_LEVEL.
 function(add_library_target)
 	add_library("${ARGV0}" STATIC "${ARGV2}" "${ARGV3}")
-	set_property(TARGET "${ARGV0}" PROPERTY CXX_STANDARD_23)
-	target_compile_options("${ARGV0}" PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)
+	set_property(TARGET "${ARGV0}" PROPERTY CXX_STANDARD ${ARGV6})
+	
+	if("${ARGV7}" MATCHES ON)
+		target_compile_options("${ARGV0}" PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)	
+	endif()
+	
 	target_precompile_headers("${ARGV0}" PRIVATE "${ARGV1}")
 	target_link_libraries("${ARGV0}" "${ARGV4}")
 	target_include_directories("${ARGV0}" PRIVATE "${ARGV5}")
 endfunction()
 
 # Adds an executable target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
-# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES.
+# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES CPP_STANDARD ENABLE_STRICT_WARNING_LEVEL BUILD_HEADLESS.
 function(add_executable_target [IN_TARGET_NAME IN_PRECOMPILED_HEADERS IN_HEADERS IN_SOURCES IN_LINK_LIBRARIES IN_INCLUDE_DIRECTORIES])
 	if(BUILD_WIN32 MATCHES ON)
 		add_executable("${ARGV0}" WIN32 "${ARGV2}" "${ARGV3}")
@@ -52,8 +56,16 @@ function(add_executable_target [IN_TARGET_NAME IN_PRECOMPILED_HEADERS IN_HEADERS
 		add_executable("${ARGV0}" "${ARGV2}" "${ARGV3}")
 	endif()
 	
-	set_property(TARGET "${ARGV0}" PROPERTY CXX_STANDARD_23)
-	target_compile_options("${ARGV0}" PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)
+	set_property(TARGET "${ARGV0}" PROPERTY CXX_STANDARD ${ARGV6})
+	
+	if("${ARGV7}" MATCHES ON)
+		target_compile_options("${ARGV0}" PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)
+	endif()
+	
+	if("${ARGV8}" MATCHES ON)
+		target_compile_definitions("${ARGV0}" PRIVATE "${BUILD_HEADLESS_DEFINITION}")
+	endif()
+	
 	target_precompile_headers("${ARGV0}" PRIVATE "${ARGV1}")
 	target_link_libraries("${ARGV0}" "${ARGV4}")
 	target_include_directories("${ARGV0}" PRIVATE "${ARGV5}")
@@ -73,16 +85,24 @@ add_library_target(
 	"${LEVIATHAN_CORE_SOURCES}"
 	"${LEVIATHAN_CORE_LINK_LIBRARIES}"
 	"${LEVIATHAN_CORE_INCLUDE_DIRECTORIES}"
+	"${CPP_STANDARD}"
+	"${ENABLE_STRICT_WARNINGS}"
 )
 
 # Add title executable targets.
 set(TEST_TITLE_NAME "TestTitle")
 set(TEST_TITLE_NAME "${TEST_TITLE_NAME}")
 set(TEST_TITLE_PRECOMPILED_HEADERS "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/StandardPch.h")
+
+if(BUILD_WIN32 MATCHES ON)
+	set(TEST_TITLE_PRECOMPILED_HEADERS "${TEST_TITLE_PRECOMPILED_HEADERS}" "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/Win32Pch.h")
+endif()
+
 set(TEST_TITLE_HEADERS "")
 set(TEST_TITLE_SOURCES "${TEST_TITLE_NAME}/Source/Private/Main.cpp")
 set(TEST_TITLE_LINK_LIBRARIES "${LEVIATHAN_CORE_NAME}")
 set(TEST_TITLE_INCLUDE_DIRECTORIES "${LEVIATHAN_CORE_NAME}/Source/Public")
+set(BUILD_TEST_TITLE_HEADLESS OFF)
 add_executable_target(
 	"${TEST_TITLE_NAME}"
 	"${TEST_TITLE_PRECOMPILED_HEADERS}"
@@ -90,6 +110,9 @@ add_executable_target(
 	"${TEST_TITLE_SOURCES}"
 	"${TEST_TITLE_LINK_LIBRARIES}"
 	"${TEST_TITLE_INCLUDE_DIRECTORIES}"
+	"${CPP_STANDARD}"
+	"${ENABLE_STRICT_WARNINGS}"
+	"${BUILD_TEST_TITLE_HEADLESS}"
 )
 
 # Set Visual Studio startup project.
