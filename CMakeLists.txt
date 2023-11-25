@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION "3.28.0")
-
 project("LeviathanEngine")
 
+# Set output directories.
 set(BINARY_OUTPUT_DIRECTORY "Binary")
 set(EXECUTABLE_OUTPUT_BINARY_DIRECTORY "${BINARY_OUTPUT_DIRECTORY}/Executable/$<CONFIG>")
 set(LIBRARY_OUTPUT_BINARY_DIRECTORY "${BINARY_OUTPUT_DIRECTORY}/Library/$<CONFIG>")
@@ -11,8 +11,29 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_BINARY_DIRECTORY}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_BINARY_DIRECTORY}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${EXECUTABLE_OUTPUT_BINARY_DIRECTORY}")
 
- # Adds a library target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
- # Optional arguments: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES.
+# Build settings.
+# Only one platform build target should be set to ON at a time.
+set(BUILD_WIN32 ON)
+
+set(BUILD_HEADLESS OFF)
+
+# Build definitions.
+set(DEFINITION_BUILD_WIN32 "BUILD_WIN32")
+set(DEFINITION_BUILD_HEADLESS "BUILD_HEADLESS")
+
+# Adds the compile definition to project wide pre-processor definitions if the condition variable matches ON.
+function(add_compile_definition_if_enabled condition definition)
+	if(${${condition}} MATCHES ON)
+		add_compile_definitions(${${definition}})
+	endif()
+endfunction()
+
+# Add project wide pre-processor definitions.
+add_compile_definition_if_enabled(BUILD_WIN32 DEFINITION_BUILD_WIN32)
+add_compile_definition_if_enabled(BUILD_HEADLESS DEFINITION_BUILD_HEADLESS)
+
+# Adds a library target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
+# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES.
 function(add_library_target)
 	add_library("${ARGV0}" STATIC "${ARGV2}" "${ARGV3}")
 	set_property(TARGET "${ARGV0}" PROPERTY CXX_STANDARD_23)
@@ -22,10 +43,15 @@ function(add_library_target)
 	target_include_directories("${ARGV0}" PRIVATE "${ARGV5}")
 endfunction()
 
- # Adds an executable target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
- # Optional arguments: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES.
+# Adds an executable target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
+# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES.
 function(add_executable_target [IN_TARGET_NAME IN_PRECOMPILED_HEADERS IN_HEADERS IN_SOURCES IN_LINK_LIBRARIES IN_INCLUDE_DIRECTORIES])
-	add_executable("${ARGV0}" "${ARGV2}" "${ARGV3}")
+	if(BUILD_WIN32 MATCHES ON)
+		add_executable("${ARGV0}" WIN32 "${ARGV2}" "${ARGV3}")
+	else()
+		add_executable("${ARGV0}" "${ARGV2}" "${ARGV3}")
+	endif()
+	
 	set_property(TARGET "${ARGV0}" PROPERTY CXX_STANDARD_23)
 	target_compile_options("${ARGV0}" PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX> $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)
 	target_precompile_headers("${ARGV0}" PRIVATE "${ARGV1}")
@@ -33,6 +59,7 @@ function(add_executable_target [IN_TARGET_NAME IN_PRECOMPILED_HEADERS IN_HEADERS
 	target_include_directories("${ARGV0}" PRIVATE "${ARGV5}")
 endfunction()
 
+# Add engine module library targets.
 set(LEVIATHAN_CORE_NAME "LeviathanCore")
 set(LEVIATHAN_CORE_PRECOMPILED_HEADERS "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/StandardPch.h")
 set(LEVIATHAN_CORE_HEADERS "${LEVIATHAN_CORE_NAME}/Source/Public/LeviathanCore.h")
@@ -48,6 +75,7 @@ add_library_target(
 	"${LEVIATHAN_CORE_INCLUDE_DIRECTORIES}"
 )
 
+# Add title executable targets.
 set(TEST_TITLE_NAME "TestTitle")
 set(TEST_TITLE_NAME "${TEST_TITLE_NAME}")
 set(TEST_TITLE_PRECOMPILED_HEADERS "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/StandardPch.h")
@@ -64,4 +92,5 @@ add_executable_target(
 	"${TEST_TITLE_INCLUDE_DIRECTORIES}"
 )
 
+# Set Visual Studio startup project.
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "${TEST_TITLE_NAME}")
