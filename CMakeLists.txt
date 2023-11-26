@@ -16,7 +16,7 @@ set(CPP_STANDARD 23)
 set(ENABLE_STRICT_WARNINGS ON)
 
 # Only one platform build target should be set to ON at a time.
-set(BUILD_WIN32 OFF)
+set(BUILD_PLATFORM_WIN32 ON)
 
 # Adds the compile definition to project wide pre-processor definitions if the condition variable matches ON.
 function(add_compile_definition_if_enabled condition definition)
@@ -26,11 +26,11 @@ function(add_compile_definition_if_enabled condition definition)
 endfunction()
 
 # Build definitions.
-set(BUILD_WIN32_DEFINITION "LVTHN_BUILD_WIN32")
-set(BUILD_HEADLESS_DEFINITION "LVTHN_BUILD_HEADLESS")
+set(BUILD_PLATFORM_WIN32_DEFINITION "LEVIATHAN_BUILD_PLATFORM_WIN32")
+set(BUILD_HEADLESS_DEFINITION "LEVIATHAN_BUILD_HEADLESS")
 
 # Add project wide pre-processor definitions.
-add_compile_definition_if_enabled(BUILD_WIN32 BUILD_WIN32_DEFINITION)
+add_compile_definition_if_enabled(BUILD_PLATFORM_WIN32 BUILD_PLATFORM_WIN32_DEFINITION)
 
 # Adds a library target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
 # Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES CPP_STANDARD ENABLE_STRICT_WARNING_LEVEL.
@@ -50,7 +50,7 @@ endfunction()
 # Adds an executable target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
 # Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES CPP_STANDARD ENABLE_STRICT_WARNING_LEVEL BUILD_HEADLESS.
 function(add_executable_target [IN_TARGET_NAME IN_PRECOMPILED_HEADERS IN_HEADERS IN_SOURCES IN_LINK_LIBRARIES IN_INCLUDE_DIRECTORIES])
-	if(BUILD_WIN32 MATCHES ON)
+	if(BUILD_PLATFORM_WIN32 MATCHES ON)
 		add_executable("${ARGV0}" WIN32 "${ARGV2}" "${ARGV3}")
 	else()
 		add_executable("${ARGV0}" "${ARGV2}" "${ARGV3}")
@@ -74,10 +74,15 @@ endfunction()
 # Add engine module library targets.
 set(LEVIATHAN_CORE_NAME "LeviathanCore")
 set(LEVIATHAN_CORE_PRECOMPILED_HEADERS "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/StandardPch.h")
-set(LEVIATHAN_CORE_HEADERS "${LEVIATHAN_CORE_NAME}/Source/Public/LeviathanCore.h")
-set(LEVIATHAN_CORE_SOURCES "${LEVIATHAN_CORE_NAME}/Source/Private/LeviathanCore.cpp")
+
+if(BUILD_PLATFORM_WIN32 MATCHES ON)
+	set(LEVIATHAN_CORE_PRECOMPILED_HEADERS "${LEVIATHAN_CORE_PRECOMPILED_HEADERS}" "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/Win32Pch.h")
+endif()
+
+set(LEVIATHAN_CORE_HEADERS "${LEVIATHAN_CORE_NAME}/Source/Public/LeviathanCore.h" "${LEVIATHAN_CORE_NAME}/Source/Public/LeviathanEntry.h")
+set(LEVIATHAN_CORE_SOURCES "${LEVIATHAN_CORE_NAME}/Source/Private/LeviathanEntry.cpp")
 set(LEVIATHAN_CORE_LINK_LIBRARIES "")
-set(LEVIATHAN_CORE_INCLUDE_DIRECTORIES "${LEVIATHAN_CORE_NAME}/Source/Public")
+set(LEVIATHAN_CORE_INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/${LEVIATHAN_CORE_NAME}/Source/Public")
 add_library_target(
 	"${LEVIATHAN_CORE_NAME}"
 	"${LEVIATHAN_CORE_PRECOMPILED_HEADERS}"
@@ -94,14 +99,14 @@ set(TEST_TITLE_NAME "TestTitle")
 set(TEST_TITLE_NAME "${TEST_TITLE_NAME}")
 set(TEST_TITLE_PRECOMPILED_HEADERS "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/StandardPch.h")
 
-if(BUILD_WIN32 MATCHES ON)
+if(BUILD_PLATFORM_WIN32 MATCHES ON)
 	set(TEST_TITLE_PRECOMPILED_HEADERS "${TEST_TITLE_PRECOMPILED_HEADERS}" "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/Win32Pch.h")
 endif()
 
 set(TEST_TITLE_HEADERS "")
 set(TEST_TITLE_SOURCES "${TEST_TITLE_NAME}/Source/Private/Main.cpp")
 set(TEST_TITLE_LINK_LIBRARIES "${LEVIATHAN_CORE_NAME}")
-set(TEST_TITLE_INCLUDE_DIRECTORIES "${LEVIATHAN_CORE_NAME}/Source/Public")
+set(TEST_TITLE_INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/${LEVIATHAN_CORE_NAME}/Source/Public")
 set(BUILD_TEST_TITLE_HEADLESS OFF)
 add_executable_target(
 	"${TEST_TITLE_NAME}"

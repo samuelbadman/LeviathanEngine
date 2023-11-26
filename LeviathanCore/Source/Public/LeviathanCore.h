@@ -1,6 +1,3 @@
 #pragma once
 
-namespace LeviathanCore
-{
-	void PrintHelloWorld();
-}
+#include "LeviathanEntry.h"
