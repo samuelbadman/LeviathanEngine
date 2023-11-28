@@ -1,3 +1,3 @@
 #pragma once
 
-#include "LeviathanEntry.h"
+#include "Platform.h"
