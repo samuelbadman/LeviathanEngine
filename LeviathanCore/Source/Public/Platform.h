@@ -17,7 +17,7 @@ namespace LeviathanCore
 		// Calls the platform defined entry point.
 		unsigned char LeviathanEntry();
 
-		// Exits the engine using the platform defined method.
-		void Exit();
+		// Exits the engine using the platform defined method optionally restarting the engine after exiting.
+		void Exit(bool Restart);
 	}
 }
