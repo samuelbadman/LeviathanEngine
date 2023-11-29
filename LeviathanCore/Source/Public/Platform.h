@@ -14,6 +14,10 @@ namespace LeviathanCore
 {
 	namespace Platform
 	{
+		// Calls the platform defined entry point.
 		unsigned char LeviathanEntry();
+
+		// Exits the engine using the platform defined method.
+		void Exit();
 	}
 }
