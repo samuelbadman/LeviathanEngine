@@ -78,10 +78,10 @@ set(LEVIATHAN_CORE_HEADERS
 	"${LEVIATHAN_CORE_NAME}/Source/Public/LeviathanCore.h"
 	"${LEVIATHAN_CORE_NAME}/Source/Public/Platform.h"
 	"${LEVIATHAN_CORE_NAME}/Source/Private/Macros/BitMacros.h"
-	"${LEVIATHAN_CORE_NAME}/Source/Private/Platform/Win32/Win32FunctionErrors.h"
+	"${LEVIATHAN_CORE_NAME}/Source/Private/Core/Core.h"
 )
 set(LEVIATHAN_CORE_SOURCES 
-	""
+	"${LEVIATHAN_CORE_NAME}/Source/Private/Core/Core.cpp"
 )
 set(LEVIATHAN_CORE_LINK_LIBRARIES "")
 set(LEVIATHAN_CORE_INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/${LEVIATHAN_CORE_NAME}/Source/Public" "${PROJECT_SOURCE_DIR}/${LEVIATHAN_CORE_NAME}/Source/Private")

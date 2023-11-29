@@ -1,17 +1,14 @@
 #include "Platform.h"
 #include "Macros/BitMacros.h"
-#include "Platform/Win32/Win32FunctionErrors.h"
+#include "Core/Core.h"
 
-static bool running = false;
-static bool restart = false;
-
-// Allocates a new console for the calling process. Returns the function result error code.
-[[maybe_unused]] static Win32FunctionError AllocWinConsole()
+// Allocates a new console for the calling process. Returns true if the function succeeds otherwise returns false.
+[[maybe_unused]] static bool AllocWinConsole()
 {
 	// Allocate console.
 	if (!AllocConsole())
 	{
-		return Win32FunctionError::AllocConsoleFailed;
+		return false;
 	}
 
 	// Redirect standard IO.
@@ -40,16 +37,16 @@ static bool restart = false;
 	std::wcin.clear();
 	std::cin.clear();
 
-	return Win32FunctionError::Success;
+	return true;
 }
 
-// Detaches the calling process from its console. Returns the function result error code.
-[[maybe_unused]] static Win32FunctionError FreeWinConsole()
+// Detaches the calling process from its console. Returns true if the function succeeds otherwise returns false.
+[[maybe_unused]] static bool FreeWinConsole()
 {
 	// Detach from console.
 	if (!FreeConsole())
 	{
-		return Win32FunctionError::FreeConsoleFailed;
+		return false;
 	}
 
 	// Redirect standard IO.
@@ -72,32 +69,89 @@ static bool restart = false;
 
 	std::ios::sync_with_stdio(false);
 
-	return Win32FunctionError::Success;
+	return true;
+}
+
+struct Win32EntryState
+{
+	bool restart = true;
+	bool running = false;
+	LARGE_INTEGER ticksPerSecond = {};
+	LARGE_INTEGER lastTickCount = {};
+	float deltaSeconds = 0.0f;
+};
+
+static Win32EntryState state = {};
+
+static bool InitializeDeltaTimeCount()
+{
+	return ((QueryPerformanceFrequency(&state.ticksPerSecond)) && (QueryPerformanceCounter(&state.lastTickCount)));
+}
+
+static bool UpdateDeltaTimeCount()
+{
+	LARGE_INTEGER currentTickCount = {};
+	if (QueryPerformanceCounter(&currentTickCount) != 0)
+	{
+		const uint64_t elapsedTicks = currentTickCount.QuadPart - state.lastTickCount.QuadPart;
+
+		// Convert to microseconds to not lose precision, by dividing a small number by a large one.
+		const uint64_t elapsedTimeInMicroseconds = (elapsedTicks * static_cast<uint64_t>(1e6)) / state.ticksPerSecond.QuadPart;
+
+		// Time in milliseconds.
+		const float deltaMilliseconds = static_cast<float>(elapsedTimeInMicroseconds) * 1e-3f;
+
+		// Time in seconds.
+		state.deltaSeconds = deltaMilliseconds * 1e-3f;
+
+		state.lastTickCount = currentTickCount;
+
+		return true;
+	}
+
+	return false;
 }
 
 unsigned char LeviathanCore::Platform::LeviathanEntry()
 {
-	if (AllocWinConsole() != Win32FunctionError::Success)
+	if (!AllocWinConsole())
 	{
 		return 1;
 	}
 
-	while (true)
+	while (state.restart)
 	{
-		running = true;
-
-		while (running)
+		state =
 		{
+			.restart = false,
+			.running = true
+		};
 
+		if (!InitializeDeltaTimeCount())
+		{
+			return 1;
 		}
 
-		if (!restart)
+		if (!Core::Initialize())
 		{
-			break;
+			return 1;
+		}
+
+		while (state.running)
+		{
+			UpdateDeltaTimeCount();
+			// TODO: Pump system message queue.
+			// TODO: Pump input message queue.
+			Core::MainLoopIteration(state.deltaSeconds);
+		}
+
+		if (!Core::Shutdown())
+		{
+			return 1;
 		}
 	}
 
-	if (FreeWinConsole() != Win32FunctionError::Success)
+	if (!FreeWinConsole())
 	{
 		return 1;
 	}
@@ -107,6 +161,6 @@ unsigned char LeviathanCore::Platform::LeviathanEntry()
 
 void LeviathanCore::Platform::Exit(bool Restart)
 {
-	running = false;
-	restart = Restart;
+	state.running = false;
+	state.restart = Restart;
 }
