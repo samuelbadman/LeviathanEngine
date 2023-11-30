@@ -1,6 +1,8 @@
 #include "Platform.h"
 #include "Macros/BitMacros.h"
 #include "Core/Core.h"
+#include "Platform/Window.h"
+#include "Platform/Win32/Win32Window.h"
 
 // Allocates a new console for the calling process. Returns true if the function succeeds otherwise returns false.
 [[maybe_unused]] static bool AllocWinConsole()
@@ -114,29 +116,37 @@ static bool UpdateDeltaTimeCount()
 
 unsigned char LeviathanCore::Platform::LeviathanEntry()
 {
-	if (!AllocWinConsole())
-	{
-		return 1;
-	}
-
 	while (state.restart)
 	{
+		// Allocate debug console.
+		if (!AllocWinConsole())
+		{
+			return 1;
+		}
+
+		// Reset Win32 platform state.
 		state =
 		{
 			.restart = false,
 			.running = true
 		};
 
+		// Initialize delta time counters.
 		if (!InitializeDeltaTimeCount())
 		{
 			return 1;
 		}
 
+		// Create and initialize hidden message window instance.
+		WindowHandle messageWindow = AllocateWindow();
+
+		// Initialize core.
 		if (!Core::Initialize())
 		{
 			return 1;
 		}
 
+		// Application main loop.
 		while (state.running)
 		{
 			UpdateDeltaTimeCount();
@@ -145,15 +155,20 @@ unsigned char LeviathanCore::Platform::LeviathanEntry()
 			Core::MainLoopIteration(state.deltaSeconds);
 		}
 
+		// Shutdown core.
 		if (!Core::Shutdown())
 		{
 			return 1;
 		}
-	}
 
-	if (!FreeWinConsole())
-	{
-		return 1;
+		// Free hidden message window.
+		FreeWindow(messageWindow);
+
+		// Free debug console.
+		if (!FreeWinConsole())
+		{
+			return 1;
+		}
 	}
 
 	return 0;

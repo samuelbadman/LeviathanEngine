@@ -75,10 +75,11 @@ endfunction()
 set(LEVIATHAN_CORE_NAME "LeviathanCore")
 set(LEVIATHAN_CORE_PRECOMPILED_HEADERS "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/StandardPch.h")
 set(LEVIATHAN_CORE_HEADERS 
-	"${LEVIATHAN_CORE_NAME}/Source/Public/LeviathanCore.h"
-	"${LEVIATHAN_CORE_NAME}/Source/Public/Platform.h"
+	"${LEVIATHAN_CORE_NAME}/Source/Public/LeviathanCore.h" 
+	"${LEVIATHAN_CORE_NAME}/Source/Public/Platform.h" 
 	"${LEVIATHAN_CORE_NAME}/Source/Private/Macros/BitMacros.h"
-	"${LEVIATHAN_CORE_NAME}/Source/Private/Core/Core.h"
+	"${LEVIATHAN_CORE_NAME}/Source/Private/Core/Core.h" 
+	"${LEVIATHAN_CORE_NAME}/Source/Private/Platform/Window.h"
 )
 set(LEVIATHAN_CORE_SOURCES 
 	"${LEVIATHAN_CORE_NAME}/Source/Private/Core/Core.cpp"
@@ -88,7 +89,8 @@ set(LEVIATHAN_CORE_INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/${LEVIATHAN_CORE_N
 
 if(BUILD_PLATFORM_WIN32 MATCHES ON)
 	set(LEVIATHAN_CORE_PRECOMPILED_HEADERS "${LEVIATHAN_CORE_PRECOMPILED_HEADERS}" "${SHARED_PRECOMPILED_HEADERS_DIRECTORY}/Win32Pch.h")
-	set(LEVIATHAN_CORE_SOURCES "${LEVIATHAN_CORE_SOURCES}" "${LEVIATHAN_CORE_NAME}/Source/Private/Platform/Win32/Win32Platform.cpp")
+	set(LEVIATHAN_CORE_HEADERS "${LEVIATHAN_CORE_HEADERS}" "${LEVIATHAN_CORE_NAME}/Source/Private/Platform/Win32/Win32Window.h")
+	set(LEVIATHAN_CORE_SOURCES "${LEVIATHAN_CORE_SOURCES}" "${LEVIATHAN_CORE_NAME}/Source/Private/Platform/Win32/Win32Platform.cpp" "${LEVIATHAN_CORE_NAME}/Source/Private/Platform/Win32/Win32Window.cpp")
 endif()
 
 add_library_target(
