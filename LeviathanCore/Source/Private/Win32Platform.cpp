@@ -4,6 +4,10 @@ namespace LeviathanCore
 {
 	namespace Platform
 	{
+		static LARGE_INTEGER TicksPerSecond = {};
+		static LARGE_INTEGER LastTickCount = {};
+		static unsigned long long ElapsedMicroseconds = 0;
+
 		bool CreateDebugConsole()
 		{
 			// Allocate console.
@@ -72,6 +76,49 @@ namespace LeviathanCore
 
 			// Console destruction succeeded.
 			return true;
+		}
+
+		bool InitializeTiming()
+		{
+			if (!QueryPerformanceFrequency(&TicksPerSecond))
+			{
+				return false;
+			}
+
+			if (!QueryPerformanceCounter(&LastTickCount))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		bool UpdateDeltaTime()
+		{
+			LARGE_INTEGER currentTickCount = {};
+			if (QueryPerformanceCounter(&currentTickCount))
+			{
+				const uint64_t elapsedTicks = currentTickCount.QuadPart - LastTickCount.QuadPart;
+
+				// Convert to microseconds to not lose precision, by dividing a small number by a large one.
+				ElapsedMicroseconds = (elapsedTicks * static_cast<unsigned long long>(1e6)) / TicksPerSecond.QuadPart;
+
+				LastTickCount = currentTickCount;
+
+				return true;
+			}
+
+			return false;
+		}
+
+		float GetDeltaTimeInMilliseconds()
+		{
+			return static_cast<float>(ElapsedMicroseconds) * 1e-3f;
+		}
+
+		float GetDeltaTimeInSeconds()
+		{
+			return GetDeltaTimeInMilliseconds() * 1e-3f;
 		}
 	}
 }

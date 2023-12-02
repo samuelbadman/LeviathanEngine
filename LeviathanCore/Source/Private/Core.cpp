@@ -14,12 +14,14 @@ namespace LeviathanCore
 		{
 			while (EngineRunning)
 			{
+				LeviathanCore::Platform::UpdateDeltaTime();
 			}
 		}
 
 		int RunEngine()
 		{
 			LeviathanCore::Platform::CreateDebugConsole();
+			LeviathanCore::Platform::InitializeTiming();
 
 			EngineRunning = true;
 
