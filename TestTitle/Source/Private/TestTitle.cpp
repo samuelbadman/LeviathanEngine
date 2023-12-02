@@ -5,6 +5,7 @@ void TestTitle::Setup()
 {
 	LeviathanCore::Core::PreMainLoopCallback.Register(OnPreMainLoop);
 	LeviathanCore::Core::PostMainLoopCallback.Register(OnPostMainLoop);
+	LeviathanCore::Core::TickCallback.Register(OnTick);
 }
 
 void TestTitle::OnPreMainLoop()
@@ -15,4 +16,9 @@ void TestTitle::OnPreMainLoop()
 void TestTitle::OnPostMainLoop()
 {
 	std::cout << "Test title post main loop.\n";
+}
+
+void TestTitle::OnTick(float DeltaSeconds)
+{
+	std::cout << "Tick: Delta seconds " << DeltaSeconds << '\n';
 }

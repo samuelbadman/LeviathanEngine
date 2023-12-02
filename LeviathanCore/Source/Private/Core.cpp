@@ -5,8 +5,9 @@ namespace LeviathanCore
 {
 	namespace Core
 	{
-		Callback<PreMainLoopCallbackType> PreMainLoopCallback;
-		Callback<PostMainLoopCallbackType> PostMainLoopCallback;
+		Callback<PreMainLoopCallbackType> PreMainLoopCallback = {};
+		Callback<PostMainLoopCallbackType> PostMainLoopCallback = {};
+		Callback<TickCallbackType> TickCallback = {};
 
 		static bool EngineRunning = false;
 
@@ -15,6 +16,7 @@ namespace LeviathanCore
 			while (EngineRunning)
 			{
 				LeviathanCore::Platform::UpdateDeltaTime();
+				TickCallback.Call(LeviathanCore::Platform::GetDeltaTimeInSeconds());
 			}
 		}
 
