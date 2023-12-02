@@ -1,4 +1,4 @@
 #pragma once
 
-#include "Platform.h"
+#include "PlatformEntryPrototype.h"
 #include "Core.h"
