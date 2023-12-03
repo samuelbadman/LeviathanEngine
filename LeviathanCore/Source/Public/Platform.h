@@ -6,7 +6,7 @@ namespace LeviathanCore
 	{
 		bool CreateDebugConsole();
 		bool DestroyDebugConsole();
-		bool InitializeTiming();
+		bool Initialize();
 		bool UpdateDeltaTime();
 		float GetDeltaTimeInMilliseconds();
 		float GetDeltaTimeInSeconds();

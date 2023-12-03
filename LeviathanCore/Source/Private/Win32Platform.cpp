@@ -1,12 +1,70 @@
 #include "Platform.h"
+#include "Win32Window.h"
 
 namespace LeviathanCore
 {
 	namespace Platform
 	{
+		static constexpr USHORT RawInputDeviceMouseUsagePage = 0x01;
+		static constexpr USHORT RawInputDeviceMouseUsage = 0x02;
+		static constexpr USHORT RawInputDeviceGameControllerUsagePage = 0x01;
+		static constexpr USHORT RawInputDeviceGameControllerUsage = 0x05;
+		static constexpr DWORD RawInputDeviceGameControllerFlags = RIDEV_DEVNOTIFY; // Generate WM_INPUT_DEVICE_CHANGED messages in the WndProc function when this device is added/removed.
+
 		static LARGE_INTEGER TicksPerSecond = {};
 		static LARGE_INTEGER LastTickCount = {};
 		static unsigned long long ElapsedMicroseconds = 0;
+		static std::unique_ptr<PlatformWindow> MessageWindow = {};
+
+		// Initializes timing variables. Returns false if the function fails otherwise will return true.
+		static bool InitializeTiming()
+		{
+			if (!QueryPerformanceFrequency(&TicksPerSecond))
+			{
+				return false;
+			}
+
+			if (!QueryPerformanceCounter(&LastTickCount))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		// Creates the hidden message window that will be used to receive raw input device messages.
+		static bool CreateMessageWindow()
+		{
+			MessageWindow = std::make_unique<PlatformWindow>();
+			return MessageWindow->Initialize("Win32MessageWindowClass", "", 0, 0, 0, 0, 0, nullptr, true);
+		}
+
+		// Registers devices that generate raw input messages. Takes the handle to the window to send raw input device messages
+		// to, that require a specific window to be sent to. Only this window will receive these messages. Returns true if the 
+		// function succeeds otherwise, returns false if the function fails. Call GetLastError for more information.
+		static bool RegisterRawInputDevicesWin32(HWND windowHandle)
+		{
+			RAWINPUTDEVICE rawInputDevices[] =
+			{
+				RAWINPUTDEVICE
+				{
+					.usUsagePage = RawInputDeviceMouseUsagePage,
+					.usUsage = RawInputDeviceMouseUsage,
+					.dwFlags = 0,
+					.hwndTarget = nullptr // Null hwnd to have generated raw input messages be sent to the window that currently has keyboard focus.
+				},
+
+				RAWINPUTDEVICE
+				{
+					.usUsagePage = RawInputDeviceGameControllerUsagePage,
+					.usUsage = RawInputDeviceGameControllerUsage,
+					.dwFlags = RawInputDeviceGameControllerFlags,
+					.hwndTarget = windowHandle // Game controller messages require a window to send messages to.
+				}
+			};
+
+			return RegisterRawInputDevices(rawInputDevices, 2, sizeof(RAWINPUTDEVICE));
+		}
 
 		bool CreateDebugConsole()
 		{
@@ -78,14 +136,19 @@ namespace LeviathanCore
 			return true;
 		}
 
-		bool InitializeTiming()
+		bool Initialize()
 		{
-			if (!QueryPerformanceFrequency(&TicksPerSecond))
+			if (!InitializeTiming())
 			{
 				return false;
 			}
 
-			if (!QueryPerformanceCounter(&LastTickCount))
+			if(!CreateMessageWindow())
+			{
+				return false;
+			}
+
+			if (!RegisterRawInputDevicesWin32(MessageWindow->GetHWnd()))
 			{
 				return false;
 			}

@@ -23,15 +23,17 @@ namespace LeviathanCore
 		int RunEngine()
 		{
 			LeviathanCore::Platform::CreateDebugConsole();
-			LeviathanCore::Platform::InitializeTiming();
+
+			if (!LeviathanCore::Platform::Initialize())
+			{
+				return 1;
+			}
 
 			EngineRunning = true;
 
 			PreMainLoopCallback.Call();
 			MainLoop();
 			PostMainLoopCallback.Call();
-
-			LeviathanCore::Platform::DestroyDebugConsole();
 
 			return 0;
 		}

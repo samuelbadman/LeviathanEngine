@@ -8,7 +8,7 @@ namespace LeviathanCore
 	{
 		using PreMainLoopCallbackType = void(*)();
 		using PostMainLoopCallbackType = void(*)();
-		using TickCallbackType = void(*)(float);
+		using TickCallbackType = void(*)(float /* deltaSeconds */);
 
 		extern Callback<PreMainLoopCallbackType> PreMainLoopCallback;
 		extern Callback<PostMainLoopCallbackType> PostMainLoopCallback;
