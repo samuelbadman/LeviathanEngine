@@ -18,7 +18,7 @@ void TestTitle::OnPostMainLoop()
 	std::cout << "Test title post main loop.\n";
 }
 
-void TestTitle::OnTick(float DeltaSeconds)
+void TestTitle::OnTick([[maybe_unused]] float DeltaSeconds)
 {
-	std::cout << "Tick: Delta seconds " << DeltaSeconds << '\n';
+	//std::cout << "Tick: Delta seconds " << DeltaSeconds << '\n';
 }

@@ -45,7 +45,13 @@ namespace LeviathanCore
 			return 0;
 		}
 
-		bool PlatformWindow::Initialize(std::string_view uniqueName, std::string_view windowTitle, DWORD style, int positionX, int positionY, int width, int height, 
+		// Returns the input key from a wparam.
+		static InputKey::Keys constexpr GetKeyFromWParam(const WPARAM wParam)
+		{
+			return static_cast<InputKey::Keys>(static_cast<std::underlying_type<InputKey::Keys>::type>(wParam));
+		}
+
+		bool PlatformWindow::Initialize(std::string_view uniqueName, std::string_view windowTitle, DWORD style, int positionX, int positionY, int width, int height,
 			HWND hWndParent, bool messageWindow)
 		{
 			InSizeMove = false;
@@ -82,7 +88,7 @@ namespace LeviathanCore
 				positionY,
 				width,
 				height,
-				(messageWindow) ? ((hWndParent == nullptr) ? HWND_MESSAGE : hWndParent) : hWndParent,
+				((messageWindow) ? ((hWndParent == nullptr) ? HWND_MESSAGE : hWndParent) : hWndParent),
 				nullptr,
 				nullptr,
 				this
@@ -108,7 +114,320 @@ namespace LeviathanCore
 
 		LRESULT PlatformWindow::WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
-			return DefWindowProcA(hWnd, msg, wParam, lParam);
+			// Handle message.
+			switch (msg)
+			{
+			case WM_MOUSEWHEEL:
+			{
+				const int16_t delta = GET_WHEEL_DELTA_WPARAM(wParam);
+
+				if (delta > 0)
+				{
+					// Mouse wheel up.
+					WndProcMouseInput(InputKey::Keys::MouseWheelUpAxis, 1.0f);
+				}
+				else if (delta < 0)
+				{
+					// Mouse wheel down.
+					WndProcMouseInput(InputKey::Keys::MouseWheelDownAxis, 1.0f);
+				}
+
+				return 0;
+			}
+
+			case WM_INPUT:
+			{
+				UINT dataSize = 0;
+				GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr, &dataSize, sizeof(RAWINPUTHEADER));
+				if (dataSize == 0)
+				{
+					return 0;
+				}
+
+				std::unique_ptr<BYTE[]> rawData = std::make_unique<BYTE[]>(dataSize);
+				if (GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, rawData.get(), &dataSize, sizeof(RAWINPUTHEADER)) != dataSize)
+				{
+					return 0;
+				}
+
+				const RAWINPUT* const rawInput = reinterpret_cast<const RAWINPUT*>(rawData.get());
+				if (rawInput->header.dwType != RIM_TYPEMOUSE)
+				{
+					return 0;
+				}
+
+				// Raw mouse delta.
+				WndProcMouseInput(InputKey::Keys::MouseXAxis, static_cast<float>(rawInput->data.mouse.lLastX));
+				WndProcMouseInput(InputKey::Keys::MouseYAxis, static_cast<float>(rawInput->data.mouse.lLastY));
+				return 0;
+			}
+
+			case WM_LBUTTONDOWN:
+			{
+				// Input.
+				WndProcMouseInput(InputKey::Keys::LeftMouseButton, 1.0f);
+				return 0;
+			}
+
+			case WM_RBUTTONDOWN:
+			{
+				// Input.
+				WndProcMouseInput(InputKey::Keys::RightMouseButton, 1.0f);
+				return 0;
+			}
+
+			case WM_MBUTTONDOWN:
+			{
+				// Input.
+				WndProcMouseInput(InputKey::Keys::MiddleMouseButton, 1.0f);
+				return 0;
+			}
+
+			case WM_LBUTTONUP:
+			{
+				// Input.
+				WndProcMouseInput(InputKey::Keys::LeftMouseButton, 0.0f);
+				return 0;
+			}
+
+			case WM_RBUTTONUP:
+			{
+				// Input.
+				WndProcMouseInput(InputKey::Keys::RightMouseButton, 0.0f);
+				return 0;
+			}
+
+			case WM_MBUTTONUP:
+			{
+				// Input.
+				WndProcMouseInput(InputKey::Keys::MiddleMouseButton, 0.0f);
+				return 0;
+			}
+
+			case WM_SYSKEYDOWN:
+			case WM_KEYDOWN:
+			{
+				// Handle alt+f4 exit shortcut.
+				bool AltBit = false;
+				AltBit = (lParam & (1 << 29)) != 0;
+				if (AltBit && (static_cast<int16_t>(wParam) == VK_F4))
+				{
+					SendMessage(hWnd, WM_CLOSE, 0, 0);
+					return 0;
+				}
+				// Input.
+				WndProcKeyboardInput(GetKeyFromWParam(wParam), static_cast<bool>(lParam & 0x40000000), 1.0f);
+				return 0;
+			}
+
+			case WM_SYSKEYUP:
+			case WM_KEYUP:
+			{
+				// Input.
+				WndProcKeyboardInput(GetKeyFromWParam(wParam), false, 0.0f);
+				return 0;
+			}
+
+			case WM_SIZE:
+			{
+				const uint32_t resizedWidth = LOWORD(lParam);
+				const uint32_t resizedHeight = HIWORD(lParam);
+
+				switch (wParam)
+				{
+				case SIZE_MAXIMIZED:
+				{
+					// Maximized.
+					WndProcMaximized();
+					// Resized.
+					WndProcResized(resizedWidth, resizedHeight);
+					return 0;
+				}
+
+				case SIZE_MINIMIZED:
+				{
+					// Minimized.
+					WndProcMinimized();
+					return 0;
+				}
+
+				case SIZE_RESTORED:
+				{
+					// Restored.
+					WndProcRestored();
+					if (!InSizeMove)
+					{
+						// Resized.
+						WndProcResized(resizedWidth, resizedHeight);
+					}
+					return 0;
+				}
+				}
+
+				return 0;
+			}
+
+			case WM_ENTERSIZEMOVE:
+			{
+				// Entered size move.
+				InSizeMove = true;
+				WndProcEnterSizeMove();
+				return 0;
+			}
+
+			case WM_EXITSIZEMOVE:
+			{
+				// Exited size move.
+				InSizeMove = false;
+				WndProcExitSizeMove();
+				// Resized.
+				int resizedWidth = 0;
+				int resizedHeight = 0;
+				GetClientAreaDimensions(resizedWidth, resizedHeight);
+				WndProcResized(resizedWidth, resizedHeight);
+				return 0;
+			}
+
+			case WM_ACTIVATEAPP:
+			{
+				if (wParam == TRUE)
+				{
+					// Received focus.
+					WndProcReceivedFocus();
+					return 0;
+				}
+				else if (wParam == FALSE)
+				{
+					// Lost focus.
+					WndProcLostFocus();
+					return 0;
+				}
+				return 0;
+			}
+
+			case WM_INPUT_DEVICE_CHANGE:
+			{
+				// WM_INPUT_DEVICE_CHANGE message is only received by the window passed to RegisterRawInputDevices. 
+				// This message will only be received by one window in the application. Usually, this will be the main window.
+				if (wParam == GIDC_ARRIVAL)
+				{
+					// Game controller connected.
+					WndProcGameControllerConnected();
+				}
+				else if (wParam == GIDC_REMOVAL)
+				{
+					// Game controller disconnected.
+					WndProcGameControllerDisconnected();
+				}
+				return 0;
+			}
+
+			case WM_CLOSE:
+			{
+				// Closed.
+				WndProcClosed();
+				return 0;
+			}
+
+			case WM_DESTROY:
+			{
+				// Destroyed.
+				WndProcDestroyed();
+				return 0;
+			}
+
+			default:
+			{
+				return DefWindowProcA(hWnd, msg, wParam, lParam);
+			}
+			}
+		}
+
+		bool PlatformWindow::GetClientAreaDimensions(int& outWidth, int& outHeight)
+		{
+			RECT clientRect = {};
+
+			if (!GetClientRect(Handle, &clientRect))
+			{
+				// Failed to get client rect.
+				outWidth = 0;
+				outHeight = 0;
+				return false;
+			}
+
+			outWidth = static_cast<int>(clientRect.right - clientRect.left);
+			outHeight = static_cast<int>(clientRect.bottom - clientRect.top);
+			return true;
+		}
+
+		void PlatformWindow::WndProcDestroyed()
+		{
+			DestroyedCallback.Call();
+		}
+
+		void PlatformWindow::WndProcClosed()
+		{
+			ClosedCallback.Call();
+		}
+
+		void PlatformWindow::WndProcGameControllerDisconnected()
+		{
+			GameControllerDisconnectedCallback.Call();
+		}
+
+		void PlatformWindow::WndProcGameControllerConnected()
+		{
+			GameControllerConnectedCallback.Call();
+		}
+
+		void PlatformWindow::WndProcLostFocus()
+		{
+			LostFocusCallback.Call();
+		}
+
+		void PlatformWindow::WndProcReceivedFocus()
+		{
+			ReceivedFocusCallback.Call();
+		}
+
+		void PlatformWindow::WndProcResized(int resizedWidth, int resizedHeight)
+		{
+			ResizedCallback.Call(resizedWidth, resizedHeight);
+		}
+
+		void PlatformWindow::WndProcExitSizeMove()
+		{
+			ExitSizeMoveCallback.Call();
+		}
+
+		void PlatformWindow::WndProcEnterSizeMove()
+		{
+			EnterSizeMoveCallback.Call();
+		}
+
+		void PlatformWindow::WndProcRestored()
+		{
+			RestoredCallback.Call();
+		}
+
+		void PlatformWindow::WndProcMinimized()
+		{
+			MinimizedCallback.Call();
+		}
+
+		void PlatformWindow::WndProcMaximized()
+		{
+			MaximizedCallback.Call();
+		}
+
+		void PlatformWindow::WndProcKeyboardInput(const InputKey::Keys key, const bool repeatedKey, const float data)
+		{
+			KeyboardInputCallback.Call(key, repeatedKey, data);
+		}
+
+		void PlatformWindow::WndProcMouseInput(const InputKey::Keys key, const float data)
+		{
+			MouseInputCallback.Call(key, data);
 		}
 	}
 }

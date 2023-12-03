@@ -13,11 +13,15 @@ namespace LeviathanCore
 
 		void MainLoop()
 		{
+			PreMainLoopCallback.Call();
+
 			while (EngineRunning)
 			{
-				LeviathanCore::Platform::UpdateDeltaTime();
+				LeviathanCore::Platform::TickPlatform();
 				TickCallback.Call(LeviathanCore::Platform::GetDeltaTimeInSeconds());
 			}
+
+			PostMainLoopCallback.Call();
 		}
 
 		int RunEngine()
@@ -29,11 +33,13 @@ namespace LeviathanCore
 				return 1;
 			}
 
+			// Create the runtime window.
+
+
+			// Enter engine main loop.
 			EngineRunning = true;
 
-			PreMainLoopCallback.Call();
 			MainLoop();
-			PostMainLoopCallback.Call();
 
 			return 0;
 		}

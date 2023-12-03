@@ -5,6 +5,8 @@ namespace LeviathanCore
 {
 	namespace Platform
 	{
+		Callback<GameControllerConnectionEventCallbackType> GameControllerConnectionEventCallback;
+
 		static constexpr USHORT RawInputDeviceMouseUsagePage = 0x01;
 		static constexpr USHORT RawInputDeviceMouseUsage = 0x02;
 		static constexpr USHORT RawInputDeviceGameControllerUsagePage = 0x01;
@@ -15,6 +17,13 @@ namespace LeviathanCore
 		static LARGE_INTEGER LastTickCount = {};
 		static unsigned long long ElapsedMicroseconds = 0;
 		static std::unique_ptr<PlatformWindow> MessageWindow = {};
+
+		// Callback function registered to the message window's game controller connected and disconnected callbacks. This will be called every time a game controller device
+		// is connected and disconnected from the platform device.
+		static void OnGameControllerConnectionEvent()
+		{
+			GameControllerConnectionEventCallback.Call();
+		}
 
 		// Initializes timing variables. Returns false if the function fails otherwise will return true.
 		static bool InitializeTiming()
@@ -37,6 +46,13 @@ namespace LeviathanCore
 		{
 			MessageWindow = std::make_unique<PlatformWindow>();
 			return MessageWindow->Initialize("Win32MessageWindowClass", "", 0, 0, 0, 0, 0, nullptr, true);
+		}
+
+		// Registers functions to message window callbacks.
+		static void RegisterMessageWindowCallbacks()
+		{
+			MessageWindow->GameControllerConnectedCallback.Register(OnGameControllerConnectionEvent);
+			MessageWindow->GameControllerDisconnectedCallback.Register(OnGameControllerConnectionEvent);
 		}
 
 		// Registers devices that generate raw input messages. Takes the handle to the window to send raw input device messages
@@ -64,6 +80,35 @@ namespace LeviathanCore
 			};
 
 			return RegisterRawInputDevices(rawInputDevices, 2, sizeof(RAWINPUTDEVICE));
+		}
+
+		static bool UpdateDeltaTime()
+		{
+			LARGE_INTEGER currentTickCount = {};
+			if (QueryPerformanceCounter(&currentTickCount))
+			{
+				const uint64_t elapsedTicks = currentTickCount.QuadPart - LastTickCount.QuadPart;
+
+				// Convert to microseconds to not lose precision, by dividing a small number by a large one.
+				ElapsedMicroseconds = (elapsedTicks * static_cast<unsigned long long>(1e6)) / TicksPerSecond.QuadPart;
+
+				LastTickCount = currentTickCount;
+
+				return true;
+			}
+
+			return false;
+		}
+
+		// Dispatches system messages on the message queue to be processed.
+		static void DispatchSystemMessages()
+		{
+			MSG msg = {};
+			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
 		}
 
 		bool CreateDebugConsole()
@@ -148,6 +193,8 @@ namespace LeviathanCore
 				return false;
 			}
 
+			RegisterMessageWindowCallbacks();
+
 			if (!RegisterRawInputDevicesWin32(MessageWindow->GetHWnd()))
 			{
 				return false;
@@ -156,22 +203,16 @@ namespace LeviathanCore
 			return true;
 		}
 
-		bool UpdateDeltaTime()
+		bool TickPlatform()
 		{
-			LARGE_INTEGER currentTickCount = {};
-			if (QueryPerformanceCounter(&currentTickCount))
+			if (!UpdateDeltaTime())
 			{
-				const uint64_t elapsedTicks = currentTickCount.QuadPart - LastTickCount.QuadPart;
-
-				// Convert to microseconds to not lose precision, by dividing a small number by a large one.
-				ElapsedMicroseconds = (elapsedTicks * static_cast<unsigned long long>(1e6)) / TicksPerSecond.QuadPart;
-
-				LastTickCount = currentTickCount;
-
-				return true;
+				return false;
 			}
 
-			return false;
+			DispatchSystemMessages();
+
+			return true;
 		}
 
 		float GetDeltaTimeInMilliseconds()
