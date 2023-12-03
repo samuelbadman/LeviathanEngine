@@ -20,7 +20,7 @@ namespace LeviathanCore
 		}
 
 		template<typename... Args>
-		void Call(Args... args)
+		void Call(Args... args) const
 		{
 			const size_t callbackCount = Callbacks.size();
 			for (size_t i = 0; i < callbackCount; ++i)

@@ -5,8 +5,6 @@ namespace LeviathanCore
 {
 	namespace Platform
 	{
-		Callback<GameControllerConnectionEventCallbackType> GameControllerConnectionEventCallback;
-
 		static constexpr USHORT RawInputDeviceMouseUsagePage = 0x01;
 		static constexpr USHORT RawInputDeviceMouseUsage = 0x02;
 		static constexpr USHORT RawInputDeviceGameControllerUsagePage = 0x01;
@@ -16,7 +14,8 @@ namespace LeviathanCore
 		static LARGE_INTEGER TicksPerSecond = {};
 		static LARGE_INTEGER LastTickCount = {};
 		static unsigned long long ElapsedMicroseconds = 0;
-		static std::unique_ptr<PlatformWindow> MessageWindow = {};
+		static Callback<GameControllerConnectionEventCallbackType> GameControllerConnectionEventCallback;
+		static std::unique_ptr<LeviathanCore::Platform::Window::PlatformWindow> MessageWindow = {};
 
 		// Callback function registered to the message window's game controller connected and disconnected callbacks. This will be called every time a game controller device
 		// is connected and disconnected from the platform device.
@@ -44,15 +43,15 @@ namespace LeviathanCore
 		// Creates the hidden message window that will be used to receive raw input device messages.
 		static bool CreateMessageWindow()
 		{
-			MessageWindow = std::make_unique<PlatformWindow>();
+			MessageWindow = std::make_unique<LeviathanCore::Platform::Window::PlatformWindow>();
 			return MessageWindow->Initialize("Win32MessageWindowClass", "", 0, 0, 0, 0, 0, nullptr, true);
 		}
 
 		// Registers functions to message window callbacks.
 		static void RegisterMessageWindowCallbacks()
 		{
-			MessageWindow->GameControllerConnectedCallback.Register(OnGameControllerConnectionEvent);
-			MessageWindow->GameControllerDisconnectedCallback.Register(OnGameControllerConnectionEvent);
+			MessageWindow->GetGameControllerConnectedCallback().Register(OnGameControllerConnectionEvent);
+			MessageWindow->GetGameControllerDisconnectedCallback().Register(OnGameControllerConnectionEvent);
 		}
 
 		// Registers devices that generate raw input messages. Takes the handle to the window to send raw input device messages
@@ -188,7 +187,7 @@ namespace LeviathanCore
 				return false;
 			}
 
-			if(!CreateMessageWindow())
+			if (!CreateMessageWindow())
 			{
 				return false;
 			}
@@ -223,6 +222,52 @@ namespace LeviathanCore
 		float GetDeltaTimeInSeconds()
 		{
 			return GetDeltaTimeInMilliseconds() * 1e-3f;
+		}
+
+		Callback<GameControllerConnectionEventCallbackType>& GetGameControllerConnectionEventCallback()
+		{
+			return GameControllerConnectionEventCallback;
+		}
+
+		namespace Displays
+		{
+			int GetDisplayCount()
+			{
+				return GetSystemMetrics(SM_CMONITORS);
+			}
+
+			DisplayDetails GetDisplayDetails(const int displayIndex)
+			{
+				// Check the index is valid.
+				const int connectedDisplaysCount = GetDisplayCount();
+				if ((connectedDisplaysCount == 0) || (displayIndex >= connectedDisplaysCount))
+				{
+					return DisplayDetails{};
+				}
+
+				// Initialize the DISPLAY_DEVICE structure.
+				DISPLAY_DEVICE displayDevice = {};
+				displayDevice.cb = sizeof(DISPLAY_DEVICE);
+
+				// Enumerate display devices
+				EnumDisplayDevices(NULL, displayIndex, &displayDevice, EDD_GET_DEVICE_INTERFACE_NAME);
+
+				// Enumerate the display device's settings.
+				DEVMODEA displaySettings = {};
+				EnumDisplaySettings(displayDevice.DeviceName, ENUM_CURRENT_SETTINGS, &displaySettings);
+
+				// Fill in and return display details with the device's details.
+				DisplayDetails details = {};
+				details.TopLeftX = displaySettings.dmPosition.x;
+				details.TopLeftY = displaySettings.dmPosition.y;
+				details.Width = displaySettings.dmPelsWidth;
+				details.Height = displaySettings.dmPelsHeight;
+				details.VerticalRefreshRateHertz = displaySettings.dmDisplayFrequency;
+				details.Name = displayDevice.DeviceName;
+				details.AdapterName = displayDevice.DeviceString;
+
+				return details;
+			}
 		}
 	}
 }

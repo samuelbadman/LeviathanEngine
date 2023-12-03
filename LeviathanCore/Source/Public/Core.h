@@ -10,11 +10,10 @@ namespace LeviathanCore
 		using PostMainLoopCallbackType = void(*)();
 		using TickCallbackType = void(*)(float /* deltaSeconds */);
 
-		extern Callback<PreMainLoopCallbackType> PreMainLoopCallback;
-		extern Callback<PostMainLoopCallbackType> PostMainLoopCallback;
-		extern Callback<TickCallbackType> TickCallback;
-
 		int RunEngine();
 		void Exit();
+		Callback<PreMainLoopCallbackType>& GetPreMainLoopCallback();
+		Callback<PostMainLoopCallbackType>& GetPostMainLoopCallback();
+		Callback<TickCallbackType>& GetTickCallback();
 	}
 }

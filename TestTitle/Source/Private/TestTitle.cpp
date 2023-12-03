@@ -3,19 +3,19 @@
 
 void TestTitle::Setup()
 {
-	LeviathanCore::Core::PreMainLoopCallback.Register(OnPreMainLoop);
-	LeviathanCore::Core::PostMainLoopCallback.Register(OnPostMainLoop);
-	LeviathanCore::Core::TickCallback.Register(OnTick);
+	LeviathanCore::Core::GetPreMainLoopCallback().Register(OnPreMainLoop);
+	LeviathanCore::Core::GetPostMainLoopCallback().Register(OnPostMainLoop);
+	LeviathanCore::Core::GetTickCallback().Register(OnTick);
 }
 
 void TestTitle::OnPreMainLoop()
 {
-	std::cout << "Test title pre main loop.\n";
+	//std::cout << "Test title pre main loop.\n";
 }
 
 void TestTitle::OnPostMainLoop()
 {
-	std::cout << "Test title post main loop.\n";
+	//std::cout << "Test title post main loop.\n";
 }
 
 void TestTitle::OnTick([[maybe_unused]] float DeltaSeconds)
