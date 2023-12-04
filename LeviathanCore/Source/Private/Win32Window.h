@@ -49,6 +49,7 @@ namespace LeviathanCore
 				LRESULT WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 				HWND GetHWnd() const { return Handle; }
 				bool SetTitle(std::string_view newTitle);
+				void Reset();
 
 				Callback<PlatformWindowDestroyedCallbackType>& GetDestroyedCallback() { return DestroyedCallback; }
 				Callback<PlatformWindowClosedCallbackType>& GetClosedCallback() { return ClosedCallback; }

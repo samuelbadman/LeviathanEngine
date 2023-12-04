@@ -31,7 +31,18 @@ namespace LeviathanCore
 				return new PlatformWindow();
 			}
 
-			bool DestroyPlatformWindow(PlatformWindow* const platformWindow)
+			void DestroyPlatformWindow(PlatformWindow* const platformWindow)
+			{
+				delete platformWindow;
+			}
+
+			bool InitializePlatformWindow(PlatformWindow* const platformWindow, const PlatformWindowDescription& description)
+			{
+				return platformWindow->Initialize(description.UniqueName, description.Title, GetModeFlags(description.Mode), description.PositionX, description.PositionY,
+					description.Width, description.Height, static_cast<HWND>(description.ParentWindowPlatformHandle), false);
+			}
+
+			bool ShutdownPlatformWindow(PlatformWindow* const platformWindow)
 			{
 				if (!DestroyWindow(platformWindow->GetHWnd()))
 				{
@@ -43,15 +54,9 @@ namespace LeviathanCore
 					return false;
 				}
 
-				delete platformWindow;
+				platformWindow->Reset();
 
 				return true;
-			}
-
-			bool InitializePlatformWindow(PlatformWindow* const platformWindow, const PlatformWindowDescription& description)
-			{
-				return platformWindow->Initialize(description.UniqueName, description.Title, GetModeFlags(description.Mode), description.PositionX, description.PositionY,
-					description.Width, description.Height, static_cast<HWND>(description.ParentWindowPlatformHandle), false);
 			}
 
 			void* GetPlatformWindowPlatformHandle(PlatformWindow* const platformWindow)
@@ -479,6 +484,13 @@ namespace LeviathanCore
 				outWidth = static_cast<int>(clientRect.right - clientRect.left);
 				outHeight = static_cast<int>(clientRect.bottom - clientRect.top);
 				return true;
+			}
+
+			void PlatformWindow::Reset()
+			{
+				Handle = nullptr;
+				InSizeMove = false;
+				ClassName = {};
 			}
 
 			void PlatformWindow::WndProcDestroyed()

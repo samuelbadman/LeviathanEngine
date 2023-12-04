@@ -25,18 +25,19 @@ namespace LeviathanCore
 			runtimeWindowDesc.Width = 1280;
 			runtimeWindowDesc.Height = 720;
 			runtimeWindowDesc.Title = "Leviathan Engine";
-			runtimeWindowDesc.UniqueName = "LevEngRuntimeWindow";
+			runtimeWindowDesc.UniqueName = "LeviathanEngineRuntimeWindow";
 			runtimeWindowDesc.Mode = LeviathanCore::Platform::Window::PlatformWindowMode::Windowed_NoResize;
 			return LeviathanCore::Platform::Window::InitializePlatformWindow(RuntimeWindow, runtimeWindowDesc);
 		}
 
-		static bool DestroyRuntimeWindow()
+		static bool ShutdownAndDestroyRuntimeWindow()
 		{
-			if (!LeviathanCore::Platform::Window::DestroyPlatformWindow(RuntimeWindow))
+			if (!LeviathanCore::Platform::Window::ShutdownPlatformWindow(RuntimeWindow))
 			{
 				return false;
 			}
 
+			LeviathanCore::Platform::Window::DestroyPlatformWindow(RuntimeWindow);
 			RuntimeWindow = nullptr;
 
 			return true;
@@ -83,7 +84,7 @@ namespace LeviathanCore
 			MainLoop();
 
 			// Cleanup.
-			if (!DestroyRuntimeWindow())
+			if (!ShutdownAndDestroyRuntimeWindow())
 			{
 				return 1;
 			}

@@ -47,8 +47,9 @@ namespace LeviathanCore
 			class PlatformWindow;
 
 			PlatformWindow* CreatePlatformWindow();
-			bool DestroyPlatformWindow(PlatformWindow* const platformWindow);
+			void DestroyPlatformWindow(PlatformWindow* const platformWindow);
 			bool InitializePlatformWindow(PlatformWindow* const platformWindow, const PlatformWindowDescription& description);
+			bool ShutdownPlatformWindow(PlatformWindow* const platformWindow);
 			void* GetPlatformWindowPlatformHandle(PlatformWindow* const platformWindow);
 			Callback<PlatformWindowDestroyedCallbackType>& GetPlatformWindowDestroyedCallback(PlatformWindow* const platformWindow);
 			Callback<PlatformWindowClosedCallbackType>& GetPlatformWindowClosedCallback(PlatformWindow* const platformWindow);
