@@ -2,7 +2,7 @@
 
 namespace TestTitle
 {
-	void Initialize();
+	bool Initialize();
 	void OnPreMainLoop();
 	void OnPostMainLoop();
 	void OnTick(float DeltaSeconds);
