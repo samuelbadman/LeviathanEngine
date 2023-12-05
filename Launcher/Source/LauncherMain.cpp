@@ -3,8 +3,8 @@
 
 LEVIATHAN_ENTRY_PROTOTYPE
 {
-	// Call on title to register engine callbacks.
-	TestTitle::Setup();
+	// Initialize engine modules.
+	TestTitle::Initialize();
 
 	// Run engine.
 	return LeviathanCore::Core::RunEngine();

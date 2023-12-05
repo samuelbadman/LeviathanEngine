@@ -1,11 +1,12 @@
 #include "TestTitle.h"
 #include "Core.h"
 
-void TestTitle::Setup()
+void TestTitle::Initialize()
 {
 	LeviathanCore::Core::GetPreMainLoopCallback().Register(OnPreMainLoop);
 	LeviathanCore::Core::GetPostMainLoopCallback().Register(OnPostMainLoop);
 	LeviathanCore::Core::GetTickCallback().Register(OnTick);
+	LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);
 }
 
 void TestTitle::OnPreMainLoop()
@@ -21,4 +22,9 @@ void TestTitle::OnPostMainLoop()
 void TestTitle::OnTick([[maybe_unused]] float DeltaSeconds)
 {
 	//std::cout << "Tick: Delta seconds " << DeltaSeconds << '\n';
+}
+
+void TestTitle::OnCleanup()
+{
+	std::cout << "Cleanup.\n";
 }

@@ -2,8 +2,9 @@
 
 namespace TestTitle
 {
-	void Setup();
+	void Initialize();
 	void OnPreMainLoop();
 	void OnPostMainLoop();
 	void OnTick(float DeltaSeconds);
+	void OnCleanup();
 }

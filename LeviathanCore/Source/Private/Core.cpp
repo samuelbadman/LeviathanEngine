@@ -11,6 +11,7 @@ namespace LeviathanCore
 		static Callback<PreMainLoopCallbackType> PreMainLoopCallback = {};
 		static Callback<PostMainLoopCallbackType> PostMainLoopCallback = {};
 		static Callback<TickCallbackType> TickCallback = {};
+		static Callback<CleanupCallbackType> CleanupCallback = {};
 
 		static void OnRuntimeWindowClosed()
 		{
@@ -46,6 +47,13 @@ namespace LeviathanCore
 		static void RegisterToRuntimeWindowCallbacks()
 		{
 			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(OnRuntimeWindowClosed);
+		}
+
+		static bool Cleanup()
+		{
+			CleanupCallback.Call();
+
+			return true;
 		}
 
 		void MainLoop()
@@ -84,9 +92,15 @@ namespace LeviathanCore
 			MainLoop();
 
 			// Cleanup.
-			if (!ShutdownAndDestroyRuntimeWindow())
+			if (!Cleanup())
 			{
 				return 1;
+			}
+
+			// Destroy the runtime window.
+			if (!ShutdownAndDestroyRuntimeWindow())
+			{
+				return false;
 			}
 
 			return 0;
@@ -110,6 +124,11 @@ namespace LeviathanCore
 		Callback<TickCallbackType>& GetTickCallback()
 		{
 			return TickCallback;
+		}
+
+		Callback<CleanupCallbackType>& GetCleanupCallback()
+		{
+			return CleanupCallback;
 		}
 	}
 }
