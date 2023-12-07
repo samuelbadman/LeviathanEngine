@@ -4,12 +4,7 @@
 
 LEVIATHAN_ENTRY_PROTOTYPE
 {
-	// Initialize engine modules.
-	if (!LeviathanInput::Initialize())
-	{
-		return 1;
-	}
-
+	// Initialize title module.
 	if (!TestTitle::Initialize())
 	{
 		return 1;

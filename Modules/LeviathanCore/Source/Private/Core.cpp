@@ -10,7 +10,9 @@ namespace LeviathanCore
 		static bool EngineRunning = false;
 		static Callback<PreMainLoopCallbackType> PreMainLoopCallback = {};
 		static Callback<PostMainLoopCallbackType> PostMainLoopCallback = {};
+		static Callback<PreTickCallbackType> PreTickCallback = {};
 		static Callback<TickCallbackType> TickCallback = {};
+		static Callback<PostTickCallbackType> PostTickCallback = {};
 		static Callback<CleanupCallbackType> CleanupCallback = {};
 
 		static void OnRuntimeWindowClosed()
@@ -63,7 +65,10 @@ namespace LeviathanCore
 			while (EngineRunning)
 			{
 				LeviathanCore::Platform::TickPlatform();
+
+				PreTickCallback.Call();
 				TickCallback.Call(LeviathanCore::Platform::GetDeltaTimeInSeconds());
+				PostTickCallback.Call();
 			}
 
 			PostMainLoopCallback.Call();
@@ -121,9 +126,19 @@ namespace LeviathanCore
 			return PostMainLoopCallback;
 		}
 
+		Callback<PreTickCallbackType>& GetPreTickCallback()
+		{
+			return PreTickCallback;
+		}
+
 		Callback<TickCallbackType>& GetTickCallback()
 		{
 			return TickCallback;
+		}
+
+		Callback<PostTickCallbackType>& GetPostTickCallback()
+		{
+			return PostTickCallback;
 		}
 
 		Callback<CleanupCallbackType>& GetCleanupCallback()

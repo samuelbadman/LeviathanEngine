@@ -1,35 +1,71 @@
 #include "TestTitle.h"
-#include "Core.h"
+#include "LeviathanCore.h"
+#include "LeviathanInput.h"
 
 namespace TestTitle
 {
-	bool Initialize()
+	static bool Shutdown()
 	{
-		LeviathanCore::Core::GetPreMainLoopCallback().Register(OnPreMainLoop);
-		LeviathanCore::Core::GetPostMainLoopCallback().Register(OnPostMainLoop);
-		LeviathanCore::Core::GetTickCallback().Register(OnTick);
-		LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);
+		if (!LeviathanInput::Shutdown())
+		{
+			return false;
+		}
 
 		return true;
 	}
 
-	void OnPreMainLoop()
+	static void OnPreMainLoop()
 	{
-		//std::cout << "Test title pre main loop.\n";
+
 	}
 
-	void OnPostMainLoop()
+	static void OnPostMainLoop()
 	{
-		//std::cout << "Test title post main loop.\n";
+
 	}
 
-	void OnTick([[maybe_unused]] float DeltaSeconds)
+	static void OnPreTick()
 	{
-		//std::cout << "Tick: Delta seconds " << DeltaSeconds << '\n';
+
 	}
 
-	void OnCleanup()
+	static void OnTick([[maybe_unused]] float DeltaSeconds)
 	{
-		std::cout << "Cleanup.\n";
+		LeviathanInput::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
+	}
+
+	static void OnPostTick()
+	{
+	}
+
+	static void OnCleanup()
+	{
+		Shutdown();
+	}
+
+	static void OnInput(LeviathanCore::InputKey key, bool isRepeatKey, float data)
+	{
+		if (key.GetKey() == LeviathanCore::InputKey::Keys::A)
+		{
+			std::cout << "A key input. isRepeatKey " << ((isRepeatKey) ? "true" : "false") << " data " << data << '\n';
+		}
+	}
+
+	bool Initialize()
+	{
+		// Initialize engine modules for title.
+		LeviathanInput::Initialize();
+
+		// Register callbacks.
+		LeviathanCore::Core::GetPreMainLoopCallback().Register(OnPreMainLoop);
+		LeviathanCore::Core::GetPostMainLoopCallback().Register(OnPostMainLoop);
+		LeviathanCore::Core::GetPreTickCallback().Register(OnPreTick);
+		LeviathanCore::Core::GetTickCallback().Register(OnTick);
+		LeviathanCore::Core::GetPostTickCallback().Register(OnPostTick);
+		LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);
+
+		LeviathanInput::PlatformInput::GetInputCallback().Register(OnInput);
+
+		return true;
 	}
 }

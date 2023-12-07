@@ -1,11 +1,15 @@
 #include "LeviathanInput.h"
+#include "PlatformInput.h"
 
 namespace LeviathanInput
 {
 	bool Initialize()
 	{
+		return PlatformInput::Initialize();
+	}
 
-
-		return true;
+	bool Shutdown()
+	{
+		return PlatformInput::Shutdown();
 	}
 }
