@@ -51,6 +51,21 @@ namespace TestTitle
 		}
 	}
 
+	static void OnGameControllerInput(LeviathanCore::InputKey key, bool isRepeatKey, float data, unsigned int gameControllerId)
+	{
+
+	}
+
+	static void OnGameControllerConnected(unsigned int gameControllerId)
+	{
+
+	}
+
+	static void OnGameControllerDisconnected(unsigned int gameControllerId)
+	{
+
+	}
+
 	bool Initialize()
 	{
 		// Initialize engine modules for title.
@@ -65,6 +80,9 @@ namespace TestTitle
 		LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);
 
 		LeviathanInput::PlatformInput::GetInputCallback().Register(OnInput);
+		LeviathanInput::PlatformInput::GetGameControllerInputCallback().Register(OnGameControllerInput);
+		LeviathanInput::PlatformInput::GetGameControllerConnectedCallback().Register(OnGameControllerConnected);
+		LeviathanInput::PlatformInput::GetGameControllerDisconnectedCallback().Register(OnGameControllerDisconnected);
 
 		return true;
 	}

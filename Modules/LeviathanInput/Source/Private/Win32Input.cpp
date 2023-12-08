@@ -2,6 +2,7 @@
 #include "Win32MouseState.h"
 #include "Win32KeyboardState.h"
 #include "Callback.h"
+#include "XInputGamepad.h"
 
 namespace LeviathanInput
 {
@@ -9,6 +10,9 @@ namespace LeviathanInput
 	{
 		// Callback objects.
 		static LeviathanCore::Callback<InputCallbackType> InputCallback = {};
+		static LeviathanCore::Callback<GameControllerInputCallbackType> GameControllerInputCallback = {};
+		static LeviathanCore::Callback<GameControllerConnectedCallbackType> GameControllerConnectedCallback = {};
+		static LeviathanCore::Callback<GameControllerDisconnectedCallbackType> GameControllerDisconnectedCallback = {};
 
 		// Handle to the mouse hook used to retrieve mouse hardware information independently of a window.
 		static HHOOK MouseHook = nullptr;
@@ -161,9 +165,20 @@ namespace LeviathanInput
 			previousState = currentState;
 		}
 
+		static void OnPreTick()
+		{
+			XInputGamepad::RefreshConnectedGameControllerStates();
+		}
+
 		static void OnPostTick()
 		{
 			UpdatePreviousMouseState(CurrentMouseState, PreviousMouseState);
+			XInputGamepad::UpdatePreviousConnectedGameControllerStates();
+		}
+
+		static void OnGameControllerConnectionEvent()
+		{
+			XInputGamepad::RefreshConnectedGameControllerFlags();
 		}
 
 		BOOL IsKeyDownAsyncKeyState(const LeviathanCore::InputKey::Keys key)
@@ -208,7 +223,10 @@ namespace LeviathanInput
 				return false;
 			}
 
+			LeviathanCore::Core::GetPreTickCallback().Register(OnPreTick);
 			LeviathanCore::Core::GetPostTickCallback().Register(OnPostTick);
+
+			LeviathanCore::Platform::GetGameControllerConnectionEventCallback().Register(OnGameControllerConnectionEvent);
 
 			return true;
 		}
@@ -223,6 +241,8 @@ namespace LeviathanInput
 			MouseHook = nullptr;
 
 			LeviathanCore::Core::GetPostTickCallback().Deregister(OnPostTick);
+
+			LeviathanCore::Platform::GetGameControllerConnectionEventCallback().Deregister(OnGameControllerConnectionEvent);
 
 			return true;
 		}
@@ -250,9 +270,29 @@ namespace LeviathanInput
 			}
 		}
 
+		void DispatchCallbackForGameControllerKey(const LeviathanCore::InputKey::Keys key, const unsigned int gameControllerId)
+		{
+			XInputGamepad::DispatchMessagesForGameControllerKey(key, gameControllerId);
+		}
+
 		LeviathanCore::Callback<InputCallbackType>& GetInputCallback()
 		{
 			return InputCallback;
+		}
+
+		LeviathanCore::Callback<GameControllerInputCallbackType>& GetGameControllerInputCallback()
+		{
+			return GameControllerInputCallback;
+		}
+
+		LeviathanCore::Callback<GameControllerConnectedCallbackType>& GetGameControllerConnectedCallback()
+		{
+			return GameControllerConnectedCallback;
+		}
+
+		LeviathanCore::Callback<GameControllerDisconnectedCallbackType>& GetGameControllerDisconnectedCallback()
+		{
+			return GameControllerDisconnectedCallback;
 		}
 	}
 }
