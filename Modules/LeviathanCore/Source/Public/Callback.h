@@ -28,5 +28,10 @@ namespace LeviathanCore
 				Callbacks[i](args...);
 			}
 		}
+
+		void Clear()
+		{
+			Callbacks.clear();
+		}
 	};
 }

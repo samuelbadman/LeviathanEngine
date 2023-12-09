@@ -6,6 +6,7 @@ namespace TestTitle
 {
 	static bool Shutdown()
 	{
+		// Shutdown engine modules used by title.
 		if (!LeviathanInput::Shutdown())
 		{
 			return false;
@@ -31,11 +32,12 @@ namespace TestTitle
 
 	static void OnTick([[maybe_unused]] float DeltaSeconds)
 	{
-		LeviathanInput::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
+
 	}
 
 	static void OnPostTick()
 	{
+
 	}
 
 	static void OnCleanup()
@@ -43,25 +45,22 @@ namespace TestTitle
 		Shutdown();
 	}
 
-	static void OnInput(LeviathanCore::InputKey key, bool isRepeatKey, float data)
-	{
-		if (key.GetKey() == LeviathanCore::InputKey::Keys::A)
-		{
-			std::cout << "A key input. isRepeatKey " << ((isRepeatKey) ? "true" : "false") << " data " << data << '\n';
-		}
-	}
-
-	static void OnGameControllerInput(LeviathanCore::InputKey key, bool isRepeatKey, float data, unsigned int gameControllerId)
+	static void OnInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data)
 	{
 
 	}
 
-	static void OnGameControllerConnected(unsigned int gameControllerId)
+	static void OnGameControllerInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data, [[maybe_unused]] unsigned int gameControllerId)
 	{
 
 	}
 
-	static void OnGameControllerDisconnected(unsigned int gameControllerId)
+	static void OnGameControllerConnected([[maybe_unused]] unsigned int gameControllerId)
+	{
+
+	}
+
+	static void OnGameControllerDisconnected([[maybe_unused]] unsigned int gameControllerId)
 	{
 
 	}
@@ -69,7 +68,10 @@ namespace TestTitle
 	bool Initialize()
 	{
 		// Initialize engine modules for title.
-		LeviathanInput::Initialize();
+		if (!LeviathanInput::Initialize())
+		{
+			return false;
+		}
 
 		// Register callbacks.
 		LeviathanCore::Core::GetPreMainLoopCallback().Register(OnPreMainLoop);

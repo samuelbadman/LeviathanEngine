@@ -17,22 +17,22 @@ namespace LeviathanInput
 			void Initialize();
 
 			// Refreshes flags for identifying connected game controller ids.
-			void RefreshConnectedGameControllerFlags();
+			void RefreshConnectedGamepadFlags();
 
 			// Logs a message to the engine's logging system stating the connection state of each supported game controller.
-			void LogConnectedGameControllers();
+			void LogConnectedGamepads();
 
 			// Refreshes current states for connected game controllers.
-			void RefreshConnectedGameControllerStates();
+			void RefreshConnectedGamepadStates();
 
 			// Copies current states for connected game controllers to previous game controller states.
-			void UpdatePreviousConnectedGameControllerStates();
+			void UpdatePreviousConnectedGamepadStates();
 
 			//// Sends messages for each connected game controller.
 			//void PumpConnectedGameControllerMessages();
 
 			// Sends messages for key for game controller with gameControllerId.
-			void DispatchMessagesForGameControllerKey(const LeviathanCore::InputKey::Keys key, const unsigned int gameControllerId);
+			void DispatchMessagesForGamepadKey(const LeviathanCore::InputKey::Keys key, const unsigned int gameControllerId);
 
 			// Sets motor speeds for the game controller connected at gameControllerId. Returns true if the function succeeds otherwise,
 			// returns false.

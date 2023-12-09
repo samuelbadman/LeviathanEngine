@@ -167,18 +167,33 @@ namespace LeviathanInput
 
 		static void OnPreTick()
 		{
-			XInputGamepad::RefreshConnectedGameControllerStates();
+			XInputGamepad::RefreshConnectedGamepadStates();
 		}
 
 		static void OnPostTick()
 		{
 			UpdatePreviousMouseState(CurrentMouseState, PreviousMouseState);
-			XInputGamepad::UpdatePreviousConnectedGameControllerStates();
+			XInputGamepad::UpdatePreviousConnectedGamepadStates();
 		}
 
 		static void OnGameControllerConnectionEvent()
 		{
-			XInputGamepad::RefreshConnectedGameControllerFlags();
+			XInputGamepad::RefreshConnectedGamepadFlags();
+		}
+
+		static void OnXInputGamepadInput(LeviathanCore::InputKey key, bool isRepeatKey, float data, unsigned int gamepadId)
+		{
+			GetGameControllerInputCallback().Call(key, isRepeatKey, data, gamepadId);
+		}
+
+		static void OnXInputGamepadConnected(unsigned int gamepadId)
+		{
+			GetGameControllerConnectedCallback().Call(gamepadId);
+		}
+
+		static void OnXInputGamepadDisconnected(unsigned int gamepadId)
+		{
+			GetGameControllerDisconnectedCallback().Call(gamepadId);
 		}
 
 		BOOL IsKeyDownAsyncKeyState(const LeviathanCore::InputKey::Keys key)
@@ -228,6 +243,10 @@ namespace LeviathanInput
 
 			LeviathanCore::Platform::GetGameControllerConnectionEventCallback().Register(OnGameControllerConnectionEvent);
 
+			LeviathanInput::PlatformInput::XInputGamepad::GetXInputGamepadInputCallback().Register(OnXInputGamepadInput);
+			LeviathanInput::PlatformInput::XInputGamepad::GetXInputGamepadConnectedCallback().Register(OnXInputGamepadConnected);
+			LeviathanInput::PlatformInput::XInputGamepad::GetXInputGamepadDisconnectedCallback().Register(OnXInputGamepadDisconnected);
+
 			return true;
 		}
 
@@ -272,7 +291,7 @@ namespace LeviathanInput
 
 		void DispatchCallbackForGameControllerKey(const LeviathanCore::InputKey::Keys key, const unsigned int gameControllerId)
 		{
-			XInputGamepad::DispatchMessagesForGameControllerKey(key, gameControllerId);
+			XInputGamepad::DispatchMessagesForGamepadKey(key, gameControllerId);
 		}
 
 		LeviathanCore::Callback<InputCallbackType>& GetInputCallback()
