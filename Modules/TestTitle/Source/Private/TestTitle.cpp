@@ -30,7 +30,12 @@ namespace TestTitle
 
 	}
 
-	static void OnTick([[maybe_unused]] float DeltaSeconds)
+	static void OnFixedTick([[maybe_unused]] float fixedTimestep)
+	{
+
+	}
+
+	static void OnTick([[maybe_unused]] float deltaSeconds)
 	{
 
 	}
@@ -77,6 +82,7 @@ namespace TestTitle
 		LeviathanCore::Core::GetPreMainLoopCallback().Register(OnPreMainLoop);
 		LeviathanCore::Core::GetPostMainLoopCallback().Register(OnPostMainLoop);
 		LeviathanCore::Core::GetPreTickCallback().Register(OnPreTick);
+		LeviathanCore::Core::GetFixedTickCallback().Register(OnFixedTick);
 		LeviathanCore::Core::GetTickCallback().Register(OnTick);
 		LeviathanCore::Core::GetPostTickCallback().Register(OnPostTick);
 		LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);

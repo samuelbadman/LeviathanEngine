@@ -6,10 +6,14 @@ namespace LeviathanCore
 {
 	namespace Core
 	{
+		static constexpr float SliceSeconds = 0.1f; // Seconds elapsed between fixed ticks. FixedTick is called every SliceSeconds seconds.
+		static constexpr float FixedTimestep = 0.1f; // Timestep used in fixed tick call. Can be tweaked for a less or more precise simulation.
+
 		static LeviathanCore::Platform::Window::PlatformWindow* RuntimeWindow = {};
 		static bool EngineRunning = false;
 		static Callback<PreMainLoopCallbackType> PreMainLoopCallback = {};
 		static Callback<PostMainLoopCallbackType> PostMainLoopCallback = {};
+		static Callback<FixedTickCallbackType> FixedTickCallback = {};
 		static Callback<PreTickCallbackType> PreTickCallback = {};
 		static Callback<TickCallbackType> TickCallback = {};
 		static Callback<PostTickCallbackType> PostTickCallback = {};
@@ -66,8 +70,21 @@ namespace LeviathanCore
 			{
 				LeviathanCore::Platform::TickPlatform();
 
+				const float deltaSeconds = LeviathanCore::Platform::GetDeltaTimeInSeconds();
+
+				static float accumulator = 0.0;
+				accumulator += deltaSeconds;
+
 				PreTickCallback.Call();
-				TickCallback.Call(LeviathanCore::Platform::GetDeltaTimeInSeconds());
+
+				while (accumulator > SliceSeconds)
+				{
+					FixedTickCallback.Call(FixedTimestep);
+					accumulator -= SliceSeconds;
+				}
+
+				TickCallback.Call(deltaSeconds);
+
 				PostTickCallback.Call();
 			}
 
@@ -124,6 +141,11 @@ namespace LeviathanCore
 		Callback<PostMainLoopCallbackType>& GetPostMainLoopCallback()
 		{
 			return PostMainLoopCallback;
+		}
+
+		Callback<FixedTickCallbackType>& GetFixedTickCallback()
+		{
+			return FixedTickCallback;
 		}
 
 		Callback<PreTickCallbackType>& GetPreTickCallback()
