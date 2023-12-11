@@ -19,11 +19,6 @@ namespace LeviathanCore
 		static Callback<PostTickCallbackType> PostTickCallback = {};
 		static Callback<CleanupCallbackType> CleanupCallback = {};
 
-		static void OnRuntimeWindowClosed()
-		{
-			Exit();
-		}
-
 		static bool CreateAndInitializeRuntimeWindow()
 		{
 			RuntimeWindow = LeviathanCore::Platform::Window::CreatePlatformWindow();
@@ -52,7 +47,7 @@ namespace LeviathanCore
 
 		static void RegisterToRuntimeWindowCallbacks()
 		{
-			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(OnRuntimeWindowClosed);
+			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(Exit);
 		}
 
 		static bool Cleanup()
