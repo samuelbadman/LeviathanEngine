@@ -2,10 +2,20 @@
 #include "LeviathanInputCore.h"
 #include "TestTitle.h"
 
+static bool InitializeTitleModule()
+{
+	if (!TestTitle::Initialize())
+	{
+		return false;
+	}
+
+	return true;
+}
+
 LEVIATHAN_ENTRY_PROTOTYPE
 {
 	// Initialize title module.
-	if (!TestTitle::Initialize())
+	if (!InitializeTitleModule())
 	{
 		return 1;
 	}
