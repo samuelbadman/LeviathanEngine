@@ -3,7 +3,7 @@
 #include "InputKey.h"
 #include "Callback.h"
 
-namespace LeviathanInput
+namespace LeviathanInputCore
 {
 	namespace PlatformInput
 	{

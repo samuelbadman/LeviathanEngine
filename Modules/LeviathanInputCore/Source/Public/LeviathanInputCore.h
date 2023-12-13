@@ -2,7 +2,7 @@
 
 #include "PlatformInput.h"
 
-namespace LeviathanInput
+namespace LeviathanInputCore
 {
 	bool Initialize();
 	bool Shutdown();

@@ -1,5 +1,5 @@
 #include "LeviathanCore.h"
-#include "LeviathanInput.h"
+#include "LeviathanInputCore.h"
 #include "TestTitle.h"
 
 LEVIATHAN_ENTRY_PROTOTYPE

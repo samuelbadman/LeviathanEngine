@@ -2,7 +2,7 @@
 
 #include "InputKey.h"
 
-namespace LeviathanInput
+namespace LeviathanInputCore
 {
 	namespace PlatformInput
 	{

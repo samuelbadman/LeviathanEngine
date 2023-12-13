@@ -1,7 +1,7 @@
-#include "LeviathanInput.h"
+#include "LeviathanInputCore.h"
 #include "PlatformInput.h"
 
-namespace LeviathanInput
+namespace LeviathanInputCore
 {
 	bool Initialize()
 	{

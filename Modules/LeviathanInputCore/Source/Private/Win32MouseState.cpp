@@ -2,7 +2,7 @@
 #include "Bits.h"
 #include "Win32Input.h"
 
-namespace LeviathanInput
+namespace LeviathanInputCore
 {
 	namespace PlatformInput
 	{

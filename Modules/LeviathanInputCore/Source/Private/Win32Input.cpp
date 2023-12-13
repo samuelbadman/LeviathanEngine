@@ -4,7 +4,7 @@
 #include "Callback.h"
 #include "XInputGamepad.h"
 
-namespace LeviathanInput
+namespace LeviathanInputCore
 {
 	namespace PlatformInput
 	{
@@ -243,9 +243,9 @@ namespace LeviathanInput
 
 			LeviathanCore::Platform::GetGameControllerConnectionEventCallback().Register(OnGameControllerConnectionEvent);
 
-			LeviathanInput::PlatformInput::XInputGamepad::GetXInputGamepadInputCallback().Register(OnXInputGamepadInput);
-			LeviathanInput::PlatformInput::XInputGamepad::GetXInputGamepadConnectedCallback().Register(OnXInputGamepadConnected);
-			LeviathanInput::PlatformInput::XInputGamepad::GetXInputGamepadDisconnectedCallback().Register(OnXInputGamepadDisconnected);
+			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadInputCallback().Register(OnXInputGamepadInput);
+			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadConnectedCallback().Register(OnXInputGamepadConnected);
+			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadDisconnectedCallback().Register(OnXInputGamepadDisconnected);
 
 			return true;
 		}

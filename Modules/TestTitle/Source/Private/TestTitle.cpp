@@ -1,13 +1,13 @@
 #include "TestTitle.h"
 #include "LeviathanCore.h"
-#include "LeviathanInput.h"
+#include "LeviathanInputCore.h"
 
 namespace TestTitle
 {
 	static bool Shutdown()
 	{
 		// Shutdown engine modules used by title.
-		if (!LeviathanInput::Shutdown())
+		if (!LeviathanInputCore::Shutdown())
 		{
 			return false;
 		}
@@ -73,7 +73,7 @@ namespace TestTitle
 	bool Initialize()
 	{
 		// Initialize engine modules for title.
-		if (!LeviathanInput::Initialize())
+		if (!LeviathanInputCore::Initialize())
 		{
 			return false;
 		}
@@ -87,10 +87,10 @@ namespace TestTitle
 		LeviathanCore::Core::GetPostTickCallback().Register(OnPostTick);
 		LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);
 
-		LeviathanInput::PlatformInput::GetInputCallback().Register(OnInput);
-		LeviathanInput::PlatformInput::GetGameControllerInputCallback().Register(OnGameControllerInput);
-		LeviathanInput::PlatformInput::GetGameControllerConnectedCallback().Register(OnGameControllerConnected);
-		LeviathanInput::PlatformInput::GetGameControllerDisconnectedCallback().Register(OnGameControllerDisconnected);
+		LeviathanInputCore::PlatformInput::GetInputCallback().Register(OnInput);
+		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Register(OnGameControllerInput);
+		LeviathanInputCore::PlatformInput::GetGameControllerConnectedCallback().Register(OnGameControllerConnected);
+		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Register(OnGameControllerDisconnected);
 
 		return true;
 	}
