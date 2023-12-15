@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION "3.28.0")
+
+# Set project configuration types.
+set(CMAKE_CONFIGURATION_TYPES Debug;Release;RelWithDebInfo;MinSizeRel;Master)
+
+# Create project.
 project("LeviathanEngine")
 
 # Set output directories.
@@ -10,12 +15,21 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_BINARY_DIRECTORY}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_BINARY_DIRECTORY}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${EXECUTABLE_OUTPUT_BINARY_DIRECTORY}")
 
-# Build settings.
+# Configure build settings.
 set(CPP_STANDARD 23)
 set(ENABLE_STRICT_WARNINGS ON)
 
 # Only one platform build target should be set to ON at a time.
 set(BUILD_PLATFORM_WIN32 ON)
+
+# Declare build definitions.
+set(BUILD_CONFIG_DEBUG_DEFINITION "LEVIATHAN_BUILD_CONFIG_DEBUG")
+set(BUILD_CONFIG_RELEASE_DEFINITION "LEVIATHAN_BUILD_CONFIG_RELEASE")
+set(BUILD_CONFIG_RELWITHDEBINFO_DEFINITION "LEVIATHAN_BUILD_CONFIG_RELWITHDEBINFO")
+set(BUILD_CONFIG_MINSIZEREL_DEFINITION "LEVIATHAN_BUILD_CONFIG_MINSIZEREL")
+set(BUILD_CONFIG_MASTER_DEFINITION "LEVIATHAN_BUILD_CONFIG_MASTER")
+
+set(BUILD_PLATFORM_WIN32_DEFINITION "LEVIATHAN_BUILD_PLATFORM_WIN32")
 
 # Adds the compile definition to project wide pre-processor definitions if the condition variable matches ON.
 function(add_compile_definition_if_enabled condition definition)
@@ -24,10 +38,13 @@ function(add_compile_definition_if_enabled condition definition)
 	endif()
 endfunction()
 
-# Build definitions.
-set(BUILD_PLATFORM_WIN32_DEFINITION "LEVIATHAN_BUILD_PLATFORM_WIN32")
-
 # Add project wide pre-processor definitions.
+add_compile_definitions("$<$<CONFIG:Debug>:${BUILD_CONFIG_DEBUG_DEFINITION}>")
+add_compile_definitions("$<$<CONFIG:Release>:${BUILD_CONFIG_RELEASE_DEFINITION}>")
+add_compile_definitions("$<$<CONFIG:RelWithDebInfo>:${BUILD_CONFIG_RELWITHDEBINFO_DEFINITION};${BUILD_CONFIG_RELEASE_DEFINITION}>")
+add_compile_definitions("$<$<CONFIG:MinSizeRel>:${BUILD_CONFIG_MINSIZEREL_DEFINITION};${BUILD_CONFIG_RELEASE_DEFINITION}>")
+add_compile_definitions("$<$<CONFIG:Master>:${BUILD_CONFIG_MASTER_DEFINITION}>")
+
 add_compile_definition_if_enabled(BUILD_PLATFORM_WIN32 BUILD_PLATFORM_WIN32_DEFINITION)
 
 # Adds a library target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
@@ -267,3 +284,39 @@ add_executable_target(
 
 # Set Visual Studio startup project.
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "${EXE_NAME}")
+
+# Create master configuration and copy release configuration settings to it.
+# Copy configuration code from https://stackoverflow.com/questions/75823363/how-can-i-copy-all-build-type-parameters-from-an-existing-build-configuration-ty
+execute_process(
+  COMMAND ${CMAKE_COMMAND} --help-variable-list
+  OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake_var_full_list.txt"
+)
+file(STRINGS "${CMAKE_CURRENT_BINARY_DIR}/cmake_var_full_list.txt" VAR_FULL_LIST)
+foreach(var ${VAR_FULL_LIST})
+  if("${var}" MATCHES "<CONFIG>")
+    if("${var}" MATCHES "<LANG>")
+      foreach(lang C CXX CSharp CUDA OBJC OBJCXX Fortran HIP ISPC Swift ASM ASM_NASM ASM_MARMASM ASM_MASM ASM-ATT)
+        # (supported languages list from https://cmake.org/cmake/help/latest/command/project.html)
+        string(REPLACE "<LANG>" "${lang}" lang_var "${var}")
+        list(APPEND CONFIG_VAR_LIST "${lang_var}")
+      endforeach()
+    else()
+      list(APPEND CONFIG_VAR_LIST "${var}")
+    endif()
+  endif()
+endforeach()
+unset(VAR_FULL_LIST)
+
+function(copy_configuration_type config_from config_to)
+  string(TOUPPER "${config_from}" config_from)
+  string(TOUPPER "${config_to}" config_to)
+  foreach(config_var ${CONFIG_VAR_LIST})
+	if(NOT "${config_var_to}" MATCHES "OUTPUT_DIRECTORY")
+		string(REPLACE "<CONFIG>" "${config_from}" config_var_from "${config_var}")
+		string(REPLACE "<CONFIG>" "${config_to}"   config_var_to   "${config_var}")
+		set("${config_var_to}" "${${config_var_from}}" PARENT_SCOPE)
+	endif()
+  endforeach()
+endfunction()
+
+copy_configuration_type(RELEASE MASTER)

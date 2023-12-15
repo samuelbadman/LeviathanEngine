@@ -25,11 +25,11 @@ namespace LeviathanInputCore
 		static LRESULT CALLBACK mouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 		{
 			// Debug builds do not use low level mouse hook structures due to mouse unresponsiveness when debugging. See LeviathanInput::PlatformInput::Initialize.
-//#ifdef _DEBUG
+//#ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
 			MOUSEHOOKSTRUCTEX* pMouseStruct = reinterpret_cast<MOUSEHOOKSTRUCTEX*>(lParam);
-//#elif defined NDEBUG
+//#else
 //			MSLLHOOKSTRUCT* pMouseStruct = reinterpret_cast<MSLLHOOKSTRUCT*>(lParam);
-//#endif // _DEBUG
+//#endif // LEVIATHAN_BUILD_CONFIG_DEBUG
 
 			if (pMouseStruct != nullptr)
 			{
@@ -224,13 +224,13 @@ namespace LeviathanInputCore
 			int32_t mouseHook = 0;
 			DWORD threadId = 0;
 
-//#ifdef _DEBUG
+//#ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
 			mouseHook = WH_MOUSE;
 			threadId = GetCurrentThreadId();
-//#elif defined NDEBUG
+//#else
 //			mouseHook = WH_MOUSE_LL;
 //			threadId = 0;
-//#endif // _DEBUG
+//#endif // LEVIATHAN_BUILD_CONFIG_DEBUG
 
 			MouseHook = SetWindowsHookEx(mouseHook, mouseProc, GetModuleHandle(nullptr), threadId);
 			if (MouseHook == nullptr)

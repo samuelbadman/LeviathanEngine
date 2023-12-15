@@ -6,8 +6,10 @@ namespace LeviathanCore
 {
 	namespace Core
 	{
-		static constexpr float SliceSeconds = 0.1f; // Seconds elapsed between fixed ticks. FixedTick is called every SliceSeconds seconds.
-		static constexpr float FixedTimestep = 0.1f; // Timestep used in fixed tick call. Can be tweaked for a less or more precise simulation.
+		// Seconds elapsed between fixed ticks. FixedTick is called every SliceSeconds seconds.
+		static constexpr float SliceSeconds = 0.1f; 
+		// Timestep used in fixed tick call. Can be tweaked for a less or more precise simulation.
+		static constexpr float FixedTimestep = 0.1f; 
 
 		static LeviathanCore::Platform::Window::PlatformWindow* RuntimeWindow = {};
 		static bool EngineRunning = false;
@@ -29,6 +31,7 @@ namespace LeviathanCore
 			runtimeWindowDesc.Title = "Leviathan Engine";
 			runtimeWindowDesc.UniqueName = "LeviathanEngineRuntimeWindow";
 			runtimeWindowDesc.Mode = LeviathanCore::Platform::Window::PlatformWindowMode::Windowed_NoResize;
+
 			return LeviathanCore::Platform::Window::InitializePlatformWindow(RuntimeWindow, runtimeWindowDesc);
 		}
 
@@ -88,7 +91,9 @@ namespace LeviathanCore
 
 		int RunEngine()
 		{
+#ifndef LEVIATHAN_BUILD_CONFIG_MASTER
 			LeviathanCore::Platform::CreateDebugConsole();
+#endif // !LEVIATHAN_BUILD_CONFIG_MASTER
 
 			// Initialize platform layer.
 			if (!LeviathanCore::Platform::Initialize())
@@ -119,6 +124,10 @@ namespace LeviathanCore
 			{
 				return false;
 			}
+
+#ifndef LEVIATHAN_BUILD_CONFIG_MASTER
+			LeviathanCore::Platform::DestroyDebugConsole();
+#endif // !LEVIATHAN_BUILD_CONFIG_MASTER
 
 			return 0;
 		}
