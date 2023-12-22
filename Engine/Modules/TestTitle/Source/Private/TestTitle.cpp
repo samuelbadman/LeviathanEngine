@@ -50,6 +50,11 @@ namespace TestTitle
 		Shutdown();
 	}
 
+	static void OnRuntimeWindowResized(int newWidth, int newHeight)
+	{
+
+	}
+
 	static void OnInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data)
 	{
 
@@ -86,6 +91,7 @@ namespace TestTitle
 		LeviathanCore::Core::GetTickCallback().Register(OnTick);
 		LeviathanCore::Core::GetPostTickCallback().Register(OnPostTick);
 		LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);
+		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(OnRuntimeWindowResized);
 
 		LeviathanInputCore::PlatformInput::GetInputCallback().Register(OnInput);
 		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Register(OnGameControllerInput);

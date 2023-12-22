@@ -20,6 +20,7 @@ namespace LeviathanCore
 		static Callback<TickCallbackType> TickCallback = {};
 		static Callback<PostTickCallbackType> PostTickCallback = {};
 		static Callback<CleanupCallbackType> CleanupCallback = {};
+		static Callback<RuntimeWindowResizedCallbackType> RuntimeWindowResizedCallback = {};
 
 		static bool CreateAndInitializeRuntimeWindow()
 		{
@@ -51,6 +52,10 @@ namespace LeviathanCore
 		static void RegisterToRuntimeWindowCallbacks()
 		{
 			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(Exit);
+			LeviathanCore::Platform::Window::GetPlatformWindowResizedCallback(RuntimeWindow).Register([](int newWidth, int newHeight)
+				{
+					RuntimeWindowResizedCallback.Call(newWidth, newHeight); 
+				});
 		}
 
 		static bool Cleanup()
@@ -170,6 +175,11 @@ namespace LeviathanCore
 		Callback<CleanupCallbackType>& GetCleanupCallback()
 		{
 			return CleanupCallback;
+		}
+
+		Callback<RuntimeWindowResizedCallbackType>& GetRuntimeWindowResizedCallback()
+		{
+			return RuntimeWindowResizedCallback;
 		}
 	}
 }

@@ -42,6 +42,9 @@ namespace LeviathanCore
 				// The unique class name used to register the window class with the Windows platform. Used to unregister the window.
 				std::string ClassName = {};
 
+				int ClientAreaWidth = 0;
+				int ClientAreaHeight = 0;
+
 			public:
 				bool Initialize(std::string_view uniqueName, std::string_view windowTitle, DWORD style, int positionX,
 					int positionY, int width, int height, HWND hWndParent, bool messageWindow);

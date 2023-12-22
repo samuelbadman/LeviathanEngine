@@ -225,6 +225,8 @@ namespace LeviathanCore
 					ShowWindow(Handle, SW_SHOW);
 				}
 
+				GetClientAreaDimensions(ClientAreaWidth, ClientAreaHeight);
+
 				return true;
 			}
 
@@ -525,6 +527,14 @@ namespace LeviathanCore
 
 			void PlatformWindow::WndProcResized(int resizedWidth, int resizedHeight)
 			{
+				if ((resizedWidth == ClientAreaWidth) && (resizedHeight == ClientAreaHeight))
+				{
+					return;
+				}
+
+				ClientAreaWidth = resizedWidth;
+				ClientAreaHeight = resizedHeight;
+
 				ResizedCallback.Call(resizedWidth, resizedHeight);
 			}
 

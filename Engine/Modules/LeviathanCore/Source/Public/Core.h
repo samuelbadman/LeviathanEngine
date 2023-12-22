@@ -13,9 +13,11 @@ namespace LeviathanCore
 		using TickCallbackType = void(*)(float /* deltaSeconds */);
 		using PostTickCallbackType = void(*)();
 		using CleanupCallbackType = void(*)();
+		using RuntimeWindowResizedCallbackType = void(*)(int /* newWidth */, int /* newHeight */);
 
 		int RunEngine();
 		void Exit();
+
 		Callback<PreMainLoopCallbackType>& GetPreMainLoopCallback();
 		Callback<PostMainLoopCallbackType>& GetPostMainLoopCallback();
 		Callback<FixedTickCallbackType>& GetFixedTickCallback();
@@ -23,5 +25,6 @@ namespace LeviathanCore
 		Callback<TickCallbackType>& GetTickCallback();
 		Callback<PostTickCallbackType>& GetPostTickCallback();
 		Callback<CleanupCallbackType>& GetCleanupCallback();
+		Callback<RuntimeWindowResizedCallbackType>& GetRuntimeWindowResizedCallback();
 	}
 }
