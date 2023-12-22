@@ -19,8 +19,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${EXECUTABLE_OUTPUT_BINARY_DIRECTORY}")
 set(CPP_STANDARD 23)
 set(ENABLE_STRICT_WARNINGS ON)
 
-# Only one platform build target should be set to ON at a time.
+# Only one platform build target can be set to ON at a time.
 set(BUILD_PLATFORM_WIN32 ON)
+
+# Only one renderer api can be set to ON at a time and must be supported by the build platform.
+# TODO: Create documentation stating what renderer apis are supported by what platform. For now, only including direct3d12 and vulkan and these are both supported by win32.
+set(BUILD_RENDERER_API_DIRECT3D12 ON)
+set(BUILD_RENDERER_API_VULKAN OFF)
 
 # Declare build definitions.
 set(BUILD_CONFIG_DEBUG_DEFINITION "LEVIATHAN_BUILD_CONFIG_DEBUG")
@@ -30,6 +35,9 @@ set(BUILD_CONFIG_MINSIZEREL_DEFINITION "LEVIATHAN_BUILD_CONFIG_MINSIZEREL")
 set(BUILD_CONFIG_MASTER_DEFINITION "LEVIATHAN_BUILD_CONFIG_MASTER")
 
 set(BUILD_PLATFORM_WIN32_DEFINITION "LEVIATHAN_BUILD_PLATFORM_WIN32")
+
+set(BUILD_RENDERER_API_DIRECT3D12_DEFINITION "LEVIATHAN_BUILD_RENDERER_API_DIRECT3D12")
+set(BUILD_RENDERER_API_VULKAN_DEFINITION "LEVIATHAN_BUILD_RENDERER_API_VULKAN")
 
 # Adds the compile definition to project wide pre-processor definitions if the condition variable matches ON.
 function(add_compile_definition_if_enabled condition definition)
@@ -46,6 +54,8 @@ add_compile_definitions("$<$<CONFIG:MinSizeRel>:${BUILD_CONFIG_MINSIZEREL_DEFINI
 add_compile_definitions("$<$<CONFIG:Master>:${BUILD_CONFIG_MASTER_DEFINITION}>")
 
 add_compile_definition_if_enabled(BUILD_PLATFORM_WIN32 BUILD_PLATFORM_WIN32_DEFINITION)
+add_compile_definition_if_enabled(BUILD_RENDERER_API_DIRECT3D12 BUILD_RENDERER_API_DIRECT3D12_DEFINITION)
+add_compile_definition_if_enabled(BUILD_RENDERER_API_VULKAN BUILD_RENDERER_API_VULKAN_DEFINITION)
 
 # Adds a library target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
 # Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES CPP_STANDARD ENABLE_STRICT_WARNING_LEVEL.
