@@ -1,6 +1,7 @@
 #include "TestTitle.h"
 #include "LeviathanCore.h"
 #include "LeviathanInputCore.h"
+#include "LeviathanRenderer.h"
 
 namespace TestTitle
 {
@@ -8,6 +9,11 @@ namespace TestTitle
 	{
 		// Shutdown engine modules used by title.
 		if (!LeviathanInputCore::Shutdown())
+		{
+			return false;
+		}
+
+		if (!LeviathanRenderer::Shutdown())
 		{
 			return false;
 		}
@@ -50,7 +56,7 @@ namespace TestTitle
 		Shutdown();
 	}
 
-	static void OnRuntimeWindowResized(int newWidth, int newHeight)
+	static void OnRuntimeWindowResized([[maybe_unused]] int newWidth, [[maybe_unused]] int newHeight)
 	{
 
 	}
@@ -79,6 +85,11 @@ namespace TestTitle
 	{
 		// Initialize engine modules for title.
 		if (!LeviathanInputCore::Initialize())
+		{
+			return false;
+		}
+
+		if (!LeviathanRenderer::Initialize())
 		{
 			return false;
 		}
