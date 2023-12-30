@@ -95,13 +95,13 @@ namespace TestTitle
 		}
 
 		// Register callbacks.
+		LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);
 		LeviathanCore::Core::GetPreMainLoopCallback().Register(OnPreMainLoop);
 		LeviathanCore::Core::GetPostMainLoopCallback().Register(OnPostMainLoop);
 		LeviathanCore::Core::GetPreTickCallback().Register(OnPreTick);
 		LeviathanCore::Core::GetFixedTickCallback().Register(OnFixedTick);
 		LeviathanCore::Core::GetTickCallback().Register(OnTick);
 		LeviathanCore::Core::GetPostTickCallback().Register(OnPostTick);
-		LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);
 		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(OnRuntimeWindowResized);
 
 		LeviathanInputCore::PlatformInput::GetInputCallback().Register(OnInput);
