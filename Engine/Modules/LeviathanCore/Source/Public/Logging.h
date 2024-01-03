@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Text.h"
+#include "LeviathanString.h"
 
 namespace LeviathanCore
 {
@@ -13,7 +13,7 @@ namespace LeviathanCore
 
 // Logging macros enabling stripping of log functionality for master build configuration.
 #ifndef LEVIATHAN_BUILD_CONFIG_MASTER
-#define LEVIATHAN_LOG(format, ...) LeviathanCore::Logging::PrintToStandardOutput(LEVIATHAN_TEXT(format, __VA_ARGS__))
+#define LEVIATHAN_LOG(format, ...) LeviathanCore::Logging::PrintToStandardOutput(LEVIATHAN_STRING(format, __VA_ARGS__))
 #else
 #define LEVIATHAN_LOG(format, ...)
 #endif // !LEVIATHAN_BUILD_CONFIG_MASTER

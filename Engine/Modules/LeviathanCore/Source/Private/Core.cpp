@@ -94,12 +94,19 @@ namespace LeviathanCore
 			PostMainLoopCallback.Call();
 		}
 
-		int RunEngine()
+		void PreModuleInitialization()
 		{
 #ifndef LEVIATHAN_BUILD_CONFIG_MASTER
 			LeviathanCore::Platform::CreateDebugConsole();
 #endif // !LEVIATHAN_BUILD_CONFIG_MASTER
+		}
 
+		void PostModuleInitialization()
+		{
+		}
+
+		int RunEngine()
+		{
 			// Initialize platform layer.
 			if (!LeviathanCore::Platform::Initialize())
 			{

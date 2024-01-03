@@ -18,5 +18,14 @@ bool LeviathanRenderer::Initialize()
 
 bool LeviathanRenderer::Shutdown()
 {
+	// Destroy render context for runtime window.
+
+
+	// Shutdown render device.
+	if (!RenderDevice::Shutdown())
+	{
+		return false;
+	}
+
 	return true;
 }

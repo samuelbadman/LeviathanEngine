@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <string>
 #include <type_traits>
+#include <cassert>
 
 #ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
 // Win32.

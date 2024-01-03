@@ -15,6 +15,8 @@ namespace LeviathanCore
 		using CleanupCallbackType = void(*)();
 		using RuntimeWindowResizedCallbackType = void(*)(int /* newWidth */, int /* newHeight */);
 
+		void PreModuleInitialization();
+		void PostModuleInitialization();
 		int RunEngine();
 		void Exit();
 

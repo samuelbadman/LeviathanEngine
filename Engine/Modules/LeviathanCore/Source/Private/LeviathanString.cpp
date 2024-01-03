@@ -1,8 +1,8 @@
-#include "Text.h"
+#include "LeviathanString.h"
 
 namespace LeviathanCore
 {
-	namespace Text
+	namespace String
 	{
 		std::string Printf(const char* format, ...)
 		{
