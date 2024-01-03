@@ -1,6 +1,5 @@
 #include "RenderDevice.h"
 #include "VulkanHelpers.h"
-#include "Logging.h"
 
 namespace LeviathanRenderer
 {
