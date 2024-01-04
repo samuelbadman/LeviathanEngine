@@ -4,6 +4,20 @@
 
 namespace LeviathanRenderer
 {
+#ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
+	typedef VkBool32(VKAPI_PTR* PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR)(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex);
+	typedef VkFlags VkWin32SurfaceCreateFlagsKHR;
+	typedef struct VkWin32SurfaceCreateInfoKHR
+	{
+		VkStructureType                 sType;
+		const void*						pNext;
+		VkWin32SurfaceCreateFlagsKHR    flags;
+		HINSTANCE                       hinstance;
+		HWND                            hwnd;
+	} VkWin32SurfaceCreateInfoKHR;
+	typedef VkResult(VKAPI_PTR* PFN_vkCreateWin32SurfaceKHR)(VkInstance instance, const VkWin32SurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface);
+#endif // LEVIATHAN_BUILD_PLATFORM_WIN32
+
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
 	static std::string MessageSeverityToString(const VkDebugUtilsMessageSeverityFlagBitsEXT severity)
 	{
@@ -81,6 +95,30 @@ namespace LeviathanRenderer
 	}
 #endif // LEVIATHAN_BUILD_CONFIG_DEBUG
 
+	static bool IsPhysicalDeviceSuitable([[maybe_unused]] const VkPhysicalDeviceProperties& properties,
+		[[maybe_unused]] const VkPhysicalDeviceMemoryProperties& memoryProperties, 
+		[[maybe_unused]] const VkPhysicalDeviceFeatures& features)
+	{
+		// Check the physical device has at least one memory heap.
+		if (memoryProperties.memoryHeapCount == 0)
+		{
+			return false;
+		}
+
+		// Check the physical device is a dedicated device.
+		if (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool VulkanPhysicalDeviceQueueFamilyIndices::Complete() const
+	{
+		return (Graphics.has_value()) && (Present.has_value()) && (Compute.has_value()) && (Transfer.has_value()) && (SparseBinding.has_value());
+	}
+
 	VkAllocationCallbacks* CreateVulkanAllocator()
 	{
 		return nullptr;
@@ -142,5 +180,142 @@ namespace LeviathanRenderer
 	void DestroyVulkanInstance(VkInstance instance, VkAllocationCallbacks* allocator)
 	{
 		vkDestroyInstance(instance, allocator);
+	}
+
+	bool SelectPhysicalDevice(VkInstance instance,
+		VkPhysicalDeviceProperties& outPhysicalDeviceProperties, 
+		VkPhysicalDeviceMemoryProperties& outPhysicalDeviceMemoryProperties, 
+		VkPhysicalDeviceFeatures& outPhysicalDeviceFeatures,
+		VkPhysicalDevice& outPhysicalDevice)
+	{
+		outPhysicalDeviceProperties = {};
+		outPhysicalDeviceMemoryProperties = {};
+		outPhysicalDeviceFeatures = {};
+
+		unsigned int count = 0;
+		if (vkEnumeratePhysicalDevices(instance, &count, nullptr) != VK_SUCCESS)
+		{
+			return false;
+		}
+
+		if (count == 0)
+		{
+			// No physical devices were found.
+			return false;
+		}
+
+		std::vector<VkPhysicalDevice> physicalDevices(static_cast<size_t>(count), VK_NULL_HANDLE);
+		if (vkEnumeratePhysicalDevices(instance, &count, physicalDevices.data()) != VK_SUCCESS)
+		{
+			return false;
+		}
+
+		for (size_t i = 0; i < static_cast<size_t>(count); ++i)
+		{
+			VkPhysicalDeviceProperties properties = {};
+			vkGetPhysicalDeviceProperties(physicalDevices[i], &properties);
+
+			VkPhysicalDeviceMemoryProperties memoryProperties = {};
+			vkGetPhysicalDeviceMemoryProperties(physicalDevices[i], &memoryProperties);
+
+			VkPhysicalDeviceFeatures features = {};
+			vkGetPhysicalDeviceFeatures(physicalDevices[i], &features);
+
+			if (!IsPhysicalDeviceSuitable(properties, memoryProperties, features))
+			{
+				continue;
+			}
+
+			// Select the first suitable physical device.
+			outPhysicalDevice = physicalDevices[i];
+			outPhysicalDeviceProperties = properties;
+			outPhysicalDeviceMemoryProperties = memoryProperties;
+			outPhysicalDeviceFeatures = features;
+
+			return true;
+		}
+
+		return false;
+	}
+
+	bool GetPhysicalDeviceVideoMemorySizeGb(const VkPhysicalDeviceMemoryProperties& memoryProperties, unsigned long long& outVideoMemorySizeGb)
+	{
+		for (size_t i = 0; i < static_cast<size_t>(memoryProperties.memoryHeapCount); ++i)
+		{
+			// If the device local bit is set in the memory heap's flags the heap corresponds to device-local memory.
+			if (memoryProperties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+			{
+				outVideoMemorySizeGb = static_cast<unsigned long long>(static_cast<double>(memoryProperties.memoryHeaps[i].size) * 1e-9);
+				return true;
+			}
+		}
+
+		outVideoMemorySizeGb = 0;
+		return false;
+	}
+
+	bool GetPhysicalDeviceQueueFamilyIndices(VkInstance const instance, VkPhysicalDevice const physicalDevice, VulkanPhysicalDeviceQueueFamilyIndices& outQueueFamilyIndices)
+	{
+		outQueueFamilyIndices = {};
+
+#ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
+		auto pfnGetPhysicalDeviceWin32PresentationSupportKHR =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR>(vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));
+
+		if (pfnGetPhysicalDeviceWin32PresentationSupportKHR == nullptr)
+		{
+			return false;
+		}
+#endif // LEVIATHAN_BUILD_PLATFORM_WIN32
+
+		// When vkGetPhysicalDeviceQueueFamilyProperties is called with a null pQueueFamilyProperties parameter, it sets the value of count to the number of queue families supported
+		// by the physical device. Calling vkGetPhysicalDeviceQueueFamilyProperties with a valid pQueueFamilyProperties parameter makes the function read the value of count. This
+		// call just gets the count of supported families by the physical device.
+		unsigned int count = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count, nullptr);
+
+		// This call actually retrieves the queue family properties.
+		std::vector<VkQueueFamilyProperties> properties(static_cast<size_t>(count));
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count, properties.data());
+
+		for (unsigned int i = 0; i < count; ++i)
+		{
+			// Early exit if all queue family indices have been assigned.
+			if (outQueueFamilyIndices.Complete())
+			{
+				return true;
+			}
+
+			// Assign i as family index for queue family type.
+			if ((!outQueueFamilyIndices.Graphics.has_value()) && (properties[static_cast<size_t>(i)].queueFlags & VK_QUEUE_GRAPHICS_BIT))
+			{
+				outQueueFamilyIndices.Graphics = i;
+			}
+			else if ((!outQueueFamilyIndices.Compute.has_value()) && (properties[static_cast<size_t>(i)].queueFlags & VK_QUEUE_COMPUTE_BIT))
+			{
+				outQueueFamilyIndices.Compute = i;
+			}
+			else if ((!outQueueFamilyIndices.Transfer.has_value()) && (properties[static_cast<size_t>(i)].queueFlags & VK_QUEUE_TRANSFER_BIT))
+			{
+				outQueueFamilyIndices.Transfer = i;
+			}
+			else if ((!outQueueFamilyIndices.SparseBinding.has_value()) && (properties[static_cast<size_t>(i)].queueFlags & VK_QUEUE_SPARSE_BINDING_BIT))
+			{
+				outQueueFamilyIndices.SparseBinding = i;
+			}
+
+			// Assign i as the present queue if queue family at index i supports presentation and has not yet been assigned.
+			if (!outQueueFamilyIndices.Present.has_value())
+			{
+#ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
+				if (pfnGetPhysicalDeviceWin32PresentationSupportKHR(physicalDevice, i) == VK_TRUE)
+				{
+					outQueueFamilyIndices.Present = i;
+				}
+#endif // LEVIATHAN_BUILD_PLATFORM_WIN32
+			}
+		}
+
+		return outQueueFamilyIndices.Complete();
 	}
 }
