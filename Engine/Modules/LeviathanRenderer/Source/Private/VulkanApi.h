@@ -5,13 +5,20 @@ namespace LeviathanRenderer
 	struct VulkanPhysicalDeviceQueueFamilyIndices
 	{
 		std::optional<unsigned int> Graphics = {};
-		std::optional<unsigned int> Present = {};
 		std::optional<unsigned int> Compute = {};
 		std::optional<unsigned int> Transfer = {};
 		std::optional<unsigned int> SparseBinding = {};
 
 		// Returns true if all queue family indices have been assigned otherwise, will return false.
 		bool Complete() const;
+	};
+
+	struct VulkanDeviceQueueCountAndPriorities
+	{
+		unsigned int QueueCount = 0;
+
+		// Each priority is assigned to each queue in the count. For example, queue 0 will be assigned QueuePriorities[0], queue 1 will be assigned QueuePriorities[1] etc...
+		std::vector<float> QueuePriorities = {};
 	};
 
 	VkAllocationCallbacks* CreateVulkanAllocator();
@@ -22,16 +29,31 @@ namespace LeviathanRenderer
 		const VkAllocationCallbacks* allocator, 
 		VkInstance& outInstance);
 
-	void DestroyVulkanInstance(VkInstance instance, VkAllocationCallbacks* allocator);
+	void DestroyVulkanInstance(VkInstance instance, const VkAllocationCallbacks* allocator);
 
-	bool SelectPhysicalDevice(VkInstance instance, 
+	bool SelectVulkanPhysicalDevice(VkInstance instance, 
 		VkPhysicalDeviceProperties& outPhysicalDeviceProperties,
 		VkPhysicalDeviceMemoryProperties& outPhysicalDeviceMemoryProperties,
 		VkPhysicalDeviceFeatures& outPhysicalDeviceFeatures,
 		VkPhysicalDevice& outPhysicalDevice);
 
 	// Returns the size of the physical device's video memory (vram) in gigabytes.
-	bool GetPhysicalDeviceVideoMemorySizeGb(const VkPhysicalDeviceMemoryProperties& memoryProperties, unsigned long long& outVideoMemorySizeGb);
+	bool GetVulkanPhysicalDeviceVideoMemorySizeGb(const VkPhysicalDeviceMemoryProperties& memoryProperties, unsigned long long& outVideoMemorySizeGb);
 
-	bool GetPhysicalDeviceQueueFamilyIndices(VkInstance const instance, VkPhysicalDevice const physicalDevice, VulkanPhysicalDeviceQueueFamilyIndices& outQueueFamilyIndices);
+	bool GetVulkanPhysicalDeviceQueueFamilyIndices(VkPhysicalDevice const physicalDevice, VulkanPhysicalDeviceQueueFamilyIndices& outQueueFamilyIndices);
+
+	bool IsPresentationSupportedOnQueue(VkInstance instance, VkPhysicalDevice physicalDevice, const unsigned int queueFamilyIndex);
+
+	bool CreateVulkanLogicalDevice(VkPhysicalDevice const physicalDevice,
+		const VulkanPhysicalDeviceQueueFamilyIndices& queueFamilyIndices,
+		const VulkanDeviceQueueCountAndPriorities& graphicsQueueCountAndPriorities,
+		const VulkanDeviceQueueCountAndPriorities& computeQueueCountAndPriorities,
+		const VulkanDeviceQueueCountAndPriorities& transferQueueCountAndPriorities,
+		const VulkanDeviceQueueCountAndPriorities& sparseBindingQueueCountAndPriorities,
+		const VkAllocationCallbacks* const allocator,
+		VkDevice& outDevice);
+
+	void GetVulkanDeviceQueue(VkDevice device, const unsigned int queueFamilyIndex, const unsigned int queueIndex, VkQueue& outQueue);
+
+	void DestroyVulkanLogicalDevice(VkDevice device, const VkAllocationCallbacks* allocator);
 }

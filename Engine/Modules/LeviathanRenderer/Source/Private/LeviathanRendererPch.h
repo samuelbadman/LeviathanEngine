@@ -5,6 +5,7 @@
 #include <vector>
 #include <cassert>
 #include <optional>
+#include <array>
 
 #ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
 // Windows.

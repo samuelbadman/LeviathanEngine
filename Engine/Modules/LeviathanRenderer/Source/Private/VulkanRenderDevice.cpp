@@ -13,41 +13,72 @@ namespace LeviathanRenderer
 		static VkPhysicalDeviceFeatures VulkanPhysicalDeviceFeatures = {};
 		static VkPhysicalDevice VulkanPhysicalDevice = {};
 		static VulkanPhysicalDeviceQueueFamilyIndices PhysicalDeviceQueueFamilyIndices = {};
+		static VkDevice VulkanDevice = {};
+		static VkQueue VulkanGraphicsQueue = {};
 
 		bool Initialize()
 		{
+			// Create allocator.
 			VulkanAllocator = CreateVulkanAllocator();
 
+			// Create instance.
 			if (!CreateVulkanInstance(VK_API_VERSION_1_3, "LeviathanApplication", "LeviathanEngine", VulkanAllocator, VulkanInstance))
 			{
 				return false;
 			}
 
-			if (!SelectPhysicalDevice(VulkanInstance, VulkanPhysicalDeviceProperties, VulkanPhysicalDeviceMemoryProperties, VulkanPhysicalDeviceFeatures, VulkanPhysicalDevice))
+			// Select physical device.
+			if (!SelectVulkanPhysicalDevice(VulkanInstance, VulkanPhysicalDeviceProperties, VulkanPhysicalDeviceMemoryProperties, VulkanPhysicalDeviceFeatures, VulkanPhysicalDevice))
 			{
 				return false;
 			}
 
 			unsigned long long availableVideoMemoryGb = 0;
-			if (!GetPhysicalDeviceVideoMemorySizeGb(VulkanPhysicalDeviceMemoryProperties, availableVideoMemoryGb))
+			if (!GetVulkanPhysicalDeviceVideoMemorySizeGb(VulkanPhysicalDeviceMemoryProperties, availableVideoMemoryGb))
 			{
 				return false;
 			}
 
 			LEVIATHAN_LOG("Vulkan render device: Selected physical device: Name %s, Dedicated video memory %zu GB", VulkanPhysicalDeviceProperties.deviceName, availableVideoMemoryGb);
 
-			if (!GetPhysicalDeviceQueueFamilyIndices(VulkanInstance, VulkanPhysicalDevice, PhysicalDeviceQueueFamilyIndices))
+			if (!GetVulkanPhysicalDeviceQueueFamilyIndices(VulkanPhysicalDevice, PhysicalDeviceQueueFamilyIndices))
 			{
 				return false;
 			}
 
+			if (!IsPresentationSupportedOnQueue(VulkanInstance, VulkanPhysicalDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value()))
+			{
+				return false;
+			}
 
+			// Create logical device.
+			VulkanDeviceQueueCountAndPriorities graphicsQueueCountAndPriorities = {};
+			graphicsQueueCountAndPriorities.QueueCount = 1;
+			graphicsQueueCountAndPriorities.QueuePriorities.emplace_back(1.0f);
+
+			VulkanDeviceQueueCountAndPriorities EmptyQueueCountAndPriorities = {};
+
+			if (!CreateVulkanLogicalDevice(VulkanPhysicalDevice,
+				PhysicalDeviceQueueFamilyIndices,
+				graphicsQueueCountAndPriorities,
+				EmptyQueueCountAndPriorities,
+				EmptyQueueCountAndPriorities,
+				EmptyQueueCountAndPriorities,
+				VulkanAllocator,
+				VulkanDevice))
+			{
+				return false;
+			}
+
+			// Get device queues.
+			GetVulkanDeviceQueue(VulkanDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value(), 0, VulkanGraphicsQueue);
 
 			return true;
 		}
 
 		bool Shutdown()
 		{
+			DestroyVulkanLogicalDevice(VulkanDevice, VulkanAllocator);
 			DestroyVulkanInstance(VulkanInstance, VulkanAllocator);
 
 			return true;

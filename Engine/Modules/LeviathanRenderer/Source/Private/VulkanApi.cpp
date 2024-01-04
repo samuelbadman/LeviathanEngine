@@ -116,7 +116,10 @@ namespace LeviathanRenderer
 
 	bool VulkanPhysicalDeviceQueueFamilyIndices::Complete() const
 	{
-		return (Graphics.has_value()) && (Present.has_value()) && (Compute.has_value()) && (Transfer.has_value()) && (SparseBinding.has_value());
+		return (Graphics.has_value()) &&
+			(Compute.has_value()) &&
+			(Transfer.has_value()) &&
+			(SparseBinding.has_value());
 	}
 
 	VkAllocationCallbacks* CreateVulkanAllocator()
@@ -163,9 +166,9 @@ namespace LeviathanRenderer
 			VK_KHR_SURFACE_EXTENSION_NAME
 		};
 
-		createInfo.enabledLayerCount = static_cast<uint32_t>(enabledLayerNames.size());
+		createInfo.enabledLayerCount = static_cast<unsigned int>(enabledLayerNames.size());
 		createInfo.ppEnabledLayerNames = enabledLayerNames.data();
-		createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensionNames.size());
+		createInfo.enabledExtensionCount = static_cast<unsigned int>(enabledExtensionNames.size());
 		createInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
 
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
@@ -177,12 +180,12 @@ namespace LeviathanRenderer
 		return (vkCreateInstance(&createInfo, allocator, &outInstance) == VK_SUCCESS);
 	}
 
-	void DestroyVulkanInstance(VkInstance instance, VkAllocationCallbacks* allocator)
+	void DestroyVulkanInstance(VkInstance instance, const VkAllocationCallbacks* allocator)
 	{
 		vkDestroyInstance(instance, allocator);
 	}
 
-	bool SelectPhysicalDevice(VkInstance instance,
+	bool SelectVulkanPhysicalDevice(VkInstance instance,
 		VkPhysicalDeviceProperties& outPhysicalDeviceProperties, 
 		VkPhysicalDeviceMemoryProperties& outPhysicalDeviceMemoryProperties, 
 		VkPhysicalDeviceFeatures& outPhysicalDeviceFeatures,
@@ -238,7 +241,7 @@ namespace LeviathanRenderer
 		return false;
 	}
 
-	bool GetPhysicalDeviceVideoMemorySizeGb(const VkPhysicalDeviceMemoryProperties& memoryProperties, unsigned long long& outVideoMemorySizeGb)
+	bool GetVulkanPhysicalDeviceVideoMemorySizeGb(const VkPhysicalDeviceMemoryProperties& memoryProperties, unsigned long long& outVideoMemorySizeGb)
 	{
 		for (size_t i = 0; i < static_cast<size_t>(memoryProperties.memoryHeapCount); ++i)
 		{
@@ -254,19 +257,9 @@ namespace LeviathanRenderer
 		return false;
 	}
 
-	bool GetPhysicalDeviceQueueFamilyIndices(VkInstance const instance, VkPhysicalDevice const physicalDevice, VulkanPhysicalDeviceQueueFamilyIndices& outQueueFamilyIndices)
+	bool GetVulkanPhysicalDeviceQueueFamilyIndices(VkPhysicalDevice const physicalDevice, VulkanPhysicalDeviceQueueFamilyIndices& outQueueFamilyIndices)
 	{
 		outQueueFamilyIndices = {};
-
-#ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
-		auto pfnGetPhysicalDeviceWin32PresentationSupportKHR =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR>(vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));
-
-		if (pfnGetPhysicalDeviceWin32PresentationSupportKHR == nullptr)
-		{
-			return false;
-		}
-#endif // LEVIATHAN_BUILD_PLATFORM_WIN32
 
 		// When vkGetPhysicalDeviceQueueFamilyProperties is called with a null pQueueFamilyProperties parameter, it sets the value of count to the number of queue families supported
 		// by the physical device. Calling vkGetPhysicalDeviceQueueFamilyProperties with a valid pQueueFamilyProperties parameter makes the function read the value of count. This
@@ -303,19 +296,102 @@ namespace LeviathanRenderer
 			{
 				outQueueFamilyIndices.SparseBinding = i;
 			}
-
-			// Assign i as the present queue if queue family at index i supports presentation and has not yet been assigned.
-			if (!outQueueFamilyIndices.Present.has_value())
-			{
-#ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
-				if (pfnGetPhysicalDeviceWin32PresentationSupportKHR(physicalDevice, i) == VK_TRUE)
-				{
-					outQueueFamilyIndices.Present = i;
-				}
-#endif // LEVIATHAN_BUILD_PLATFORM_WIN32
-			}
 		}
 
 		return outQueueFamilyIndices.Complete();
+	}
+
+	bool IsPresentationSupportedOnQueue(VkInstance instance, VkPhysicalDevice physicalDevice, const unsigned int queueFamilyIndex)
+	{
+#ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
+		auto pfnGetPhysicalDeviceWin32PresentationSupportKHR =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR>(vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));
+
+		if (pfnGetPhysicalDeviceWin32PresentationSupportKHR == nullptr)
+		{
+			return false;
+		}
+
+		return (pfnGetPhysicalDeviceWin32PresentationSupportKHR(physicalDevice, queueFamilyIndex) == VK_TRUE);
+#else
+		return false;
+#endif // LEVIATHAN_BUILD_PLATFORM_WIN32
+	}
+
+	bool CreateVulkanLogicalDevice(VkPhysicalDevice const physicalDevice,
+		const VulkanPhysicalDeviceQueueFamilyIndices& queueFamilyIndices,
+		const VulkanDeviceQueueCountAndPriorities& graphicsQueueCountAndPriorities,
+		const VulkanDeviceQueueCountAndPriorities& computeQueueCountAndPriorities,
+		const VulkanDeviceQueueCountAndPriorities& transferQueueCountAndPriorities,
+		const VulkanDeviceQueueCountAndPriorities& sparseBindingQueueCountAndPriorities,
+		const VkAllocationCallbacks* const allocator, 
+		VkDevice& outDevice)
+	{
+		// Create device queue create infos.
+		std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos = {};
+		deviceQueueCreateInfos.reserve(4);
+
+		auto addDeviceQueueCreateInfo = [&deviceQueueCreateInfos](unsigned int queueFamilyIndex, unsigned int queueCount, const float* pQueuePriorities)
+			{
+				VkDeviceQueueCreateInfo& createInfo = deviceQueueCreateInfos.emplace_back();
+				createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				createInfo.queueFamilyIndex = queueFamilyIndex;
+				createInfo.queueCount = queueCount;
+				createInfo.pQueuePriorities = pQueuePriorities;
+			};
+
+		if (graphicsQueueCountAndPriorities.QueueCount > 0)
+		{
+			addDeviceQueueCreateInfo(queueFamilyIndices.Graphics.value(), graphicsQueueCountAndPriorities.QueueCount, graphicsQueueCountAndPriorities.QueuePriorities.data());
+		}
+
+		if (computeQueueCountAndPriorities.QueueCount > 0)
+		{
+			addDeviceQueueCreateInfo(queueFamilyIndices.Compute.value(), computeQueueCountAndPriorities.QueueCount, computeQueueCountAndPriorities.QueuePriorities.data());
+		}
+
+		if (transferQueueCountAndPriorities.QueueCount > 0)
+		{
+			addDeviceQueueCreateInfo(queueFamilyIndices.Transfer.value(), transferQueueCountAndPriorities.QueueCount, transferQueueCountAndPriorities.QueuePriorities.data());
+		}
+
+		if (sparseBindingQueueCountAndPriorities.QueueCount > 0)
+		{
+			addDeviceQueueCreateInfo(queueFamilyIndices.SparseBinding.value(), sparseBindingQueueCountAndPriorities.QueueCount, sparseBindingQueueCountAndPriorities.QueuePriorities.data());
+		}
+
+		// Add device extensions.
+		// VK_KHR_timeline_semaphore extension is now part of core and the extension no longer needs to be added however, the timeline semaphore feature still
+		// needs to be enabled to be used.
+		std::array<const char*, 1> enabledDeviceExtensionNames =
+		{
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		};
+
+		// Enable timeline semaphores feature from Vulkan 1.2 features. Feature is enabled by pointing to this structure in the pNext field of VkDeviceCreateInfo.
+		VkPhysicalDeviceVulkan12Features vulkan12Features = {};
+		vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		vulkan12Features.timelineSemaphore = true;
+
+		// Create device.
+		VkDeviceCreateInfo deviceCreateInfo = {};
+		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		deviceCreateInfo.pQueueCreateInfos = deviceQueueCreateInfos.data();
+		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(deviceQueueCreateInfos.size());
+		deviceCreateInfo.ppEnabledExtensionNames = enabledDeviceExtensionNames.data();
+		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(enabledDeviceExtensionNames.size());
+		deviceCreateInfo.pNext = &vulkan12Features;
+
+		return (vkCreateDevice(physicalDevice, &deviceCreateInfo, allocator, &outDevice) == VK_SUCCESS);
+	}
+
+	void GetVulkanDeviceQueue(VkDevice device, const unsigned int queueFamilyIndex, const unsigned int queueIndex, VkQueue& outQueue)
+	{
+		vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, &outQueue);
+	}
+
+	void DestroyVulkanLogicalDevice(VkDevice device, const VkAllocationCallbacks* allocator)
+	{
+		vkDestroyDevice(device, allocator);
 	}
 }
