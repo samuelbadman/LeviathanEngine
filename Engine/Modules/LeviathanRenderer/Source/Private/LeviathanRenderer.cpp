@@ -1,31 +1,59 @@
 #include "LeviathanRenderer.h"
 #include "RenderDevice.h"
+#include "RenderContext.h"
 
-bool LeviathanRenderer::Initialize()
+namespace LeviathanRenderer
 {
-	// Initialize render device.
-	if (!RenderDevice::Initialize())
+	static RenderContextInstance* RuntimeWindowRenderContext = nullptr;
+
+	static bool CreateAndInitializeRuntimeWindowRenderContext()
 	{
-		return false;
+		RuntimeWindowRenderContext = RenderDevice::CreateRenderContextInstance();
+		return RenderDevice::InitializeRenderContextInstance(RuntimeWindowRenderContext);
 	}
 
-	// Create render context for runtime window.
-
-
-
-	return true;
-}
-
-bool LeviathanRenderer::Shutdown()
-{
-	// Destroy render context for runtime window.
-
-
-	// Shutdown render device.
-	if (!RenderDevice::Shutdown())
+	static bool ShutdownAndDestroyRuntimeWindowRenderContext()
 	{
-		return false;
+		if (!RenderDevice::ShutdownRenderContextInstance(RuntimeWindowRenderContext))
+		{
+			return false;
+		}
+
+		RenderDevice::DestroyRenderContextInstance(RuntimeWindowRenderContext);
+		return true;
 	}
 
-	return true;
+	bool Initialize()
+	{
+		// Initialize render device.
+		if (!RenderDevice::Initialize())
+		{
+			return false;
+		}
+
+		// Create and initialize render context for runtime window.
+		if (!CreateAndInitializeRuntimeWindowRenderContext())
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool Shutdown()
+	{
+		// Shutdown and destroy render context for runtime window.
+		if (!ShutdownAndDestroyRuntimeWindowRenderContext())
+		{
+			return false;
+		}
+
+		// Shutdown render device.
+		if (!RenderDevice::Shutdown())
+		{
+			return false;
+		}
+
+		return true;
+	}
 }

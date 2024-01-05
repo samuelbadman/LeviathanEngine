@@ -1,6 +1,7 @@
 #include "RenderDevice.h"
 #include "VulkanApi.h"
 #include "Logging.h"
+#include "VulkanRenderContext.h"
 
 namespace LeviathanRenderer
 {
@@ -11,10 +12,10 @@ namespace LeviathanRenderer
 		static VkPhysicalDeviceProperties VulkanPhysicalDeviceProperties = {};
 		static VkPhysicalDeviceMemoryProperties VulkanPhysicalDeviceMemoryProperties = {};
 		static VkPhysicalDeviceFeatures VulkanPhysicalDeviceFeatures = {};
-		static VkPhysicalDevice VulkanPhysicalDevice = {};
+		static VkPhysicalDevice VulkanPhysicalDevice = VK_NULL_HANDLE;
 		static VulkanPhysicalDeviceQueueFamilyIndices PhysicalDeviceQueueFamilyIndices = {};
-		static VkDevice VulkanDevice = {};
-		static VkQueue VulkanGraphicsQueue = {};
+		static VkDevice VulkanDevice = VK_NULL_HANDLE;
+		static VkQueue VulkanGraphicsQueue = VK_NULL_HANDLE;
 
 		bool Initialize()
 		{
@@ -81,6 +82,26 @@ namespace LeviathanRenderer
 			DestroyVulkanLogicalDevice(VulkanDevice, VulkanAllocator);
 			DestroyVulkanInstance(VulkanInstance, VulkanAllocator);
 
+			return true;
+		}
+
+		RenderContextInstance* CreateRenderContextInstance()
+		{
+			return new RenderContextInstance();
+		}
+
+		void DestroyRenderContextInstance(RenderContextInstance* const context)
+		{
+			delete context;
+		}
+
+		bool InitializeRenderContextInstance([[maybe_unused]] RenderContextInstance* const context)
+		{
+			return true;
+		}
+
+		bool ShutdownRenderContextInstance([[maybe_unused]] RenderContextInstance* const context)
+		{
 			return true;
 		}
 	}

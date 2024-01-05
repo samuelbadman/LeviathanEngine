@@ -56,4 +56,6 @@ namespace LeviathanRenderer
 	void GetVulkanDeviceQueue(VkDevice device, const unsigned int queueFamilyIndex, const unsigned int queueIndex, VkQueue& outQueue);
 
 	void DestroyVulkanLogicalDevice(VkDevice device, const VkAllocationCallbacks* allocator);
+
+
 }
