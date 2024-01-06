@@ -94,27 +94,30 @@ namespace LeviathanCore
 			PostMainLoopCallback.Call();
 		}
 
-		void PreModuleInitialization()
+		bool PreModuleInitialization()
 		{
 #ifndef LEVIATHAN_BUILD_CONFIG_MASTER
 			LeviathanCore::Platform::CreateDebugConsole();
 #endif // !LEVIATHAN_BUILD_CONFIG_MASTER
+
+			// Create the runtime window.
+			if (!CreateAndInitializeRuntimeWindow())
+			{
+				return false;
+			}
+
+			return true;
 		}
 
-		void PostModuleInitialization()
+		bool PostModuleInitialization()
 		{
+			return true;
 		}
 
 		int RunEngine()
 		{
 			// Initialize platform layer.
 			if (!LeviathanCore::Platform::Initialize())
-			{
-				return 1;
-			}
-
-			// Create the runtime window.
-			if (!CreateAndInitializeRuntimeWindow())
 			{
 				return 1;
 			}
@@ -147,6 +150,11 @@ namespace LeviathanCore
 		void Exit()
 		{
 			EngineRunning = false;
+		}
+
+		void* GetRuntimeWindowPlatformHandle()
+		{
+			return LeviathanCore::Platform::Window::GetPlatformWindowPlatformHandle(RuntimeWindow);
 		}
 
 		Callback<PreMainLoopCallbackType>& GetPreMainLoopCallback()

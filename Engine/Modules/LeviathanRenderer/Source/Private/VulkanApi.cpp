@@ -394,4 +394,35 @@ namespace LeviathanRenderer
 	{
 		vkDestroyDevice(device, allocator);
 	}
+
+	bool CreateVulkanSurface(VkInstance const instance, void* const platformWindowHandle, VkAllocationCallbacks* const allocator, VkSurfaceKHR& outSurface)
+	{
+#ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
+		auto pfnCreateWin32SurfaceKHR = reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(vkGetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR"));
+		if (pfnCreateWin32SurfaceKHR == nullptr)
+		{
+			return false;
+		}
+
+		VkWin32SurfaceCreateInfoKHR createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		createInfo.hwnd = static_cast<HWND>(platformWindowHandle);
+		createInfo.hinstance = nullptr;
+		createInfo.flags = 0;
+
+		if (pfnCreateWin32SurfaceKHR(instance, &createInfo, allocator, &outSurface) != VK_SUCCESS)
+		{
+			return false;
+		}
+
+		return true;
+#else
+		return false;
+#endif // LEVIATHAN_BUILD_PLATFORM_WIN32
+	}
+
+	void DestroyVulkanSurface(VkInstance const instance, VkSurfaceKHR const surface, VkAllocationCallbacks* const allocator)
+	{
+		vkDestroySurfaceKHR(instance, surface, allocator);
+	}
 }

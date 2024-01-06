@@ -2,6 +2,7 @@
 #include "VulkanApi.h"
 #include "Logging.h"
 #include "VulkanRenderContext.h"
+#include "Core.h"
 
 namespace LeviathanRenderer
 {
@@ -97,11 +98,20 @@ namespace LeviathanRenderer
 
 		bool InitializeRenderContextInstance([[maybe_unused]] RenderContextInstance* const context)
 		{
+			if (!CreateVulkanSurface(VulkanInstance, LeviathanCore::Core::GetRuntimeWindowPlatformHandle(), VulkanAllocator, context->GetVulkanSurfaceHandleReference()))
+			{
+				return false;
+			}
+
+
+
 			return true;
 		}
 
 		bool ShutdownRenderContextInstance([[maybe_unused]] RenderContextInstance* const context)
 		{
+			DestroyVulkanSurface(VulkanInstance, context->GetVulkanSurface(), VulkanAllocator);
+
 			return true;
 		}
 	}

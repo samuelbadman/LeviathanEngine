@@ -57,5 +57,7 @@ namespace LeviathanRenderer
 
 	void DestroyVulkanLogicalDevice(VkDevice device, const VkAllocationCallbacks* allocator);
 
+	bool CreateVulkanSurface(VkInstance const instance, void* const platformWindowHandle, VkAllocationCallbacks* const allocator, VkSurfaceKHR& outSurface);
 
+	void DestroyVulkanSurface(VkInstance const instance, VkSurfaceKHR const surface, VkAllocationCallbacks* const allocator);
 }
