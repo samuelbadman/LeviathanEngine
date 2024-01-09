@@ -8,6 +8,9 @@ namespace LeviathanRenderer
 {
 	namespace RenderDevice
 	{
+		static constexpr VkColorSpaceKHR SwapchainColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+		static constexpr VkFormat SwapchainFormat = /*VK_FORMAT_B8G8R8A8_SRGB */ VK_FORMAT_B8G8R8A8_UNORM;
+
 		static VkAllocationCallbacks* VulkanAllocator = nullptr;
 		static VkInstance VulkanInstance = VK_NULL_HANDLE;
 		static VkPhysicalDeviceProperties VulkanPhysicalDeviceProperties = {};
@@ -96,23 +99,20 @@ namespace LeviathanRenderer
 			delete context;
 		}
 
-		bool InitializeRenderContextInstance([[maybe_unused]] RenderContextInstance* const context)
+		bool InitializeRenderContextInstance(RenderContextInstance* const context)
 		{
-			if (!CreateVulkanSurface(VulkanInstance, LeviathanCore::Core::GetRuntimeWindowPlatformHandle(), VulkanAllocator, context->GetVulkanSurfaceHandleReference()))
-			{
-				return false;
-			}
-
-
-
-			return true;
+			return context->Initialize(VulkanInstance,
+				LeviathanCore::Core::GetRuntimeWindowPlatformHandle(),
+				VulkanAllocator,
+				VulkanPhysicalDevice, 
+				SwapchainColorSpace, 
+				SwapchainFormat, 
+				VulkanDevice);
 		}
 
-		bool ShutdownRenderContextInstance([[maybe_unused]] RenderContextInstance* const context)
+		bool ShutdownRenderContextInstance(RenderContextInstance* const context)
 		{
-			DestroyVulkanSurface(VulkanInstance, context->GetVulkanSurface(), VulkanAllocator);
-
-			return true;
+			return context->Shutdown(VulkanInstance, VulkanAllocator, VulkanDevice);
 		}
 	}
 }

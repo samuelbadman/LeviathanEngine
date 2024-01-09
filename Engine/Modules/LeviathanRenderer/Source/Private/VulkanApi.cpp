@@ -2,6 +2,10 @@
 #include "Logging.h"
 #include "LeviathanAssert.h"
 
+#ifdef max
+#undef max
+#endif // max
+
 namespace LeviathanRenderer
 {
 #ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
@@ -10,7 +14,7 @@ namespace LeviathanRenderer
 	typedef struct VkWin32SurfaceCreateInfoKHR
 	{
 		VkStructureType                 sType;
-		const void*						pNext;
+		const void* pNext;
 		VkWin32SurfaceCreateFlagsKHR    flags;
 		HINSTANCE                       hinstance;
 		HWND                            hwnd;
@@ -96,7 +100,7 @@ namespace LeviathanRenderer
 #endif // LEVIATHAN_BUILD_CONFIG_DEBUG
 
 	static bool IsPhysicalDeviceSuitable([[maybe_unused]] const VkPhysicalDeviceProperties& properties,
-		[[maybe_unused]] const VkPhysicalDeviceMemoryProperties& memoryProperties, 
+		[[maybe_unused]] const VkPhysicalDeviceMemoryProperties& memoryProperties,
 		[[maybe_unused]] const VkPhysicalDeviceFeatures& features)
 	{
 		// Check the physical device has at least one memory heap.
@@ -186,8 +190,8 @@ namespace LeviathanRenderer
 	}
 
 	bool SelectVulkanPhysicalDevice(VkInstance instance,
-		VkPhysicalDeviceProperties& outPhysicalDeviceProperties, 
-		VkPhysicalDeviceMemoryProperties& outPhysicalDeviceMemoryProperties, 
+		VkPhysicalDeviceProperties& outPhysicalDeviceProperties,
+		VkPhysicalDeviceMemoryProperties& outPhysicalDeviceMemoryProperties,
 		VkPhysicalDeviceFeatures& outPhysicalDeviceFeatures,
 		VkPhysicalDevice& outPhysicalDevice)
 	{
@@ -324,7 +328,7 @@ namespace LeviathanRenderer
 		const VulkanDeviceQueueCountAndPriorities& computeQueueCountAndPriorities,
 		const VulkanDeviceQueueCountAndPriorities& transferQueueCountAndPriorities,
 		const VulkanDeviceQueueCountAndPriorities& sparseBindingQueueCountAndPriorities,
-		const VkAllocationCallbacks* const allocator, 
+		const VkAllocationCallbacks* const allocator,
 		VkDevice& outDevice)
 	{
 		// Create device queue create infos.
@@ -424,5 +428,167 @@ namespace LeviathanRenderer
 	void DestroyVulkanSurface(VkInstance const instance, VkSurfaceKHR const surface, VkAllocationCallbacks* const allocator)
 	{
 		vkDestroySurfaceKHR(instance, surface, allocator);
+	}
+
+	bool CreateVulkanSwapchain(VkSurfaceKHR surface,
+		VkPhysicalDevice physicalDevice,
+		VkColorSpaceKHR colorSpace,
+		VkFormat format,
+		VkPresentModeKHR presentMode,
+		VkSwapchainKHR oldSwapchain,
+		unsigned int imageCount,
+		VkDevice device,
+		VkAllocationCallbacks* const allocator,
+		VkSwapchainKHR& outSwapchain,
+		VkExtent2D& outExtent,
+		VkFormat& outFormat)
+	{
+		// Get surface capabilities.
+		VkSurfaceCapabilitiesKHR surfaceCapabilities = {};
+
+		if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities) != VK_SUCCESS)
+		{
+			return false;
+		}
+
+		// Get surface format count then formats.
+		uint32_t formatCount = 0;
+
+		if (vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr) != VK_SUCCESS)
+		{
+			return false;
+		}
+
+		std::vector<VkSurfaceFormatKHR> formats(static_cast<size_t>(formatCount));
+
+		if (vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, formats.data()) != VK_SUCCESS)
+		{
+			return false;
+		}
+
+		// Select surface format.
+		unsigned int formatIndex = std::numeric_limits<unsigned int>::max();
+
+		for (unsigned int i = 0; i < formatCount; ++i)
+		{
+			if ((formats[static_cast<size_t>(i)].colorSpace == colorSpace) &&
+				(formats[static_cast<size_t>(i)].format == format))
+			{
+				formatIndex = i;
+				break;
+			}
+		}
+
+		if (formatIndex == std::numeric_limits<unsigned int>::max())
+		{
+			return false;
+		}
+
+		// Get present mode count then present modes.
+		uint32_t presentModeCount = 0;
+
+		if (vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr) != VK_SUCCESS)
+		{
+			return false;
+		}
+
+		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+
+		if (vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes.data()) != VK_SUCCESS)
+		{
+			return false;
+		}
+
+		// Select present mode.
+		unsigned int presentModeIndex = std::numeric_limits<unsigned int>::max();
+
+		for (unsigned int i = 0; i < presentModeCount; ++i)
+		{
+			if (presentModes[static_cast<size_t>(i)] == presentMode)
+			{
+				presentModeIndex = i;
+				break;
+			}
+		}
+
+		if (presentModeIndex == std::numeric_limits<unsigned int>::max())
+		{
+			return false;
+		}
+
+		// Fill out swap chain create info.
+		VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
+		swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+		swapchainCreateInfo.surface = surface;
+		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		swapchainCreateInfo.clipped = VK_TRUE;
+		swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		swapchainCreateInfo.imageArrayLayers = 1;
+		swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		swapchainCreateInfo.oldSwapchain = oldSwapchain;
+		swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
+		swapchainCreateInfo.imageExtent = surfaceCapabilities.currentExtent;
+		swapchainCreateInfo.minImageCount = std::clamp(imageCount,
+			surfaceCapabilities.minImageCount,
+			((surfaceCapabilities.maxImageCount != 0) ? surfaceCapabilities.maxImageCount : std::numeric_limits<unsigned int>::max()));
+		swapchainCreateInfo.imageFormat = formats[static_cast<size_t>(formatIndex)].format;
+		swapchainCreateInfo.imageColorSpace = formats[static_cast<size_t>(formatIndex)].colorSpace;
+		swapchainCreateInfo.presentMode = presentModes[static_cast<size_t>(presentModeIndex)];
+
+		// Set output swapchain extent and format.
+		outExtent = swapchainCreateInfo.imageExtent;
+		outFormat = swapchainCreateInfo.imageFormat;
+		
+		// Create swap chain.
+		return (vkCreateSwapchainKHR(device, &swapchainCreateInfo, allocator, &outSwapchain) == VK_SUCCESS);
+	}
+
+	bool RetreiveSwapchainImages(VkDevice device, VkSwapchainKHR swapchain, std::vector<VkImage>& outImages)
+	{
+		// Get swapchain image count then swapchain images.
+		uint32_t imageCount = 0;
+
+		if (vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr) != VK_SUCCESS)
+		{
+			return false;
+		}
+
+		outImages.resize(static_cast<size_t>(imageCount), VK_NULL_HANDLE);
+
+		return vkGetSwapchainImagesKHR(device, swapchain, &imageCount, outImages.data()) == VK_SUCCESS;
+	}
+
+	bool CreateVulkanImageView(VkDevice device, 
+		VkImage image, 
+		const VkImageViewType viewType,
+		const VkFormat format,
+		const VkImageAspectFlags aspectMask,
+		const VkComponentMapping& components,
+		VkAllocationCallbacks* const allocator,
+		VkImageView& outImageView)
+	{
+		VkImageViewCreateInfo imageViewCreateInfo = {};
+		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		imageViewCreateInfo.image = image;
+		imageViewCreateInfo.viewType = viewType;
+		imageViewCreateInfo.format = format;
+		imageViewCreateInfo.components = components;
+		imageViewCreateInfo.subresourceRange.aspectMask = aspectMask;
+		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+		imageViewCreateInfo.subresourceRange.levelCount = 1;
+		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+		imageViewCreateInfo.subresourceRange.layerCount = 1;
+
+		return (vkCreateImageView(device, &imageViewCreateInfo, allocator, &outImageView) == VK_SUCCESS);
+	}
+
+	void DestroyVulkanSwapchain(VkDevice device, VkSwapchainKHR swapchain, VkAllocationCallbacks* const allocator)
+	{
+		vkDestroySwapchainKHR(device, swapchain, allocator);
+	}
+
+	void DestroyVulkanImageView(VkDevice device, VkImageView imageView, VkAllocationCallbacks* const allocator)
+	{
+		vkDestroyImageView(device, imageView, allocator);
 	}
 }

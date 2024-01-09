@@ -2,6 +2,9 @@
 
 namespace LeviathanRenderer
 {
+	static constexpr VkPresentModeKHR PresentModeVSyncEnabled = VK_PRESENT_MODE_FIFO_KHR;
+	static constexpr VkPresentModeKHR PresentModeVSyncDisabled = VK_PRESENT_MODE_MAILBOX_KHR;
+
 	struct VulkanPhysicalDeviceQueueFamilyIndices
 	{
 		std::optional<unsigned int> Graphics = {};
@@ -60,4 +63,32 @@ namespace LeviathanRenderer
 	bool CreateVulkanSurface(VkInstance const instance, void* const platformWindowHandle, VkAllocationCallbacks* const allocator, VkSurfaceKHR& outSurface);
 
 	void DestroyVulkanSurface(VkInstance const instance, VkSurfaceKHR const surface, VkAllocationCallbacks* const allocator);
+
+	bool CreateVulkanSwapchain(VkSurfaceKHR surface,
+		VkPhysicalDevice physicalDevice,
+		VkColorSpaceKHR colorSpace,
+		VkFormat format,
+		VkPresentModeKHR presentMode,
+		VkSwapchainKHR oldSwapchain,
+		unsigned int imageCount,
+		VkDevice device,
+		VkAllocationCallbacks* const allocator,
+		VkSwapchainKHR& outSwapchain,
+		VkExtent2D& outExtent,
+		VkFormat& outFormat);
+
+	bool RetreiveSwapchainImages(VkDevice device, VkSwapchainKHR swapchain, std::vector<VkImage>& outImages);
+
+	bool CreateVulkanImageView(VkDevice device,
+		VkImage image,
+		const VkImageViewType viewType,
+		const VkFormat format,
+		const VkImageAspectFlags aspectMask,
+		const VkComponentMapping& components,
+		VkAllocationCallbacks* const allocator,
+		VkImageView& outImageView);
+
+	void DestroyVulkanSwapchain(VkDevice device, VkSwapchainKHR swapchain, VkAllocationCallbacks* const allocator);
+
+	void DestroyVulkanImageView(VkDevice device, VkImageView imageView, VkAllocationCallbacks* const allocator);
 }
