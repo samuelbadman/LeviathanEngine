@@ -649,3 +649,18 @@ namespace LeviathanRenderer
 		}
 	}
 }
+
+bool LeviathanRenderer::VulkanApi::RenderCommands::BeginCommandBuffer(VkCommandBuffer commandBuffer)
+{
+	VkCommandBufferBeginInfo beginInfo = {};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = 0;
+	beginInfo.pInheritanceInfo = nullptr;
+
+	return (vkBeginCommandBuffer(commandBuffer, &beginInfo) == VK_SUCCESS);
+}
+
+bool LeviathanRenderer::VulkanApi::RenderCommands::EndCommandBuffer(VkCommandBuffer commandBuffer)
+{
+	return (vkEndCommandBuffer(commandBuffer) == VK_SUCCESS);
+}

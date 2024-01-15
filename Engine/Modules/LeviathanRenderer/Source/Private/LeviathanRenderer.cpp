@@ -62,7 +62,15 @@ namespace LeviathanRenderer
 
 	bool Render()
 	{
+		if (!RenderDevice::RenderCommands::BeginFrame())
+		{
+			return false;
+		}
 
+		if (!RenderDevice::RenderCommands::EndFrame())
+		{
+			return false;
+		}
 
 		return true;
 	}

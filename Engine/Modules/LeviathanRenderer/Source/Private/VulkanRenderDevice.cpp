@@ -23,6 +23,19 @@ namespace LeviathanRenderer
 		static VkCommandPool VulkanGraphicsCommandPool = VK_NULL_HANDLE;
 		static VkCommandBuffer VulkanGraphicsCommandBuffer = VK_NULL_HANDLE;
 
+		namespace RenderCommands
+		{
+			bool BeginFrame()
+			{
+				return VulkanApi::RenderCommands::BeginCommandBuffer(VulkanGraphicsCommandBuffer);
+			}
+
+			bool EndFrame()
+			{
+				return VulkanApi::RenderCommands::EndCommandBuffer(VulkanGraphicsCommandBuffer);
+			}
+		}
+
 		bool Initialize()
 		{
 			// Create allocator.

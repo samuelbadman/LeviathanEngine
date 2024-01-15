@@ -6,6 +6,12 @@ namespace LeviathanRenderer
 
 	namespace RenderDevice
 	{
+		namespace RenderCommands
+		{
+			bool BeginFrame();
+			bool EndFrame();
+		}
+
 		bool Initialize();
 		bool Shutdown();
 		RenderContextInstance* CreateRenderContextInstance();

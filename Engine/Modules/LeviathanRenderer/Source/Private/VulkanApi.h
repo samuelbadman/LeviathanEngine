@@ -26,6 +26,12 @@ namespace LeviathanRenderer
 			std::vector<float> QueuePriorities = {};
 		};
 
+		namespace RenderCommands
+		{
+			bool BeginCommandBuffer(VkCommandBuffer commandBuffer);
+			bool EndCommandBuffer(VkCommandBuffer commandBuffer);
+		}
+
 		constexpr VkPresentModeKHR GetVSyncPresentMode(bool vsyncEnabled)
 		{
 			return ((vsyncEnabled) ? VulkanApi::PresentModeVSyncEnabled : VulkanApi::PresentModeVSyncDisabled);
