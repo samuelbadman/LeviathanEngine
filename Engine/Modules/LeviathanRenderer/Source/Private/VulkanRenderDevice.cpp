@@ -10,7 +10,6 @@ namespace LeviathanRenderer
 	{
 		static constexpr VkColorSpaceKHR SwapchainColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 		static constexpr VkFormat SwapchainFormat = /*VK_FORMAT_B8G8R8A8_SRGB */ VK_FORMAT_B8G8R8A8_UNORM;
-		static constexpr VkCommandPoolCreateFlags GraphicsCommandPoolCreateFlags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 		static VkAllocationCallbacks* VulkanAllocator = nullptr;
 		static VkInstance VulkanInstance = VK_NULL_HANDLE;
@@ -22,6 +21,7 @@ namespace LeviathanRenderer
 		static VkDevice VulkanDevice = VK_NULL_HANDLE;
 		static VkQueue VulkanGraphicsQueue = VK_NULL_HANDLE;
 		static VkCommandPool VulkanGraphicsCommandPool = VK_NULL_HANDLE;
+		static VkCommandBuffer VulkanGraphicsCommandBuffer = VK_NULL_HANDLE;
 
 		bool Initialize()
 		{
@@ -81,7 +81,13 @@ namespace LeviathanRenderer
 			VulkanApi::GetVulkanDeviceQueue(VulkanDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value(), 0, VulkanGraphicsQueue);
 
 			// Create command pools.
-			if (!VulkanApi::CreateVulkanCommandPool(VulkanDevice, GraphicsCommandPoolCreateFlags, PhysicalDeviceQueueFamilyIndices.Graphics.value(), VulkanAllocator, VulkanGraphicsCommandPool))
+			if (!VulkanApi::CreateVulkanCommandPool(VulkanDevice, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, PhysicalDeviceQueueFamilyIndices.Graphics.value(), VulkanAllocator, VulkanGraphicsCommandPool))
+			{
+				return false;
+			}
+
+			// Allocate command buffers.
+			if (!VulkanApi::AllocateVulkanCommandBuffer(VulkanDevice, VulkanGraphicsCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1, &VulkanGraphicsCommandBuffer))
 			{
 				return false;
 			}

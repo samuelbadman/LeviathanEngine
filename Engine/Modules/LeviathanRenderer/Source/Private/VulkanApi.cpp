@@ -626,13 +626,26 @@ namespace LeviathanRenderer
 			poolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 			poolCreateInfo.flags = flags;
 			poolCreateInfo.queueFamilyIndex = queueFamilyIndex;
+			poolCreateInfo.pNext = nullptr;
 
 			return (vkCreateCommandPool(device, &poolCreateInfo, allocator, &outCommandPool) == VK_SUCCESS);
 		}
 
-		void DestroyVulkanCommandPool(VkDevice device, VkCommandPool pool, VkAllocationCallbacks* const allocator)
+		void DestroyVulkanCommandPool(VkDevice device, VkCommandPool commandPool, VkAllocationCallbacks* const allocator)
 		{
-			vkDestroyCommandPool(device, pool, allocator);
+			vkDestroyCommandPool(device, commandPool, allocator);
+		}
+
+		bool AllocateVulkanCommandBuffer(VkDevice device, VkCommandPool commandPool, VkCommandBufferLevel level, unsigned int commandBufferCount, VkCommandBuffer* pCommandBuffers)
+		{
+			VkCommandBufferAllocateInfo allocInfo = {};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.commandPool = commandPool;
+			allocInfo.level = level;
+			allocInfo.commandBufferCount = commandBufferCount;
+			allocInfo.pNext = nullptr;
+
+			return (vkAllocateCommandBuffers(device, &allocInfo, pCommandBuffers) == VK_SUCCESS);
 		}
 	}
 }

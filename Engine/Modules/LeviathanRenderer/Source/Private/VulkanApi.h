@@ -112,6 +112,8 @@ namespace LeviathanRenderer
 
 		bool CreateVulkanCommandPool(VkDevice device, const VkCommandPoolCreateFlags flags, const unsigned int queueFamilyIndex, VkAllocationCallbacks* const allocator, VkCommandPool& outCommandPool);
 
-		void DestroyVulkanCommandPool(VkDevice device, VkCommandPool pool, VkAllocationCallbacks* const allocator);
+		void DestroyVulkanCommandPool(VkDevice device, VkCommandPool commandPool, VkAllocationCallbacks* const allocator);
+
+		bool AllocateVulkanCommandBuffer(VkDevice device, VkCommandPool commandPool, VkCommandBufferLevel level, unsigned int commandBufferCount, VkCommandBuffer* pCommandBuffers);
 	}
 }
