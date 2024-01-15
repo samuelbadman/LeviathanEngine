@@ -619,5 +619,20 @@ namespace LeviathanRenderer
 		{
 			vkDestroyFramebuffer(device, framebuffer, allocator);
 		}
+
+		bool CreateVulkanCommandPool(VkDevice device, const VkCommandPoolCreateFlags flags,const unsigned int queueFamilyIndex, VkAllocationCallbacks* const allocator, VkCommandPool& outCommandPool)
+		{
+			VkCommandPoolCreateInfo poolCreateInfo = {};
+			poolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			poolCreateInfo.flags = flags;
+			poolCreateInfo.queueFamilyIndex = queueFamilyIndex;
+
+			return (vkCreateCommandPool(device, &poolCreateInfo, allocator, &outCommandPool) == VK_SUCCESS);
+		}
+
+		void DestroyVulkanCommandPool(VkDevice device, VkCommandPool pool, VkAllocationCallbacks* const allocator)
+		{
+			vkDestroyCommandPool(device, pool, allocator);
+		}
 	}
 }

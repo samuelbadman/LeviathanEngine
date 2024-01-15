@@ -10,6 +10,7 @@ namespace LeviathanRenderer
 	{
 		static constexpr VkColorSpaceKHR SwapchainColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 		static constexpr VkFormat SwapchainFormat = /*VK_FORMAT_B8G8R8A8_SRGB */ VK_FORMAT_B8G8R8A8_UNORM;
+		static constexpr VkCommandPoolCreateFlags GraphicsCommandPoolCreateFlags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 		static VkAllocationCallbacks* VulkanAllocator = nullptr;
 		static VkInstance VulkanInstance = VK_NULL_HANDLE;
@@ -20,6 +21,7 @@ namespace LeviathanRenderer
 		static VulkanApi::VulkanPhysicalDeviceQueueFamilyIndices PhysicalDeviceQueueFamilyIndices = {};
 		static VkDevice VulkanDevice = VK_NULL_HANDLE;
 		static VkQueue VulkanGraphicsQueue = VK_NULL_HANDLE;
+		static VkCommandPool VulkanGraphicsCommandPool = VK_NULL_HANDLE;
 
 		bool Initialize()
 		{
@@ -78,11 +80,18 @@ namespace LeviathanRenderer
 			// Get device queues.
 			VulkanApi::GetVulkanDeviceQueue(VulkanDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value(), 0, VulkanGraphicsQueue);
 
+			// Create command pools.
+			if (!VulkanApi::CreateVulkanCommandPool(VulkanDevice, GraphicsCommandPoolCreateFlags, PhysicalDeviceQueueFamilyIndices.Graphics.value(), VulkanAllocator, VulkanGraphicsCommandPool))
+			{
+				return false;
+			}
+
 			return true;
 		}
 
 		bool Shutdown()
 		{
+			VulkanApi::DestroyVulkanCommandPool(VulkanDevice, VulkanGraphicsCommandPool, VulkanAllocator);
 			VulkanApi::DestroyVulkanLogicalDevice(VulkanDevice, VulkanAllocator);
 			VulkanApi::DestroyVulkanInstance(VulkanInstance, VulkanAllocator);
 

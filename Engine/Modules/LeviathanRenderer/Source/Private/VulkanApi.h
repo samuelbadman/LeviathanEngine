@@ -109,5 +109,9 @@ namespace LeviathanRenderer
 			VkFramebuffer& outFramebuffer);
 
 		void DestroyVulkanFramebuffer(VkDevice device, VkFramebuffer framebuffer, VkAllocationCallbacks* const allocator);
+
+		bool CreateVulkanCommandPool(VkDevice device, const VkCommandPoolCreateFlags flags, const unsigned int queueFamilyIndex, VkAllocationCallbacks* const allocator, VkCommandPool& outCommandPool);
+
+		void DestroyVulkanCommandPool(VkDevice device, VkCommandPool pool, VkAllocationCallbacks* const allocator);
 	}
 }
