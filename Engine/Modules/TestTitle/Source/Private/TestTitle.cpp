@@ -81,6 +81,11 @@ namespace TestTitle
 
 	}
 
+	static void OnRender()
+	{
+		LeviathanRenderer::Render();
+	}
+
 	bool Initialize()
 	{
 		// Initialize engine modules for title.
@@ -103,6 +108,7 @@ namespace TestTitle
 		LeviathanCore::Core::GetTickCallback().Register(OnTick);
 		LeviathanCore::Core::GetPostTickCallback().Register(OnPostTick);
 		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(OnRuntimeWindowResized);
+		LeviathanCore::Core::GetRenderCallback().Register(OnRender);
 
 		LeviathanInputCore::PlatformInput::GetInputCallback().Register(OnInput);
 		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Register(OnGameControllerInput);

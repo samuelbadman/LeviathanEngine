@@ -14,12 +14,7 @@ namespace LeviathanCore
 		using PostTickCallbackType = void(*)();
 		using CleanupCallbackType = void(*)();
 		using RuntimeWindowResizedCallbackType = void(*)(int /* newWidth */, int /* newHeight */);
-
-		bool PreModuleInitialization();
-		bool PostModuleInitialization();
-		int RunEngine();
-		void Exit();
-		void* GetRuntimeWindowPlatformHandle();
+		using RenderCallbackType = void(*)();
 
 		Callback<PreMainLoopCallbackType>& GetPreMainLoopCallback();
 		Callback<PostMainLoopCallbackType>& GetPostMainLoopCallback();
@@ -29,5 +24,12 @@ namespace LeviathanCore
 		Callback<PostTickCallbackType>& GetPostTickCallback();
 		Callback<CleanupCallbackType>& GetCleanupCallback();
 		Callback<RuntimeWindowResizedCallbackType>& GetRuntimeWindowResizedCallback();
+		Callback<RenderCallbackType>& GetRenderCallback();
+
+		bool PreModuleInitialization();
+		bool PostModuleInitialization();
+		int RunEngine();
+		void Exit();
+		void* GetRuntimeWindowPlatformHandle();
 	}
 }

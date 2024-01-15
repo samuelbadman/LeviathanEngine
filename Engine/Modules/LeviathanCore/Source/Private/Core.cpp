@@ -21,6 +21,7 @@ namespace LeviathanCore
 		static Callback<PostTickCallbackType> PostTickCallback = {};
 		static Callback<CleanupCallbackType> CleanupCallback = {};
 		static Callback<RuntimeWindowResizedCallbackType> RuntimeWindowResizedCallback = {};
+		static Callback<RenderCallbackType> RenderCallback = {};
 
 		static bool CreateAndInitializeRuntimeWindow()
 		{
@@ -65,6 +66,51 @@ namespace LeviathanCore
 			return true;
 		}
 
+		Callback<PreMainLoopCallbackType>& GetPreMainLoopCallback()
+		{
+			return PreMainLoopCallback;
+		}
+
+		Callback<PostMainLoopCallbackType>& GetPostMainLoopCallback()
+		{
+			return PostMainLoopCallback;
+		}
+
+		Callback<FixedTickCallbackType>& GetFixedTickCallback()
+		{
+			return FixedTickCallback;
+		}
+
+		Callback<PreTickCallbackType>& GetPreTickCallback()
+		{
+			return PreTickCallback;
+		}
+
+		Callback<TickCallbackType>& GetTickCallback()
+		{
+			return TickCallback;
+		}
+
+		Callback<PostTickCallbackType>& GetPostTickCallback()
+		{
+			return PostTickCallback;
+		}
+
+		Callback<CleanupCallbackType>& GetCleanupCallback()
+		{
+			return CleanupCallback;
+		}
+
+		Callback<RuntimeWindowResizedCallbackType>& GetRuntimeWindowResizedCallback()
+		{
+			return RuntimeWindowResizedCallback;
+		}
+
+		Callback<RenderCallbackType>& GetRenderCallback()
+		{
+			return RenderCallback;
+		}
+
 		void MainLoop()
 		{
 			PreMainLoopCallback.Call();
@@ -89,6 +135,8 @@ namespace LeviathanCore
 				TickCallback.Call(deltaSeconds);
 
 				PostTickCallback.Call();
+
+				RenderCallback.Call();
 			}
 
 			PostMainLoopCallback.Call();
@@ -155,46 +203,6 @@ namespace LeviathanCore
 		void* GetRuntimeWindowPlatformHandle()
 		{
 			return LeviathanCore::Platform::Window::GetPlatformWindowPlatformHandle(RuntimeWindow);
-		}
-
-		Callback<PreMainLoopCallbackType>& GetPreMainLoopCallback()
-		{
-			return PreMainLoopCallback;
-		}
-
-		Callback<PostMainLoopCallbackType>& GetPostMainLoopCallback()
-		{
-			return PostMainLoopCallback;
-		}
-
-		Callback<FixedTickCallbackType>& GetFixedTickCallback()
-		{
-			return FixedTickCallback;
-		}
-
-		Callback<PreTickCallbackType>& GetPreTickCallback()
-		{
-			return PreTickCallback;
-		}
-
-		Callback<TickCallbackType>& GetTickCallback()
-		{
-			return TickCallback;
-		}
-
-		Callback<PostTickCallbackType>& GetPostTickCallback()
-		{
-			return PostTickCallback;
-		}
-
-		Callback<CleanupCallbackType>& GetCleanupCallback()
-		{
-			return CleanupCallback;
-		}
-
-		Callback<RuntimeWindowResizedCallbackType>& GetRuntimeWindowResizedCallback()
-		{
-			return RuntimeWindowResizedCallback;
 		}
 	}
 }

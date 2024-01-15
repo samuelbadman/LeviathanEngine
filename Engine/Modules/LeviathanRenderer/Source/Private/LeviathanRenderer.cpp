@@ -59,4 +59,11 @@ namespace LeviathanRenderer
 
 		return true;
 	}
+
+	bool Render()
+	{
+
+
+		return true;
+	}
 }
