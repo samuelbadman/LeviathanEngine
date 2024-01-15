@@ -9,6 +9,9 @@ namespace LeviathanRenderer
 	static bool CreateAndInitializeRuntimeWindowRenderContext()
 	{
 		RuntimeWindowRenderContext = RenderDevice::CreateRenderContextInstance();
+
+		RenderContext::SetVSyncEnabled(RuntimeWindowRenderContext, false);
+		RenderContext::SetBackingBufferCount(RuntimeWindowRenderContext, 3);
 		return RenderDevice::InitializeRenderContextInstance(RuntimeWindowRenderContext);
 	}
 

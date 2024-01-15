@@ -13,6 +13,7 @@ set(BUILD_RENDERER_API_DIRECT3D12_PC OFF)
 set(BUILD_RENDERER_API_VULKAN ON)
 
 # Set SDK directories.
+# TODO: Remove hard coded file path.
 set(VULKAN_SDK_DIRECTORY "C:/SDKs/Vulkan_SDK_1.3.268.0")
 
 # Set project configuration types.

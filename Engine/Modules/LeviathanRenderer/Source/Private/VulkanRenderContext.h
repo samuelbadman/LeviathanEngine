@@ -11,6 +11,7 @@ namespace LeviathanRenderer
 		std::vector<VkImageView> VulkanSwapchainImageViews = {};
 		VkFormat SwapchainFormat = VK_FORMAT_UNDEFINED;
 		VkExtent2D SwapchainExtent = {};
+		std::vector<VkFramebuffer> VulkanSwapchainFramebuffers = {};
 
 		// Render context settings. Must be applied with RenderContext::ApplyRenderContextSettings() when changing after context initialization.
 		bool VSyncEnabled = false;

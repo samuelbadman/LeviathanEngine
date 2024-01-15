@@ -31,16 +31,16 @@ namespace LeviathanRenderer
 		VkFormat swapchainFormat,
 		VkDevice device)
 	{
-		if (!CreateVulkanSurface(instance, platformWindowHandle, allocator, VulkanSurface))
+		if (!VulkanApi::CreateVulkanSurface(instance, platformWindowHandle, allocator, VulkanSurface))
 		{
 			return false;
 		}
 
-		if (!CreateVulkanSwapchain(VulkanSurface,
+		if (!VulkanApi::CreateVulkanSwapchain(VulkanSurface,
 			physicalDevice,
 			swapchainColorSpace,
 			swapchainFormat,
-			((VSyncEnabled) ? PresentModeVSyncEnabled : PresentModeVSyncDisabled),
+			VulkanApi::GetVSyncPresentMode(VSyncEnabled),
 			VK_NULL_HANDLE,
 			SwapchainImageCount,
 			device,
@@ -52,14 +52,17 @@ namespace LeviathanRenderer
 			return false;
 		}
 
-		if (!RetreiveSwapchainImages(device, VulkanSwapchain, VulkanSwapchainImages))
+		if (!VulkanApi::RetreiveSwapchainImages(device, VulkanSwapchain, VulkanSwapchainImages))
 		{
 			return false;
 		}
 
+		VulkanSwapchainImageViews.resize(static_cast<size_t>(SwapchainImageCount));
+		VulkanSwapchainFramebuffers.resize(static_cast<size_t>(SwapchainImageCount));
+
 		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
 		{
-			if (!CreateVulkanImageView(device,
+			if (!VulkanApi::CreateVulkanImageView(device,
 				VulkanSwapchainImages[i],
 				VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
 				SwapchainFormat,
@@ -76,6 +79,18 @@ namespace LeviathanRenderer
 			{
 				return false;
 			}
+
+			if (!VulkanApi::CreateVulkanFramebuffer(device,
+				VK_NULL_HANDLE,
+				1,
+				&VulkanSwapchainImageViews[i],
+				SwapchainExtent.width,
+				SwapchainExtent.height,
+				allocator,
+				VulkanSwapchainFramebuffers[i]))
+			{
+				return false;
+			}
 		}
 
 		return true;
@@ -83,14 +98,15 @@ namespace LeviathanRenderer
 
 	bool RenderContextInstance::Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device)
 	{
-		DestroyVulkanSurface(instance, VulkanSurface, allocator);
+		VulkanApi::DestroyVulkanSurface(instance, VulkanSurface, allocator);
 
 		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
 		{
-			DestroyVulkanImageView(device, VulkanSwapchainImageViews[i], allocator);
+			VulkanApi::DestroyVulkanFramebuffer(device, VulkanSwapchainFramebuffers[i], allocator);
+			VulkanApi::DestroyVulkanImageView(device, VulkanSwapchainImageViews[i], allocator);
 		}
 
-		DestroyVulkanSwapchain(device, VulkanSwapchain, allocator);
+		VulkanApi::DestroyVulkanSwapchain(device, VulkanSwapchain, allocator);
 
 		return true;
 	}

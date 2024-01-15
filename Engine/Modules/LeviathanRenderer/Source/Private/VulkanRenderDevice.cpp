@@ -17,29 +17,29 @@ namespace LeviathanRenderer
 		static VkPhysicalDeviceMemoryProperties VulkanPhysicalDeviceMemoryProperties = {};
 		static VkPhysicalDeviceFeatures VulkanPhysicalDeviceFeatures = {};
 		static VkPhysicalDevice VulkanPhysicalDevice = VK_NULL_HANDLE;
-		static VulkanPhysicalDeviceQueueFamilyIndices PhysicalDeviceQueueFamilyIndices = {};
+		static VulkanApi::VulkanPhysicalDeviceQueueFamilyIndices PhysicalDeviceQueueFamilyIndices = {};
 		static VkDevice VulkanDevice = VK_NULL_HANDLE;
 		static VkQueue VulkanGraphicsQueue = VK_NULL_HANDLE;
 
 		bool Initialize()
 		{
 			// Create allocator.
-			VulkanAllocator = CreateVulkanAllocator();
+			VulkanAllocator = VulkanApi::CreateVulkanAllocator();
 
 			// Create instance.
-			if (!CreateVulkanInstance(VK_API_VERSION_1_3, "LeviathanApplication", "LeviathanEngine", VulkanAllocator, VulkanInstance))
+			if (!VulkanApi::CreateVulkanInstance(VK_API_VERSION_1_3, "LeviathanApplication", "LeviathanEngine", VulkanAllocator, VulkanInstance))
 			{
 				return false;
 			}
 
 			// Select physical device.
-			if (!SelectVulkanPhysicalDevice(VulkanInstance, VulkanPhysicalDeviceProperties, VulkanPhysicalDeviceMemoryProperties, VulkanPhysicalDeviceFeatures, VulkanPhysicalDevice))
+			if (!VulkanApi::SelectVulkanPhysicalDevice(VulkanInstance, VulkanPhysicalDeviceProperties, VulkanPhysicalDeviceMemoryProperties, VulkanPhysicalDeviceFeatures, VulkanPhysicalDevice))
 			{
 				return false;
 			}
 
 			unsigned long long availableVideoMemoryGb = 0;
-			if (!GetVulkanPhysicalDeviceVideoMemorySizeGb(VulkanPhysicalDeviceMemoryProperties, availableVideoMemoryGb))
+			if (!VulkanApi::GetVulkanPhysicalDeviceVideoMemorySizeGb(VulkanPhysicalDeviceMemoryProperties, availableVideoMemoryGb))
 			{
 				return false;
 			}
@@ -51,17 +51,17 @@ namespace LeviathanRenderer
 				return false;
 			}
 
-			if (!IsPresentationSupportedOnQueue(VulkanInstance, VulkanPhysicalDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value()))
+			if (!VulkanApi::IsPresentationSupportedOnQueue(VulkanInstance, VulkanPhysicalDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value()))
 			{
 				return false;
 			}
 
 			// Create logical device.
-			VulkanDeviceQueueCountAndPriorities graphicsQueueCountAndPriorities = {};
+			VulkanApi::VulkanDeviceQueueCountAndPriorities graphicsQueueCountAndPriorities = {};
 			graphicsQueueCountAndPriorities.QueueCount = 1;
 			graphicsQueueCountAndPriorities.QueuePriorities.emplace_back(1.0f);
 
-			VulkanDeviceQueueCountAndPriorities EmptyQueueCountAndPriorities = {};
+			VulkanApi::VulkanDeviceQueueCountAndPriorities EmptyQueueCountAndPriorities = {};
 
 			if (!CreateVulkanLogicalDevice(VulkanPhysicalDevice,
 				PhysicalDeviceQueueFamilyIndices,
@@ -76,15 +76,15 @@ namespace LeviathanRenderer
 			}
 
 			// Get device queues.
-			GetVulkanDeviceQueue(VulkanDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value(), 0, VulkanGraphicsQueue);
+			VulkanApi::GetVulkanDeviceQueue(VulkanDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value(), 0, VulkanGraphicsQueue);
 
 			return true;
 		}
 
 		bool Shutdown()
 		{
-			DestroyVulkanLogicalDevice(VulkanDevice, VulkanAllocator);
-			DestroyVulkanInstance(VulkanInstance, VulkanAllocator);
+			VulkanApi::DestroyVulkanLogicalDevice(VulkanDevice, VulkanAllocator);
+			VulkanApi::DestroyVulkanInstance(VulkanInstance, VulkanAllocator);
 
 			return true;
 		}
