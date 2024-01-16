@@ -10,8 +10,8 @@ namespace LeviathanRenderer
 	{
 		RuntimeWindowRenderContext = RenderDevice::CreateRenderContextInstance();
 
-		RenderContext::SetVSyncEnabled(RuntimeWindowRenderContext, false);
-		RenderContext::SetBackingBufferCount(RuntimeWindowRenderContext, 3);
+		RenderContext::SetVSyncEnabled(RuntimeWindowRenderContext, true);
+		RenderContext::SetBackBufferCount(RuntimeWindowRenderContext, 3);
 		return RenderDevice::InitializeRenderContextInstance(RuntimeWindowRenderContext);
 	}
 
@@ -62,15 +62,7 @@ namespace LeviathanRenderer
 
 	bool Render()
 	{
-		if (!RenderDevice::RenderCommands::BeginFrame())
-		{
-			return false;
-		}
 
-		if (!RenderDevice::RenderCommands::EndFrame())
-		{
-			return false;
-		}
 
 		return true;
 	}

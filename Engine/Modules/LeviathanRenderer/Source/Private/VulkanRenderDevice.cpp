@@ -20,21 +20,6 @@ namespace LeviathanRenderer
 		static VulkanApi::VulkanPhysicalDeviceQueueFamilyIndices PhysicalDeviceQueueFamilyIndices = {};
 		static VkDevice VulkanDevice = VK_NULL_HANDLE;
 		static VkQueue VulkanGraphicsQueue = VK_NULL_HANDLE;
-		static VkCommandPool VulkanGraphicsCommandPool = VK_NULL_HANDLE;
-		static VkCommandBuffer VulkanGraphicsCommandBuffer = VK_NULL_HANDLE;
-
-		namespace RenderCommands
-		{
-			bool BeginFrame()
-			{
-				return VulkanApi::RenderCommands::BeginCommandBuffer(VulkanGraphicsCommandBuffer);
-			}
-
-			bool EndFrame()
-			{
-				return VulkanApi::RenderCommands::EndCommandBuffer(VulkanGraphicsCommandBuffer);
-			}
-		}
 
 		bool Initialize()
 		{
@@ -93,24 +78,11 @@ namespace LeviathanRenderer
 			// Get device queues.
 			VulkanApi::GetVulkanDeviceQueue(VulkanDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value(), 0, VulkanGraphicsQueue);
 
-			// Create command pools.
-			if (!VulkanApi::CreateVulkanCommandPool(VulkanDevice, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, PhysicalDeviceQueueFamilyIndices.Graphics.value(), VulkanAllocator, VulkanGraphicsCommandPool))
-			{
-				return false;
-			}
-
-			// Allocate command buffers.
-			if (!VulkanApi::AllocateVulkanCommandBuffer(VulkanDevice, VulkanGraphicsCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1, &VulkanGraphicsCommandBuffer))
-			{
-				return false;
-			}
-
 			return true;
 		}
 
 		bool Shutdown()
 		{
-			VulkanApi::DestroyVulkanCommandPool(VulkanDevice, VulkanGraphicsCommandPool, VulkanAllocator);
 			VulkanApi::DestroyVulkanLogicalDevice(VulkanDevice, VulkanAllocator);
 			VulkanApi::DestroyVulkanInstance(VulkanInstance, VulkanAllocator);
 
@@ -135,7 +107,8 @@ namespace LeviathanRenderer
 				VulkanPhysicalDevice, 
 				SwapchainColorSpace, 
 				SwapchainFormat, 
-				VulkanDevice);
+				VulkanDevice,
+				PhysicalDeviceQueueFamilyIndices);
 		}
 
 		bool ShutdownRenderContextInstance(RenderContextInstance* const context)

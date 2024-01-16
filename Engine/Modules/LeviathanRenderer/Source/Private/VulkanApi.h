@@ -26,12 +26,6 @@ namespace LeviathanRenderer
 			std::vector<float> QueuePriorities = {};
 		};
 
-		namespace RenderCommands
-		{
-			bool BeginCommandBuffer(VkCommandBuffer commandBuffer);
-			bool EndCommandBuffer(VkCommandBuffer commandBuffer);
-		}
-
 		constexpr VkPresentModeKHR GetVSyncPresentMode(bool vsyncEnabled)
 		{
 			return ((vsyncEnabled) ? VulkanApi::PresentModeVSyncEnabled : VulkanApi::PresentModeVSyncDisabled);
@@ -121,5 +115,9 @@ namespace LeviathanRenderer
 		void DestroyVulkanCommandPool(VkDevice device, VkCommandPool commandPool, VkAllocationCallbacks* const allocator);
 
 		bool AllocateVulkanCommandBuffer(VkDevice device, VkCommandPool commandPool, VkCommandBufferLevel level, unsigned int commandBufferCount, VkCommandBuffer* pCommandBuffers);
+
+		bool BeginCommandBuffer(VkCommandBuffer commandBuffer);
+
+		bool EndCommandBuffer(VkCommandBuffer commandBuffer);
 	}
 }
