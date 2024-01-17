@@ -15,18 +15,14 @@ namespace LeviathanRenderer
 		std::vector<VkImage> VulkanSwapchainImages = {};
 		std::vector<VkImageView> VulkanSwapchainImageViews = {};
 		std::vector<VkFramebuffer> VulkanSwapchainFramebuffers = {};
-		VkCommandPool GraphicsVulkanCommandPool = VK_NULL_HANDLE;
-		std::vector<VkCommandBuffer> VulkanGraphicsCommandBuffers = {};
 
 		VkFormat SwapchainFormat = VK_FORMAT_UNDEFINED;
 		VkExtent2D SwapchainExtent = {};
 		size_t CurrentFrame = 0;
 
-		//////////////////////////////////////////////////
 		// Render context settings. Need to be set before calling Initialize. Must be applied with RenderContext::ApplyRenderContextSettings() when changing after context initialization.
 		bool VSyncEnabled = false;
 		unsigned int SwapchainImageCount = 0;
-		/////////////////////////////////////////////////
 
 	public:
 		bool Initialize(VkInstance instance,
@@ -35,12 +31,10 @@ namespace LeviathanRenderer
 			VkPhysicalDevice physicalDevice,
 			VkColorSpaceKHR swapchainColorSpace,
 			VkFormat swapchainFormat,
-			VkDevice device,
-			const VulkanApi::VulkanPhysicalDeviceQueueFamilyIndices& queueFamilyIndices);
+			VkDevice device);
 
 		bool Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device);
 
-		void WaitForCurrentFrameOnHost();
 		void IncrementCurrentFrame();
 
 		// Functions to set render context settings.

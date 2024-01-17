@@ -29,8 +29,7 @@ namespace LeviathanRenderer
 		VkPhysicalDevice physicalDevice,
 		VkColorSpaceKHR swapchainColorSpace,
 		VkFormat swapchainFormat,
-		VkDevice device,
-		const VulkanApi::VulkanPhysicalDeviceQueueFamilyIndices& queueFamilyIndices)
+		VkDevice device)
 	{
 		if (!VulkanApi::CreateVulkanSurface(instance, platformWindowHandle, allocator, VulkanSurface))
 		{
@@ -94,25 +93,12 @@ namespace LeviathanRenderer
 			}
 		}
 
-		if (!VulkanApi::CreateVulkanCommandPool(device, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, queueFamilyIndices.Graphics.value(), allocator, GraphicsVulkanCommandPool))
-		{
-			return false;
-		}
-
-		VulkanGraphicsCommandBuffers.resize(static_cast<size_t>(SwapchainImageCount));
-
-		if (!VulkanApi::AllocateVulkanCommandBuffer(device, GraphicsVulkanCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, SwapchainImageCount, VulkanGraphicsCommandBuffers.data()))
-		{
-			return false;
-		}
-
 		return true;
 	}
 
 	bool RenderContextInstance::Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device)
 	{
 		VulkanApi::DestroyVulkanSurface(instance, VulkanSurface, allocator);
-		VulkanApi::DestroyVulkanCommandPool(device, GraphicsVulkanCommandPool, allocator);
 
 		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
 		{
@@ -123,11 +109,6 @@ namespace LeviathanRenderer
 		VulkanApi::DestroyVulkanSwapchain(device, VulkanSwapchain, allocator);
 
 		return true;
-	}
-
-	void RenderContextInstance::WaitForCurrentFrameOnHost()
-	{
-
 	}
 
 	void RenderContextInstance::IncrementCurrentFrame()

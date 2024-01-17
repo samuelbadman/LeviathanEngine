@@ -6,7 +6,7 @@ namespace LeviathanRenderer
 
 	namespace RenderDevice
 	{
-		bool Initialize();
+		bool Initialize(const unsigned int backBufferCount);
 		bool Shutdown();
 		RenderContextInstance* CreateRenderContextInstance();
 		void DestroyRenderContextInstance(RenderContextInstance* const context);

@@ -19,9 +19,11 @@ namespace LeviathanRenderer
 		static VkPhysicalDevice VulkanPhysicalDevice = VK_NULL_HANDLE;
 		static VulkanApi::VulkanPhysicalDeviceQueueFamilyIndices PhysicalDeviceQueueFamilyIndices = {};
 		static VkDevice VulkanDevice = VK_NULL_HANDLE;
-		static VkQueue VulkanGraphicsQueue = VK_NULL_HANDLE;
+		static VkQueue GraphicsVulkanQueue = VK_NULL_HANDLE;
+		static VkCommandPool GraphicsVulkanCommandPool = VK_NULL_HANDLE;
+		static std::vector<VkCommandBuffer> GraphicsVulkanCommandBuffers = {};
 
-		bool Initialize()
+		bool Initialize(const unsigned int backBufferCount)
 		{
 			// Create allocator.
 			VulkanAllocator = VulkanApi::CreateVulkanAllocator();
@@ -76,13 +78,37 @@ namespace LeviathanRenderer
 			}
 
 			// Get device queues.
-			VulkanApi::GetVulkanDeviceQueue(VulkanDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value(), 0, VulkanGraphicsQueue);
+			VulkanApi::GetVulkanDeviceQueue(VulkanDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value(), 0, GraphicsVulkanQueue);
+
+
+			// Create command pools.
+			if (!VulkanApi::CreateVulkanCommandPool(VulkanDevice, 
+				VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, 
+				PhysicalDeviceQueueFamilyIndices.Graphics.value(), 
+				VulkanAllocator, 
+				GraphicsVulkanCommandPool))
+			{
+				return false;
+			}
+
+			// Allocate command buffers.
+			GraphicsVulkanCommandBuffers.resize(static_cast<size_t>(backBufferCount));
+
+			if (!VulkanApi::AllocateVulkanCommandBuffers(VulkanDevice,
+				GraphicsVulkanCommandPool, 
+				VK_COMMAND_BUFFER_LEVEL_PRIMARY, 
+				backBufferCount,
+				GraphicsVulkanCommandBuffers.data()))
+			{
+				return false;
+			}
 
 			return true;
 		}
 
 		bool Shutdown()
 		{
+			VulkanApi::DestroyVulkanCommandPool(VulkanDevice, GraphicsVulkanCommandPool, VulkanAllocator);
 			VulkanApi::DestroyVulkanLogicalDevice(VulkanDevice, VulkanAllocator);
 			VulkanApi::DestroyVulkanInstance(VulkanInstance, VulkanAllocator);
 
@@ -107,8 +133,7 @@ namespace LeviathanRenderer
 				VulkanPhysicalDevice, 
 				SwapchainColorSpace, 
 				SwapchainFormat, 
-				VulkanDevice,
-				PhysicalDeviceQueueFamilyIndices);
+				VulkanDevice);
 		}
 
 		bool ShutdownRenderContextInstance(RenderContextInstance* const context)

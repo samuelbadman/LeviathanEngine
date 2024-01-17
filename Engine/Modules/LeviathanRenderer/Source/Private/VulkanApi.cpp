@@ -636,7 +636,7 @@ namespace LeviathanRenderer
 			vkDestroyCommandPool(device, commandPool, allocator);
 		}
 
-		bool AllocateVulkanCommandBuffer(VkDevice device, VkCommandPool commandPool, VkCommandBufferLevel level, unsigned int commandBufferCount, VkCommandBuffer* pCommandBuffers)
+		bool AllocateVulkanCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBufferLevel level, unsigned int commandBufferCount, VkCommandBuffer* pCommandBuffers)
 		{
 			VkCommandBufferAllocateInfo allocInfo = {};
 			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

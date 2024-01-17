@@ -114,7 +114,7 @@ namespace LeviathanRenderer
 
 		void DestroyVulkanCommandPool(VkDevice device, VkCommandPool commandPool, VkAllocationCallbacks* const allocator);
 
-		bool AllocateVulkanCommandBuffer(VkDevice device, VkCommandPool commandPool, VkCommandBufferLevel level, unsigned int commandBufferCount, VkCommandBuffer* pCommandBuffers);
+		bool AllocateVulkanCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBufferLevel level, unsigned int commandBufferCount, VkCommandBuffer* pCommandBuffers);
 
 		bool BeginCommandBuffer(VkCommandBuffer commandBuffer);
 
