@@ -15,7 +15,11 @@ namespace LeviathanRenderer
 
 		namespace RenderCommands
 		{
-			bool CmdBeginFrame(VkCommandBuffer commandBuffer);
+			// Begin a render frame for the render context.
+			bool CmdBeginFrame(RenderContextInstance* const context);
+
+			// End a render frame for the render context.
+			bool CmdEndFrame(RenderContextInstance* const context);
 		}
 	}
 }

@@ -7,11 +7,21 @@
 #include <optional>
 #include <array>
 #include <algorithm>
+#include <chrono>
 
 #ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
 // Windows.
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+
+#ifdef max
+#undef max
+#endif // max.
+
+#ifdef min
+#undef min
+#endif // min.
+
 #endif
 
 #ifdef LEVIATHAN_BUILD_RENDERER_API_VULKAN

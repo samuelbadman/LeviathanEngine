@@ -19,8 +19,9 @@ namespace LeviathanRenderer
 
 		VkFormat SwapchainFormat = VK_FORMAT_UNDEFINED;
 		VkExtent2D SwapchainExtent = {};
-		size_t CurrentImageIndex = 0;
+		size_t CurrentInFlightFrameIndex = 0;
 		unsigned int InFlightFrameCount = 0;
+		unsigned int CurrentImageIndex = 0;
 
 		// Render context settings. Need to be set before calling Initialize. Must be applied with RenderContext::ApplyRenderContextSettings() when changing after context initialization.
 		bool VSyncEnabled = false;
@@ -39,7 +40,23 @@ namespace LeviathanRenderer
 
 		bool Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device, VkCommandPool graphicsCommandPool);
 
-		void IncrementCurrentImageIndex();
+		void IncrementCurrentInFlightFrameIndex();
+
+		// Acquires the index of the next swapchain image to render into. The index value is stored internally inside the VulkanRenderContext. This function signals the 
+		// image available semaphore for the current in flight frame index meaning that this function must be called after the current in flight frame index has been progressed,
+		// as the function signals the semaphore resource for the current in flight frame index.
+		bool AcquireCurrentImageIndex(VkDevice device, unsigned long long timeoutDurationNanoseconds);
+
+		VkCommandBuffer GetGraphicsCommandBufferForCurrentInFlightFrame() const { return GraphicsVulkanCommandBuffers[static_cast<size_t>(CurrentInFlightFrameIndex)]; }
+
+		// Returns a pointer to the fence resource for the current in flight frame. Points to the start of a VkFence buffer size of 1.
+		const VkFence* GetCurrentInFlightFrameFencePointer() const { return &InFlightVulkanFences[static_cast<size_t>(CurrentInFlightFrameIndex)]; }
+
+		VkSwapchainKHR GetSwapchain() const { return VulkanSwapchain; }
+
+		VkSemaphore GetImageAvailableSemaphoreForCurrentInFlightFrame() const { return ImageAvailableVulkanSemaphores[static_cast<size_t>(CurrentInFlightFrameIndex)]; }
+
+		VkSemaphore GetRenderFinishedSemaphoreForCurrentInFlightFrame() const { return RenderFinishedVulkanSemaphores[static_cast<size_t>(CurrentInFlightFrameIndex)]; }
 
 		// Functions to set render context settings.
 		void SetVSyncEnabled(const bool enabled) { VSyncEnabled = enabled; }

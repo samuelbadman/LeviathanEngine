@@ -3,6 +3,7 @@
 #include "Logging.h"
 #include "VulkanRenderContext.h"
 #include "Core.h"
+#include "Timing.h"
 
 namespace LeviathanRenderer
 {
@@ -80,12 +81,11 @@ namespace LeviathanRenderer
 			// Get device queues.
 			VulkanApi::GetVulkanDeviceQueue(VulkanDevice, PhysicalDeviceQueueFamilyIndices.Graphics.value(), 0, GraphicsVulkanQueue);
 
-
 			// Create command pools.
-			if (!VulkanApi::CreateVulkanCommandPool(VulkanDevice, 
-				VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, 
-				PhysicalDeviceQueueFamilyIndices.Graphics.value(), 
-				VulkanAllocator, 
+			if (!VulkanApi::CreateVulkanCommandPool(VulkanDevice,
+				VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+				PhysicalDeviceQueueFamilyIndices.Graphics.value(),
+				VulkanAllocator,
 				GraphicsVulkanCommandPool))
 			{
 				return false;
@@ -120,9 +120,9 @@ namespace LeviathanRenderer
 			return context->Initialize(VulkanInstance,
 				LeviathanCore::Core::GetRuntimeWindowPlatformHandle(),
 				VulkanAllocator,
-				VulkanPhysicalDevice, 
-				SwapchainColorSpace, 
-				SwapchainFormat, 
+				VulkanPhysicalDevice,
+				SwapchainColorSpace,
+				SwapchainFormat,
 				VulkanDevice,
 				RenderContextInstanceInFlightFrameCount,
 				GraphicsVulkanCommandPool);
@@ -132,20 +132,57 @@ namespace LeviathanRenderer
 		{
 			return context->Shutdown(VulkanInstance, VulkanAllocator, VulkanDevice, GraphicsVulkanCommandPool);
 		}
-	}
 
-	namespace RenderCommands
-	{
-		bool CmdBeginFrame(VkCommandBuffer commandBuffer)
+		namespace RenderCommands
 		{
-			if (!VulkanApi::BeginCommandBuffer(commandBuffer))
+			bool CmdBeginFrame(RenderContextInstance* const context)
 			{
-				return false;
+				// Progress the context's current in flight frame.
+				context->IncrementCurrentInFlightFrameIndex();
+
+				// Obtain context resources for current in flight frame.
+				const VkFence* const pCurrentInFlightFrameFencePointer = context->GetCurrentInFlightFrameFencePointer();
+				const VkCommandBuffer GraphicsCommandBufferForCurrentInFlightFrame = context->GetGraphicsCommandBufferForCurrentInFlightFrame();
+
+				// Wait for the context's current in flight frame resources to be finished with from the previous frame before resetting them for this frame.
+				if (!VulkanApi::WaitForFences(VulkanDevice, 1, pCurrentInFlightFrameFencePointer, VK_TRUE, static_cast<unsigned long long>(LeviathanCore::Timing::MaxNanoseconds)))
+				{
+					return false;
+				}
+
+				// Reset the fence to an unsignalled state now that it has been signalled by the command queue.
+				if (!VulkanApi::ResetFences(VulkanDevice, 1, pCurrentInFlightFrameFencePointer))
+				{
+					return false;
+				}
+
+				// Acquire next image index for the current frame. Next image index is stored within the render context instance as the current image index.
+				if (!context->AcquireCurrentImageIndex(VulkanDevice, static_cast<unsigned long long>(LeviathanCore::Timing::MaxNanoseconds)))
+				{
+					return false;
+				}
+
+				// Begin the current in flight frame's graphics command buffer to start recording rendering commands.
+				if (!VulkanApi::BeginCommandBuffer(GraphicsCommandBufferForCurrentInFlightFrame))
+				{
+					return false;
+				}
+
+				// Reset the current in flight frame's graphics command buffer to its initial state.
+				if (!VulkanApi::ResetCommandBuffer(GraphicsCommandBufferForCurrentInFlightFrame))
+				{
+					return false;
+				}
+
+				return true;
 			}
 
-			 
+			bool CmdEndFrame(RenderContextInstance* const context)
+			{
 
-			return true;
+
+				return true;
+			}
 		}
 	}
 }

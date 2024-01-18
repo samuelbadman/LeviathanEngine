@@ -7,6 +7,7 @@
 #include <string>
 #include <type_traits>
 #include <cassert>
+#include <chrono>
 
 #ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
 // Win32.

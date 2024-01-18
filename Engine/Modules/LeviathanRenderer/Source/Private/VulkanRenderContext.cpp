@@ -160,8 +160,20 @@ namespace LeviathanRenderer
 		return true;
 	}
 
-	void RenderContextInstance::IncrementCurrentImageIndex()
+	void RenderContextInstance::IncrementCurrentInFlightFrameIndex()
 	{
-		CurrentImageIndex = (CurrentImageIndex + 1) % static_cast<size_t>(SwapchainImageCount);
+		CurrentInFlightFrameIndex = (CurrentInFlightFrameIndex + 1) % static_cast<size_t>(InFlightFrameCount);
+	}
+
+	bool RenderContextInstance::AcquireCurrentImageIndex(VkDevice device, unsigned long long timeoutDurationNanoseconds)
+	{
+		// Acquire the context's swapchain's next image index. This function signals the specified semaphore and/or fence once the presentation engine has finished with
+		// the image resource and the image memory is available to be rendered to.
+		return (VulkanApi::AcquireNextImageFromSwapchain(device,
+			VulkanSwapchain,
+			timeoutDurationNanoseconds,
+			ImageAvailableVulkanSemaphores[CurrentInFlightFrameIndex],
+			VK_NULL_HANDLE,
+			CurrentImageIndex) == VK_SUCCESS);
 	}
 }

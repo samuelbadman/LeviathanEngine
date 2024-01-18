@@ -129,5 +129,18 @@ namespace LeviathanRenderer
 		void DestroyVulkanFence(VkDevice device, VkFence fence, VkAllocationCallbacks* const allocator);
 
 		void FreeCommandBuffers(VkDevice device, VkCommandPool commandPool, unsigned int commandBufferCount, VkCommandBuffer* const pCommandBuffersStart);
+
+		bool WaitForFences(VkDevice device, unsigned int fenceCount, const VkFence* pFences, VkBool32 waitAll, unsigned long long timeoutDurationNanoseconds);
+
+		bool ResetFences(VkDevice device, unsigned int fenceCount, const VkFence* pFences);
+
+		bool AcquireNextImageFromSwapchain(VkDevice device,
+			VkSwapchainKHR swapchain,
+			unsigned long long timeoutDurationNanoseconds,
+			VkSemaphore signalSemaphore,
+			VkFence signalFence,
+			unsigned int& outImageIndex);
+
+		bool ResetCommandBuffer(VkCommandBuffer commandBuffer);
 	}
 }

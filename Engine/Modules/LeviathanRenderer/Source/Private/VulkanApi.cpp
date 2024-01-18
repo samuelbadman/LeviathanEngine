@@ -698,3 +698,33 @@ void LeviathanRenderer::VulkanApi::FreeCommandBuffers(VkDevice device, VkCommand
 {
 	vkFreeCommandBuffers(device, commandPool, commandBufferCount, pCommandBuffersStart);
 }
+
+bool LeviathanRenderer::VulkanApi::WaitForFences(VkDevice device, unsigned int fenceCount, const VkFence* pFences, VkBool32 waitAll, unsigned long long timeoutDurationNanoseconds)
+{
+	return (vkWaitForFences(device, fenceCount, pFences, waitAll, timeoutDurationNanoseconds) == VK_SUCCESS);
+}
+
+bool LeviathanRenderer::VulkanApi::ResetFences(VkDevice device, unsigned int fenceCount, const VkFence* pFences)
+{
+	return (vkResetFences(device, fenceCount, pFences) == VK_SUCCESS);
+}
+
+bool LeviathanRenderer::VulkanApi::AcquireNextImageFromSwapchain(VkDevice device, 
+	VkSwapchainKHR swapchain, 
+	unsigned long long timeoutDurationNanoseconds, 
+	VkSemaphore signalSemaphore,
+	VkFence signalFence, 
+	unsigned int& outImageIndex)
+{
+	return (vkAcquireNextImageKHR(device,
+		swapchain,
+		timeoutDurationNanoseconds, 
+		signalSemaphore,
+		signalFence, 
+		&outImageIndex) == VK_SUCCESS);
+}
+
+bool LeviathanRenderer::VulkanApi::ResetCommandBuffer(VkCommandBuffer commandBuffer)
+{
+	return (vkResetCommandBuffer(commandBuffer, 0) == VK_SUCCESS);
+}
