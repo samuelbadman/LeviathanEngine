@@ -664,3 +664,37 @@ bool LeviathanRenderer::VulkanApi::EndCommandBuffer(VkCommandBuffer commandBuffe
 {
 	return (vkEndCommandBuffer(commandBuffer) == VK_SUCCESS);
 }
+
+bool LeviathanRenderer::VulkanApi::CreateVulkanSemaphore(VkDevice device, VkAllocationCallbacks* const allocator, VkSemaphore& outSemaphore)
+{
+	VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	return (vkCreateSemaphore(device, &semaphoreCreateInfo, allocator, &outSemaphore) == VK_SUCCESS);
+}
+
+bool LeviathanRenderer::VulkanApi::CreateVulkanFence(VkDevice device, VkAllocationCallbacks* const allocator, VkFence& outFence)
+{
+	VkFenceCreateInfo fenceCreateInfo = {};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	
+	// Create the fence in a signaled state.
+	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT; 
+
+	return (vkCreateFence(device, &fenceCreateInfo, allocator, &outFence) == VK_SUCCESS);
+}
+
+void LeviathanRenderer::VulkanApi::DestroyVulkanSemaphore(VkDevice device, VkSemaphore semaphore, VkAllocationCallbacks* const allocator)
+{
+	vkDestroySemaphore(device, semaphore, allocator);
+}
+
+void LeviathanRenderer::VulkanApi::DestroyVulkanFence(VkDevice device, VkFence fence, VkAllocationCallbacks* const allocator)
+{
+	vkDestroyFence(device, fence, allocator);
+}
+
+void LeviathanRenderer::VulkanApi::FreeCommandBuffers(VkDevice device, VkCommandPool commandPool, unsigned int commandBufferCount, VkCommandBuffer* const pCommandBuffersStart)
+{
+	vkFreeCommandBuffers(device, commandPool, commandBufferCount, pCommandBuffersStart);
+}

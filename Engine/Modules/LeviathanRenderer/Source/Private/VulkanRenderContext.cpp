@@ -29,7 +29,9 @@ namespace LeviathanRenderer
 		VkPhysicalDevice physicalDevice,
 		VkColorSpaceKHR swapchainColorSpace,
 		VkFormat swapchainFormat,
-		VkDevice device)
+		VkDevice device,
+		unsigned int inFlightFrameCount,
+		VkCommandPool graphicsCommandPool)
 	{
 		if (!VulkanApi::CreateVulkanSurface(instance, platformWindowHandle, allocator, VulkanSurface))
 		{
@@ -40,7 +42,7 @@ namespace LeviathanRenderer
 			physicalDevice,
 			swapchainColorSpace,
 			swapchainFormat,
-			VulkanApi::GetVSyncPresentMode(VSyncEnabled),
+			VulkanApi::GetPresentModeForVSyncState(VSyncEnabled),
 			VK_NULL_HANDLE,
 			SwapchainImageCount,
 			device,
@@ -93,12 +95,52 @@ namespace LeviathanRenderer
 			}
 		}
 
+		// Allocate command buffers.
+		GraphicsVulkanCommandBuffers.resize(static_cast<size_t>(inFlightFrameCount));
+
+		if (!VulkanApi::AllocateVulkanCommandBuffers(device,
+			graphicsCommandPool,
+			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+			inFlightFrameCount,
+			GraphicsVulkanCommandBuffers.data()))
+		{
+			return false;
+		}
+
+		// Create synchronization objects.
+		ImageAvailableVulkanSemaphores.resize(static_cast<size_t>(inFlightFrameCount));
+		RenderFinishedVulkanSemaphores.resize(static_cast<size_t>(inFlightFrameCount));
+		InFlightVulkanFences.resize(static_cast<size_t>(inFlightFrameCount));
+
+		for (size_t i = 0; i < static_cast<size_t>(inFlightFrameCount); ++i)
+		{
+			if (!VulkanApi::CreateVulkanSemaphore(device, allocator, ImageAvailableVulkanSemaphores[i]))
+			{
+				return false;
+			}
+
+			if (!VulkanApi::CreateVulkanSemaphore(device, allocator, RenderFinishedVulkanSemaphores[i]))
+			{
+				return false;
+			}
+
+			if (!VulkanApi::CreateVulkanFence(device, allocator, InFlightVulkanFences[i]))
+			{
+				return false;
+			}
+		}
+
+		// Store in flight frame count.
+		InFlightFrameCount = inFlightFrameCount;
+
 		return true;
 	}
 
-	bool RenderContextInstance::Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device)
+	bool RenderContextInstance::Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device, VkCommandPool graphicsCommandPool)
 	{
 		VulkanApi::DestroyVulkanSurface(instance, VulkanSurface, allocator);
+
+		VulkanApi::DestroyVulkanSwapchain(device, VulkanSwapchain, allocator);
 
 		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
 		{
@@ -106,13 +148,20 @@ namespace LeviathanRenderer
 			VulkanApi::DestroyVulkanImageView(device, VulkanSwapchainImageViews[i], allocator);
 		}
 
-		VulkanApi::DestroyVulkanSwapchain(device, VulkanSwapchain, allocator);
+		VulkanApi::FreeCommandBuffers(device, graphicsCommandPool, InFlightFrameCount, GraphicsVulkanCommandBuffers.data());
+
+		for (size_t i = 0; i < static_cast<size_t>(InFlightFrameCount); ++i)
+		{
+			VulkanApi::DestroyVulkanSemaphore(device, ImageAvailableVulkanSemaphores[i], allocator);
+			VulkanApi::DestroyVulkanSemaphore(device, RenderFinishedVulkanSemaphores[i], allocator);
+			VulkanApi::DestroyVulkanFence(device, InFlightVulkanFences[i], allocator);
+		}
 
 		return true;
 	}
 
-	void RenderContextInstance::IncrementCurrentFrame()
+	void RenderContextInstance::IncrementCurrentImageIndex()
 	{
-		CurrentFrame = (CurrentFrame + 1) % static_cast<size_t>(SwapchainImageCount);
+		CurrentImageIndex = (CurrentImageIndex + 1) % static_cast<size_t>(SwapchainImageCount);
 	}
 }

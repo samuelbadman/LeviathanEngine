@@ -2,11 +2,6 @@
 
 namespace LeviathanRenderer
 {
-	namespace VulkanApi
-	{
-		struct VulkanPhysicalDeviceQueueFamilyIndices;
-	}
-
 	class RenderContextInstance
 	{
 	private:
@@ -16,9 +11,16 @@ namespace LeviathanRenderer
 		std::vector<VkImageView> VulkanSwapchainImageViews = {};
 		std::vector<VkFramebuffer> VulkanSwapchainFramebuffers = {};
 
+		// In flight frame resources.
+		std::vector<VkCommandBuffer> GraphicsVulkanCommandBuffers = {};
+		std::vector<VkSemaphore> ImageAvailableVulkanSemaphores = {};
+		std::vector<VkSemaphore> RenderFinishedVulkanSemaphores = {};
+		std::vector<VkFence> InFlightVulkanFences = {};
+
 		VkFormat SwapchainFormat = VK_FORMAT_UNDEFINED;
 		VkExtent2D SwapchainExtent = {};
-		size_t CurrentFrame = 0;
+		size_t CurrentImageIndex = 0;
+		unsigned int InFlightFrameCount = 0;
 
 		// Render context settings. Need to be set before calling Initialize. Must be applied with RenderContext::ApplyRenderContextSettings() when changing after context initialization.
 		bool VSyncEnabled = false;
@@ -31,11 +33,13 @@ namespace LeviathanRenderer
 			VkPhysicalDevice physicalDevice,
 			VkColorSpaceKHR swapchainColorSpace,
 			VkFormat swapchainFormat,
-			VkDevice device);
+			VkDevice device,
+			unsigned int inFlightFrameCount,
+			VkCommandPool graphicsCommandPool);
 
-		bool Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device);
+		bool Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device, VkCommandPool graphicsCommandPool);
 
-		void IncrementCurrentFrame();
+		void IncrementCurrentImageIndex();
 
 		// Functions to set render context settings.
 		void SetVSyncEnabled(const bool enabled) { VSyncEnabled = enabled; }

@@ -6,11 +6,16 @@ namespace LeviathanRenderer
 
 	namespace RenderDevice
 	{
-		bool Initialize(const unsigned int backBufferCount);
+		bool Initialize();
 		bool Shutdown();
 		RenderContextInstance* CreateRenderContextInstance();
 		void DestroyRenderContextInstance(RenderContextInstance* const context);
 		bool InitializeRenderContextInstance(RenderContextInstance* const context);
 		bool ShutdownRenderContextInstance(RenderContextInstance* const context);
+
+		namespace RenderCommands
+		{
+			bool CmdBeginFrame(VkCommandBuffer commandBuffer);
+		}
 	}
 }

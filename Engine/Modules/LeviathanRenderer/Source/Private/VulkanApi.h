@@ -26,7 +26,7 @@ namespace LeviathanRenderer
 			std::vector<float> QueuePriorities = {};
 		};
 
-		constexpr VkPresentModeKHR GetVSyncPresentMode(bool vsyncEnabled)
+		constexpr VkPresentModeKHR GetPresentModeForVSyncState(bool vsyncEnabled)
 		{
 			return ((vsyncEnabled) ? VulkanApi::PresentModeVSyncEnabled : VulkanApi::PresentModeVSyncDisabled);
 		}
@@ -119,5 +119,15 @@ namespace LeviathanRenderer
 		bool BeginCommandBuffer(VkCommandBuffer commandBuffer);
 
 		bool EndCommandBuffer(VkCommandBuffer commandBuffer);
+
+		bool CreateVulkanSemaphore(VkDevice device, VkAllocationCallbacks* const allocator, VkSemaphore& outSemaphore);
+
+		bool CreateVulkanFence(VkDevice device, VkAllocationCallbacks* const allocator, VkFence& outFence);
+
+		void DestroyVulkanSemaphore(VkDevice device, VkSemaphore semaphore, VkAllocationCallbacks* const allocator);
+
+		void DestroyVulkanFence(VkDevice device, VkFence fence, VkAllocationCallbacks* const allocator);
+
+		void FreeCommandBuffers(VkDevice device, VkCommandPool commandPool, unsigned int commandBufferCount, VkCommandBuffer* const pCommandBuffersStart);
 	}
 }

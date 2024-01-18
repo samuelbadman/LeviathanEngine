@@ -9,7 +9,7 @@ namespace LeviathanRenderer
 	namespace RenderDevice
 	{
 		static constexpr VkColorSpaceKHR SwapchainColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-		static constexpr VkFormat SwapchainFormat = /*VK_FORMAT_B8G8R8A8_SRGB */ VK_FORMAT_B8G8R8A8_UNORM;
+		static constexpr VkFormat SwapchainFormat = /* VK_FORMAT_B8G8R8A8_SRGB */ VK_FORMAT_B8G8R8A8_UNORM;
 
 		static VkAllocationCallbacks* VulkanAllocator = nullptr;
 		static VkInstance VulkanInstance = VK_NULL_HANDLE;
@@ -21,9 +21,8 @@ namespace LeviathanRenderer
 		static VkDevice VulkanDevice = VK_NULL_HANDLE;
 		static VkQueue GraphicsVulkanQueue = VK_NULL_HANDLE;
 		static VkCommandPool GraphicsVulkanCommandPool = VK_NULL_HANDLE;
-		static std::vector<VkCommandBuffer> GraphicsVulkanCommandBuffers = {};
 
-		bool Initialize(const unsigned int backBufferCount)
+		bool Initialize()
 		{
 			// Create allocator.
 			VulkanAllocator = VulkanApi::CreateVulkanAllocator();
@@ -91,23 +90,13 @@ namespace LeviathanRenderer
 				return false;
 			}
 
-			// Allocate command buffers.
-			GraphicsVulkanCommandBuffers.resize(static_cast<size_t>(backBufferCount));
-
-			if (!VulkanApi::AllocateVulkanCommandBuffers(VulkanDevice,
-				GraphicsVulkanCommandPool, 
-				VK_COMMAND_BUFFER_LEVEL_PRIMARY, 
-				backBufferCount,
-				GraphicsVulkanCommandBuffers.data()))
-			{
-				return false;
-			}
-
 			return true;
 		}
 
 		bool Shutdown()
 		{
+			// All render context instances created by this render device must be shutdown and destroyed before shutting down this render device.
+
 			VulkanApi::DestroyVulkanCommandPool(VulkanDevice, GraphicsVulkanCommandPool, VulkanAllocator);
 			VulkanApi::DestroyVulkanLogicalDevice(VulkanDevice, VulkanAllocator);
 			VulkanApi::DestroyVulkanInstance(VulkanInstance, VulkanAllocator);
@@ -133,12 +122,29 @@ namespace LeviathanRenderer
 				VulkanPhysicalDevice, 
 				SwapchainColorSpace, 
 				SwapchainFormat, 
-				VulkanDevice);
+				VulkanDevice,
+				3,
+				GraphicsVulkanCommandPool);
 		}
 
 		bool ShutdownRenderContextInstance(RenderContextInstance* const context)
 		{
-			return context->Shutdown(VulkanInstance, VulkanAllocator, VulkanDevice);
+			return context->Shutdown(VulkanInstance, VulkanAllocator, VulkanDevice, GraphicsVulkanCommandPool);
+		}
+	}
+
+	namespace RenderCommands
+	{
+		bool CmdBeginFrame(VkCommandBuffer commandBuffer)
+		{
+			if (!VulkanApi::BeginCommandBuffer(commandBuffer))
+			{
+				return false;
+			}
+
+			 
+
+			return true;
 		}
 	}
 }
