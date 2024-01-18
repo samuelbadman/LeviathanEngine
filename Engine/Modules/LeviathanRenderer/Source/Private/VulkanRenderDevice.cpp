@@ -10,6 +10,7 @@ namespace LeviathanRenderer
 	{
 		static constexpr VkColorSpaceKHR SwapchainColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 		static constexpr VkFormat SwapchainFormat = /* VK_FORMAT_B8G8R8A8_SRGB */ VK_FORMAT_B8G8R8A8_UNORM;
+		static constexpr unsigned int RenderContextInstanceInFlightFrameCount = 3;
 
 		static VkAllocationCallbacks* VulkanAllocator = nullptr;
 		static VkInstance VulkanInstance = VK_NULL_HANDLE;
@@ -123,7 +124,7 @@ namespace LeviathanRenderer
 				SwapchainColorSpace, 
 				SwapchainFormat, 
 				VulkanDevice,
-				3,
+				RenderContextInstanceInFlightFrameCount,
 				GraphicsVulkanCommandPool);
 		}
 

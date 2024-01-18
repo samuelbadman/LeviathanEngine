@@ -11,7 +11,7 @@ namespace LeviathanRenderer
 			context->SetVSyncEnabled(vsyncEnabled);
 		}
 
-		void SetBackBufferCount(RenderContextInstance* const context, const unsigned int count)
+		void SetSwapChainBackBufferCount(RenderContextInstance* const context, const unsigned int count)
 		{
 			context->SetSwapchainImageCount(count);
 		}
