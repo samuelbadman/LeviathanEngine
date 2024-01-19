@@ -728,3 +728,13 @@ bool LeviathanRenderer::VulkanApi::ResetCommandBuffer(VkCommandBuffer commandBuf
 {
 	return (vkResetCommandBuffer(commandBuffer, 0) == VK_SUCCESS);
 }
+
+bool LeviathanRenderer::VulkanApi::VulkanQueueSubmit(VkQueue queue, unsigned int submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
+{
+	return (vkQueueSubmit(queue, submitCount, pSubmits, fence) == VK_SUCCESS);
+}
+
+bool LeviathanRenderer::VulkanApi::VulkanQueuePresent(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
+{
+	return (vkQueuePresentKHR(queue, pPresentInfo) == VK_SUCCESS);
+}

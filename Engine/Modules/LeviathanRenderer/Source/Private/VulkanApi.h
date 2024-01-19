@@ -142,5 +142,9 @@ namespace LeviathanRenderer
 			unsigned int& outImageIndex);
 
 		bool ResetCommandBuffer(VkCommandBuffer commandBuffer);
+
+		bool VulkanQueueSubmit(VkQueue queue, unsigned int submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
+
+		bool VulkanQueuePresent(VkQueue queue, const VkPresentInfoKHR* pPresentInfo);
 	}
 }
