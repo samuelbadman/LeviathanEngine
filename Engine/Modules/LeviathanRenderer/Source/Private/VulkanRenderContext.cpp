@@ -31,13 +31,16 @@ namespace LeviathanRenderer
 		VkFormat swapchainFormat,
 		VkDevice device,
 		unsigned int inFlightFrameCount,
-		VkCommandPool graphicsCommandPool)
+		VkCommandPool graphicsCommandPool,
+		VkRenderPass mainRenderPass)
 	{
+		// Create the surface.
 		if (!VulkanApi::CreateVulkanSurface(instance, platformWindowHandle, allocator, VulkanSurface))
 		{
 			return false;
 		}
 
+		// Create the swapchain.
 		if (!VulkanApi::CreateVulkanSwapchain(VulkanSurface,
 			physicalDevice,
 			swapchainColorSpace,
@@ -54,11 +57,13 @@ namespace LeviathanRenderer
 			return false;
 		}
 
+		// Retreive the swapchain images.
 		if (!VulkanApi::RetreiveSwapchainImages(device, VulkanSwapchain, VulkanSwapchainImages))
 		{
 			return false;
 		}
 
+		// Create swapchain image views and framebuffers.
 		VulkanSwapchainImageViews.resize(static_cast<size_t>(SwapchainImageCount));
 		VulkanSwapchainFramebuffers.resize(static_cast<size_t>(SwapchainImageCount));
 
@@ -83,7 +88,7 @@ namespace LeviathanRenderer
 			}
 
 			if (!VulkanApi::CreateVulkanFramebuffer(device,
-				VK_NULL_HANDLE,
+				mainRenderPass,
 				1,
 				&VulkanSwapchainImageViews[i],
 				SwapchainExtent.width,
@@ -169,11 +174,11 @@ namespace LeviathanRenderer
 	{
 		// Acquire the context's swapchain's next image index. This function signals the specified semaphore and/or fence once the presentation engine has finished with
 		// the image resource and the image memory is available to be rendered to.
-		return (VulkanApi::AcquireNextImageFromSwapchain(device,
+		return VulkanApi::AcquireNextImageFromSwapchain(device,
 			VulkanSwapchain,
 			timeoutDurationNanoseconds,
 			ImageAvailableVulkanSemaphores[CurrentInFlightFrameIndex],
 			VK_NULL_HANDLE,
-			CurrentImageIndex) == VK_SUCCESS);
+			CurrentImageIndex);
 	}
 }

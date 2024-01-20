@@ -23,6 +23,7 @@ namespace LeviathanRenderer
 		static VkDevice VulkanDevice = VK_NULL_HANDLE;
 		static VkQueue GraphicsVulkanQueue = VK_NULL_HANDLE;
 		static VkCommandPool GraphicsVulkanCommandPool = VK_NULL_HANDLE;
+		static VkRenderPass MainVulkanRenderPass = VK_NULL_HANDLE;
 
 		bool Initialize()
 		{
@@ -91,6 +92,48 @@ namespace LeviathanRenderer
 				return false;
 			}
 
+			// Create render passes.
+			VkAttachmentDescription colorAttachmentDescription = {};
+			colorAttachmentDescription.format = SwapchainFormat;
+			colorAttachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+			colorAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			colorAttachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			colorAttachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			colorAttachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			colorAttachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			colorAttachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+			VkAttachmentReference colorAttachmentReference = {};
+			colorAttachmentReference.attachment = 0;
+			colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+			VkSubpassDescription mainRenderPassSubpassDescription = {};
+			mainRenderPassSubpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+			mainRenderPassSubpassDescription.colorAttachmentCount = 1;
+			mainRenderPassSubpassDescription.pColorAttachments = &colorAttachmentReference;
+
+			VkSubpassDependency mainRenderPassSubpassDependency = {};
+			mainRenderPassSubpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+			mainRenderPassSubpassDependency.dstSubpass = 0;
+			mainRenderPassSubpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			mainRenderPassSubpassDependency.srcAccessMask = 0;
+			mainRenderPassSubpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			mainRenderPassSubpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+			VkRenderPassCreateInfo mainRenderPassCreateInfo = {};
+			mainRenderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+			mainRenderPassCreateInfo.attachmentCount = 1;
+			mainRenderPassCreateInfo.pAttachments = &colorAttachmentDescription;
+			mainRenderPassCreateInfo.subpassCount = 1;
+			mainRenderPassCreateInfo.pSubpasses = &mainRenderPassSubpassDescription;
+			mainRenderPassCreateInfo.dependencyCount = 1;
+			mainRenderPassCreateInfo.pDependencies = &mainRenderPassSubpassDependency;
+
+			if (vkCreateRenderPass(VulkanDevice, &mainRenderPassCreateInfo, VulkanAllocator, &MainVulkanRenderPass) != VK_SUCCESS)
+			{
+				return false;
+			}
+
 			return true;
 		}
 
@@ -98,6 +141,13 @@ namespace LeviathanRenderer
 		{
 			// All render context instances created by this render device must be shutdown and destroyed before shutting down this render device.
 
+			// Wait for all queues on the logical device to finish outstanding queue operations before destroying the logical device.
+			if (vkDeviceWaitIdle(VulkanDevice) != VK_SUCCESS)
+			{
+				return false;
+			}
+
+			vkDestroyRenderPass(VulkanDevice, MainVulkanRenderPass, VulkanAllocator);
 			VulkanApi::DestroyVulkanCommandPool(VulkanDevice, GraphicsVulkanCommandPool, VulkanAllocator);
 			VulkanApi::DestroyVulkanLogicalDevice(VulkanDevice, VulkanAllocator);
 			VulkanApi::DestroyVulkanInstance(VulkanInstance, VulkanAllocator);
@@ -125,28 +175,37 @@ namespace LeviathanRenderer
 				SwapchainFormat,
 				VulkanDevice,
 				RenderContextInstanceInFlightFrameCount,
-				GraphicsVulkanCommandPool);
+				GraphicsVulkanCommandPool,
+				MainVulkanRenderPass);
 		}
 
 		bool ShutdownRenderContextInstance(RenderContextInstance* const context)
 		{
+			// Wait for the graphics queue to finish doing work with the context's resources. TODO: Potentially create a queue per context to be able to 
+			// only wait for the work for the context being shutdown instead of all graphics queue work.
+			if (vkQueueWaitIdle(GraphicsVulkanQueue) != VK_SUCCESS)
+			{
+				return false;
+			}
+
 			return context->Shutdown(VulkanInstance, VulkanAllocator, VulkanDevice, GraphicsVulkanCommandPool);
 		}
 
 		bool BeginFrameCommandRecording(RenderContextInstance* const context)
 		{
-			// Progress the context's current in flight frame.
-			context->IncrementCurrentInFlightFrameIndex();
-
 			// Obtain context resources for current in flight frame.
 			const VkFence currentInFlightFrameFence = context->GetCurrentInFlightFrameFence();
 			const VkCommandBuffer GraphicsCommandBufferForCurrentInFlightFrame = context->GetGraphicsCommandBufferForCurrentInFlightFrame();
+
+			LEVIATHAN_LOG("Waiting for fence %d", context->GetCurrentInFlightFrameIndex());
 
 			// Wait for the context's current in flight frame resources to be finished with from the previous frame before resetting them for this frame.
 			if (!VulkanApi::WaitForFences(VulkanDevice, 1, &currentInFlightFrameFence, VK_TRUE, static_cast<unsigned long long>(LeviathanCore::Timing::MaxNanoseconds)))
 			{
 				return false;
 			}
+
+			LEVIATHAN_LOG("Finished waiting for fence %d", context->GetCurrentInFlightFrameIndex());
 
 			// Reset the fence to an unsignalled state now that it has been signalled by the command queue.
 			if (!VulkanApi::ResetFences(VulkanDevice, 1, &currentInFlightFrameFence))
@@ -172,11 +231,33 @@ namespace LeviathanRenderer
 				return false;
 			}
 
+			// Start main render pass.
+			VkClearValue clearColor =
+			{
+				.color = {1.0f, 0.0f, 0.0f, 1.0f}
+			};
+
+			VkRenderPassBeginInfo mainRenderPassBeginInfo = {};
+			mainRenderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			mainRenderPassBeginInfo.renderPass = MainVulkanRenderPass;
+			mainRenderPassBeginInfo.framebuffer = context->GetCurrentImageFramebuffer();
+			mainRenderPassBeginInfo.renderArea.offset = 
+			{ 
+				.x = 0,
+				.y = 0
+			};
+			mainRenderPassBeginInfo.renderArea.extent = context->GetSwapchainExtent();
+			mainRenderPassBeginInfo.clearValueCount = 1;
+			mainRenderPassBeginInfo.pClearValues = &clearColor;
+			vkCmdBeginRenderPass(GraphicsCommandBufferForCurrentInFlightFrame, &mainRenderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
 			return true;
 		}
 
 		bool EndFrameCommandRecording(RenderContextInstance* const context)
 		{
+			vkCmdEndRenderPass(context->GetGraphicsCommandBufferForCurrentInFlightFrame());
+
 			return VulkanApi::EndCommandBuffer(context->GetGraphicsCommandBufferForCurrentInFlightFrame());
 		}
 
@@ -217,6 +298,9 @@ namespace LeviathanRenderer
 			presentInfo.pSwapchains = &presentSwapchain;
 			presentInfo.pImageIndices = &presentSwapchainImageIndex;
 			presentInfo.pResults = nullptr;
+
+			// Progress the context's current in flight frame.
+			context->IncrementCurrentInFlightFrameIndex();
 
 			return VulkanApi::VulkanQueuePresent(GraphicsVulkanQueue, &presentInfo);
 		}

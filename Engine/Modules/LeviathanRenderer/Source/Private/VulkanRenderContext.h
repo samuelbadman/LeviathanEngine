@@ -19,7 +19,7 @@ namespace LeviathanRenderer
 
 		VkFormat SwapchainFormat = VK_FORMAT_UNDEFINED;
 		VkExtent2D SwapchainExtent = {};
-		size_t CurrentInFlightFrameIndex = 0;
+		unsigned int CurrentInFlightFrameIndex = 0;
 		unsigned int InFlightFrameCount = 0;
 		unsigned int CurrentImageIndex = 0;
 
@@ -36,7 +36,8 @@ namespace LeviathanRenderer
 			VkFormat swapchainFormat,
 			VkDevice device,
 			unsigned int inFlightFrameCount,
-			VkCommandPool graphicsCommandPool);
+			VkCommandPool graphicsCommandPool,
+			VkRenderPass mainRenderPass);
 
 		bool Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device, VkCommandPool graphicsCommandPool);
 
@@ -58,6 +59,12 @@ namespace LeviathanRenderer
 		VkSemaphore GetRenderFinishedSemaphoreForCurrentInFlightFrame() const { return RenderFinishedVulkanSemaphores[static_cast<size_t>(CurrentInFlightFrameIndex)]; }
 
 		unsigned int GetCurrentImageIndex() const { return CurrentImageIndex; }
+
+		unsigned int GetCurrentInFlightFrameIndex() const { return CurrentInFlightFrameIndex; }
+
+		VkFramebuffer GetCurrentImageFramebuffer() const { return VulkanSwapchainFramebuffers[static_cast<size_t>(CurrentImageIndex)]; }
+
+		VkExtent2D GetSwapchainExtent() const { return SwapchainExtent; }
 
 		// Functions to set render context settings.
 		void SetVSyncEnabled(const bool enabled) { VSyncEnabled = enabled; }

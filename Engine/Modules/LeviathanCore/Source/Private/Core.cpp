@@ -21,6 +21,9 @@ namespace LeviathanCore
 		static Callback<PostTickCallbackType> PostTickCallback = {};
 		static Callback<CleanupCallbackType> CleanupCallback = {};
 		static Callback<RuntimeWindowResizedCallbackType> RuntimeWindowResizedCallback = {};
+		static Callback<RuntimeWindowMinimizedCallbackType> RuntimeWindowMinimizedCallback = {};
+		static Callback<RuntimeWindowMaximizedCallbackType> RuntimeWindowMaximizedCallback = {};
+		static Callback<RuntimeWindowRestoredCallbackType> RuntimeWindowRestoredCallback = {};
 		static Callback<RenderCallbackType> RenderCallback = {};
 
 		static bool CreateAndInitializeRuntimeWindow()
@@ -32,7 +35,7 @@ namespace LeviathanCore
 			runtimeWindowDesc.Height = 720;
 			runtimeWindowDesc.Title = "Leviathan Engine";
 			runtimeWindowDesc.UniqueName = "LeviathanEngineRuntimeWindow";
-			runtimeWindowDesc.Mode = LeviathanCore::Platform::Window::PlatformWindowMode::Windowed_NoResize;
+			runtimeWindowDesc.Mode = LeviathanCore::Platform::Window::PlatformWindowMode::Windowed;
 
 			return LeviathanCore::Platform::Window::InitializePlatformWindow(RuntimeWindow, runtimeWindowDesc);
 		}
@@ -57,6 +60,9 @@ namespace LeviathanCore
 				{
 					RuntimeWindowResizedCallback.Call(newWidth, newHeight); 
 				});
+			LeviathanCore::Platform::Window::GetPlatformWindowMinimizedCallback(RuntimeWindow).Register([]() { RuntimeWindowMinimizedCallback.Call(); });
+			LeviathanCore::Platform::Window::GetPlatformWindowMaximizedCallback(RuntimeWindow).Register([]() { RuntimeWindowMaximizedCallback.Call(); });
+			LeviathanCore::Platform::Window::GetPlatformWindowRestoredCallback(RuntimeWindow).Register([]() { RuntimeWindowRestoredCallback.Call(); });
 		}
 
 		static bool Cleanup()
@@ -104,6 +110,21 @@ namespace LeviathanCore
 		Callback<RuntimeWindowResizedCallbackType>& GetRuntimeWindowResizedCallback()
 		{
 			return RuntimeWindowResizedCallback;
+		}
+
+		Callback<RuntimeWindowMinimizedCallbackType>& GetRuntimeWindowMinimizedCallback()
+		{
+			return RuntimeWindowMinimizedCallback;
+		}
+
+		Callback<RuntimeWindowMaximizedCallbackType>& GetRuntimeWindowMaximizedCallback()
+		{
+			return RuntimeWindowMaximizedCallback;
+		}
+
+		Callback<RuntimeWindowRestoredCallbackType>& GetRuntimeWindowRestoredCallback()
+		{
+			return RuntimeWindowRestoredCallback;
 		}
 
 		Callback<RenderCallbackType>& GetRenderCallback()
