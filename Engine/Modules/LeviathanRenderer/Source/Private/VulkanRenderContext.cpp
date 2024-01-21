@@ -24,8 +24,8 @@ namespace LeviathanRenderer
 	}
 
 	bool RenderContextInstance::Initialize(VkInstance instance,
-		void* platformWindowHandle, 
-		VkAllocationCallbacks* const allocator, 
+		void* platformWindowHandle,
+		VkAllocationCallbacks* const allocator,
 		VkPhysicalDevice physicalDevice,
 		VkColorSpaceKHR swapchainColorSpace,
 		VkFormat swapchainFormat,
@@ -41,63 +41,9 @@ namespace LeviathanRenderer
 		}
 
 		// Create the swapchain.
-		if (!VulkanApi::CreateVulkanSwapchain(VulkanSurface,
-			physicalDevice,
-			swapchainColorSpace,
-			swapchainFormat,
-			VulkanApi::GetPresentModeForVSyncState(VSyncEnabled),
-			VK_NULL_HANDLE,
-			SwapchainImageCount,
-			device,
-			allocator,
-			VulkanSwapchain,
-			SwapchainExtent,
-			SwapchainFormat))
+		if (!CreateSwapchain(allocator, physicalDevice, swapchainColorSpace, swapchainFormat, device, mainRenderPass))
 		{
 			return false;
-		}
-
-		// Retreive the swapchain images.
-		if (!VulkanApi::RetreiveSwapchainImages(device, VulkanSwapchain, VulkanSwapchainImages))
-		{
-			return false;
-		}
-
-		// Create swapchain image views and framebuffers.
-		VulkanSwapchainImageViews.resize(static_cast<size_t>(SwapchainImageCount));
-		VulkanSwapchainFramebuffers.resize(static_cast<size_t>(SwapchainImageCount));
-
-		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
-		{
-			if (!VulkanApi::CreateVulkanImageView(device,
-				VulkanSwapchainImages[i],
-				VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
-				SwapchainFormat,
-				VK_IMAGE_ASPECT_COLOR_BIT,
-				VkComponentMapping
-				{
-					.r = VK_COMPONENT_SWIZZLE_IDENTITY,
-					.g = VK_COMPONENT_SWIZZLE_IDENTITY,
-					.b = VK_COMPONENT_SWIZZLE_IDENTITY,
-					.a = VK_COMPONENT_SWIZZLE_IDENTITY
-				},
-				allocator,
-				VulkanSwapchainImageViews[i]))
-			{
-				return false;
-			}
-
-			if (!VulkanApi::CreateVulkanFramebuffer(device,
-				mainRenderPass,
-				1,
-				&VulkanSwapchainImageViews[i],
-				SwapchainExtent.width,
-				SwapchainExtent.height,
-				allocator,
-				VulkanSwapchainFramebuffers[i]))
-			{
-				return false;
-			}
 		}
 
 		// Allocate command buffers.
@@ -145,13 +91,7 @@ namespace LeviathanRenderer
 	{
 		VulkanApi::DestroyVulkanSurface(instance, VulkanSurface, allocator);
 
-		VulkanApi::DestroyVulkanSwapchain(device, VulkanSwapchain, allocator);
-
-		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
-		{
-			VulkanApi::DestroyVulkanFramebuffer(device, VulkanSwapchainFramebuffers[i], allocator);
-			VulkanApi::DestroyVulkanImageView(device, VulkanSwapchainImageViews[i], allocator);
-		}
+		DestroySwapchain(device, allocator);
 
 		VulkanApi::FreeCommandBuffers(device, graphicsCommandPool, InFlightFrameCount, GraphicsVulkanCommandBuffers.data());
 
@@ -180,5 +120,104 @@ namespace LeviathanRenderer
 			ImageAvailableVulkanSemaphores[CurrentInFlightFrameIndex],
 			VK_NULL_HANDLE,
 			CurrentImageIndex);
+	}
+
+	bool RenderContextInstance::RecreateSwapchain(VkDevice device, 
+		VkPhysicalDevice physicalDevice, 
+		VkColorSpaceKHR swapchainColorSpace,
+		VkFormat swapchainFormat,
+		VkRenderPass mainRenderPass,
+		VkAllocationCallbacks* const allocator)
+	{
+		DestroySwapchain(device, allocator);
+
+		return CreateSwapchain(allocator,
+			physicalDevice,
+			swapchainColorSpace,
+			swapchainFormat,
+			device,
+			mainRenderPass);
+	}
+
+	bool RenderContextInstance::CreateSwapchain(VkAllocationCallbacks* const allocator,
+		VkPhysicalDevice physicalDevice,
+		VkColorSpaceKHR swapchainColorSpace,
+		VkFormat swapchainFormat,
+		VkDevice device,
+		VkRenderPass mainRenderPass)
+	{
+		if (!VulkanApi::CreateVulkanSwapchain(VulkanSurface,
+			physicalDevice,
+			swapchainColorSpace,
+			swapchainFormat,
+			VulkanApi::GetPresentModeForVSyncState(VSyncEnabled),
+			VK_NULL_HANDLE,
+			SwapchainImageCount,
+			device,
+			allocator,
+			VulkanSwapchain,
+			SwapchainExtent,
+			SwapchainFormat))
+		{
+			return false;
+		}
+
+		// Retreive the swapchain images.
+		VulkanSwapchainImages.resize(static_cast<size_t>(SwapchainImageCount));
+
+		if (!VulkanApi::RetreiveSwapchainImages(device, VulkanSwapchain, VulkanSwapchainImages))
+		{
+			return false;
+		}
+
+		// Create swapchain image views and framebuffers.
+		VulkanSwapchainImageViews.resize(static_cast<size_t>(SwapchainImageCount));
+		VulkanSwapchainFramebuffers.resize(static_cast<size_t>(SwapchainImageCount));
+
+		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
+		{
+			if (!VulkanApi::CreateVulkanImageView(device,
+				VulkanSwapchainImages[i],
+				VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
+				SwapchainFormat,
+				VK_IMAGE_ASPECT_COLOR_BIT,
+				VkComponentMapping
+				{
+					.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+					.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+					.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+					.a = VK_COMPONENT_SWIZZLE_IDENTITY
+				},
+				allocator,
+				VulkanSwapchainImageViews[i]))
+			{
+				return false;
+			}
+
+			if (!VulkanApi::CreateVulkanFramebuffer(device,
+				mainRenderPass,
+				1,
+				&VulkanSwapchainImageViews[i],
+				SwapchainExtent.width,
+				SwapchainExtent.height,
+				allocator,
+				VulkanSwapchainFramebuffers[i]))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void RenderContextInstance::DestroySwapchain(VkDevice device, VkAllocationCallbacks* const allocator)
+	{
+		VulkanApi::DestroyVulkanSwapchain(device, VulkanSwapchain, allocator);
+
+		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
+		{
+			VulkanApi::DestroyVulkanFramebuffer(device, VulkanSwapchainFramebuffers[i], allocator);
+			VulkanApi::DestroyVulkanImageView(device, VulkanSwapchainImageViews[i], allocator);
+		}
 	}
 }

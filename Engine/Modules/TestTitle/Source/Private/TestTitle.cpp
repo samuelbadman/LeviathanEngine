@@ -56,26 +56,6 @@ namespace TestTitle
 		Shutdown();
 	}
 
-	static void OnRuntimeWindowResized([[maybe_unused]] int newWidth, [[maybe_unused]] int newHeight)
-	{
-		LEVIATHAN_LOG("Runtime window resized width: %d height: %d.", newWidth, newHeight);
-	}
-
-	static void OnRuntimeWindowMinimized()
-	{
-		LEVIATHAN_LOG("Runtime window minimized.");
-	}
-
-	static void OnRuntimeWindowMaximized()
-	{
-		LEVIATHAN_LOG("Runtime window maximized.");
-	}
-
-	static void OnRuntimeWindowRestored()
-	{
-		LEVIATHAN_LOG("Runtime window restored.");
-	}
-
 	static void OnInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data)
 	{
 
@@ -83,7 +63,7 @@ namespace TestTitle
 
 	static void OnGameControllerInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data, [[maybe_unused]] unsigned int gameControllerId)
 	{
-
+		
 	}
 
 	static void OnGameControllerConnected([[maybe_unused]] unsigned int gameControllerId)
@@ -122,10 +102,6 @@ namespace TestTitle
 		LeviathanCore::Core::GetFixedTickCallback().Register(&OnFixedTick);
 		LeviathanCore::Core::GetTickCallback().Register(&OnTick);
 		LeviathanCore::Core::GetPostTickCallback().Register(&OnPostTick);
-		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(&OnRuntimeWindowResized);
-		LeviathanCore::Core::GetRuntimeWindowMinimizedCallback().Register(&OnRuntimeWindowMinimized);
-		LeviathanCore::Core::GetRuntimeWindowMaximizedCallback().Register(&OnRuntimeWindowMaximized);
-		LeviathanCore::Core::GetRuntimeWindowRestoredCallback().Register(&OnRuntimeWindowRestored);
 		LeviathanCore::Core::GetRenderCallback().Register(&OnRender);
 
 		LeviathanInputCore::PlatformInput::GetInputCallback().Register(&OnInput);

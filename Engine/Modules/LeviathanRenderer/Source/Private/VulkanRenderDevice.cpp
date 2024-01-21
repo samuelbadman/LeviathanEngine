@@ -197,15 +197,11 @@ namespace LeviathanRenderer
 			const VkFence currentInFlightFrameFence = context->GetCurrentInFlightFrameFence();
 			const VkCommandBuffer GraphicsCommandBufferForCurrentInFlightFrame = context->GetGraphicsCommandBufferForCurrentInFlightFrame();
 
-			LEVIATHAN_LOG("Waiting for fence %d", context->GetCurrentInFlightFrameIndex());
-
 			// Wait for the context's current in flight frame resources to be finished with from the previous frame before resetting them for this frame.
 			if (!VulkanApi::WaitForFences(VulkanDevice, 1, &currentInFlightFrameFence, VK_TRUE, static_cast<unsigned long long>(LeviathanCore::Timing::MaxNanoseconds)))
 			{
 				return false;
 			}
-
-			LEVIATHAN_LOG("Finished waiting for fence %d", context->GetCurrentInFlightFrameIndex());
 
 			// Reset the fence to an unsignalled state now that it has been signalled by the command queue.
 			if (!VulkanApi::ResetFences(VulkanDevice, 1, &currentInFlightFrameFence))
@@ -303,6 +299,16 @@ namespace LeviathanRenderer
 			context->IncrementCurrentInFlightFrameIndex();
 
 			return VulkanApi::VulkanQueuePresent(GraphicsVulkanQueue, &presentInfo);
+		}
+
+		bool ResizeRenderContextInstance(RenderContextInstance* const context)
+		{
+			if (vkQueueWaitIdle(GraphicsVulkanQueue) != VK_SUCCESS)
+			{
+				return false;
+			}
+
+			return context->RecreateSwapchain(VulkanDevice, VulkanPhysicalDevice, SwapchainColorSpace, SwapchainFormat, MainVulkanRenderPass, VulkanAllocator);
 		}
 
 		namespace RenderCommands

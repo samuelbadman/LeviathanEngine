@@ -11,6 +11,13 @@ namespace LeviathanRenderer
 
 	static RenderContextInstance* RuntimeWindowRenderContext = nullptr;
 
+	static void OnRuntimeWindowResized([[maybe_unused]] int newWidth, [[maybe_unused]] int newHeight)
+	{
+		[[maybe_unused]] bool success = RenderDevice::ResizeRenderContextInstance(RuntimeWindowRenderContext);
+
+		LEVIATHAN_LOG("Resize runtime window render context result: %s.", ((success) ? "Success" : "Failed"));
+	}
+
 	static bool CreateAndInitializeRuntimeWindowRenderContext()
 	{
 		RuntimeWindowRenderContext = RenderDevice::CreateRenderContextInstance();
@@ -34,6 +41,9 @@ namespace LeviathanRenderer
 
 	bool Initialize()
 	{
+		// Register to runtime window callbacks.
+		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(&OnRuntimeWindowResized);
+
 		// Initialize render device.
 		if (!RenderDevice::Initialize())
 		{

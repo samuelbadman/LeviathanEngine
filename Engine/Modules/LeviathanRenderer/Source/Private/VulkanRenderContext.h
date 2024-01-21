@@ -66,8 +66,25 @@ namespace LeviathanRenderer
 
 		VkExtent2D GetSwapchainExtent() const { return SwapchainExtent; }
 
+		bool RecreateSwapchain(VkDevice device,
+			VkPhysicalDevice physicalDevice,
+			VkColorSpaceKHR swapchainColorSpace,
+			VkFormat swapchainFormat,
+			VkRenderPass mainRenderPass,
+			VkAllocationCallbacks* const allocator);
+
 		// Functions to set render context settings.
 		void SetVSyncEnabled(const bool enabled) { VSyncEnabled = enabled; }
 		void SetSwapchainImageCount(const unsigned int count) { SwapchainImageCount = count; }
+
+	private:
+		bool CreateSwapchain(VkAllocationCallbacks* const allocator,
+			VkPhysicalDevice physicalDevice,
+			VkColorSpaceKHR swapchainColorSpace,
+			VkFormat swapchainFormat,
+			VkDevice device,
+			VkRenderPass mainRenderPass);
+
+		void DestroySwapchain(VkDevice device, VkAllocationCallbacks* const allocator);
 	};
 }
