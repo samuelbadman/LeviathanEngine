@@ -115,23 +115,23 @@ namespace TestTitle
 		}
 
 		// Register callbacks.
-		LeviathanCore::Core::GetCleanupCallback().Register(OnCleanup);
-		LeviathanCore::Core::GetPreMainLoopCallback().Register(OnPreMainLoop);
-		LeviathanCore::Core::GetPostMainLoopCallback().Register(OnPostMainLoop);
-		LeviathanCore::Core::GetPreTickCallback().Register(OnPreTick);
-		LeviathanCore::Core::GetFixedTickCallback().Register(OnFixedTick);
-		LeviathanCore::Core::GetTickCallback().Register(OnTick);
-		LeviathanCore::Core::GetPostTickCallback().Register(OnPostTick);
-		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(OnRuntimeWindowResized);
-		LeviathanCore::Core::GetRuntimeWindowMinimizedCallback().Register(OnRuntimeWindowMinimized);
-		LeviathanCore::Core::GetRuntimeWindowMaximizedCallback().Register(OnRuntimeWindowMaximized);
-		LeviathanCore::Core::GetRuntimeWindowRestoredCallback().Register(OnRuntimeWindowRestored);
-		LeviathanCore::Core::GetRenderCallback().Register(OnRender);
+		LeviathanCore::Core::GetCleanupCallback().Register(&OnCleanup);
+		LeviathanCore::Core::GetPreMainLoopCallback().Register(&OnPreMainLoop);
+		LeviathanCore::Core::GetPostMainLoopCallback().Register(&OnPostMainLoop);
+		LeviathanCore::Core::GetPreTickCallback().Register(&OnPreTick);
+		LeviathanCore::Core::GetFixedTickCallback().Register(&OnFixedTick);
+		LeviathanCore::Core::GetTickCallback().Register(&OnTick);
+		LeviathanCore::Core::GetPostTickCallback().Register(&OnPostTick);
+		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(&OnRuntimeWindowResized);
+		LeviathanCore::Core::GetRuntimeWindowMinimizedCallback().Register(&OnRuntimeWindowMinimized);
+		LeviathanCore::Core::GetRuntimeWindowMaximizedCallback().Register(&OnRuntimeWindowMaximized);
+		LeviathanCore::Core::GetRuntimeWindowRestoredCallback().Register(&OnRuntimeWindowRestored);
+		LeviathanCore::Core::GetRenderCallback().Register(&OnRender);
 
-		LeviathanInputCore::PlatformInput::GetInputCallback().Register(OnInput);
-		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Register(OnGameControllerInput);
-		LeviathanInputCore::PlatformInput::GetGameControllerConnectedCallback().Register(OnGameControllerConnected);
-		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Register(OnGameControllerDisconnected);
+		LeviathanInputCore::PlatformInput::GetInputCallback().Register(&OnInput);
+		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Register(&OnGameControllerInput);
+		LeviathanInputCore::PlatformInput::GetGameControllerConnectedCallback().Register(&OnGameControllerConnected);
+		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Register(&OnGameControllerDisconnected);
 
 		return true;
 	}

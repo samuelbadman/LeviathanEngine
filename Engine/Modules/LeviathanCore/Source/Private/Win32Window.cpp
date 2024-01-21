@@ -64,6 +64,11 @@ namespace LeviathanCore
 				return static_cast<void*>(platformWindow->GetHWnd());
 			}
 
+			bool IsPlatformWindowMinimized(PlatformWindow* const platformWindow)
+			{
+				return platformWindow->IsMinimized();
+			}
+
 			Callback<PlatformWindowDestroyedCallbackType>& GetPlatformWindowDestroyedCallback(PlatformWindow* const platformWindow)
 			{
 				return platformWindow->GetDestroyedCallback();
@@ -376,10 +381,10 @@ namespace LeviathanCore
 
 					case SIZE_RESTORED:
 					{
-						// Restored.
-						WndProcRestored();
 						if (!InSizeMove)
 						{
+							// Restored.
+							WndProcRestored();
 							// Resized.
 							WndProcResized(resizedWidth, resizedHeight);
 						}
@@ -493,6 +498,11 @@ namespace LeviathanCore
 				Handle = nullptr;
 				InSizeMove = false;
 				ClassName = {};
+			}
+
+			bool PlatformWindow::IsMinimized() const
+			{
+				return IsIconic(Handle);
 			}
 
 			void PlatformWindow::WndProcDestroyed()

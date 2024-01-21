@@ -51,6 +51,7 @@ namespace LeviathanCore
 			bool InitializePlatformWindow(PlatformWindow* const platformWindow, const PlatformWindowDescription& description);
 			bool ShutdownPlatformWindow(PlatformWindow* const platformWindow);
 			void* GetPlatformWindowPlatformHandle(PlatformWindow* const platformWindow);
+			bool IsPlatformWindowMinimized(PlatformWindow* const platformWindow);
 
 			Callback<PlatformWindowDestroyedCallbackType>& GetPlatformWindowDestroyedCallback(PlatformWindow* const platformWindow);
 			Callback<PlatformWindowClosedCallbackType>& GetPlatformWindowClosedCallback(PlatformWindow* const platformWindow);

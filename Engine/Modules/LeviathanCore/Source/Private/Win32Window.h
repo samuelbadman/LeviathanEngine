@@ -53,6 +53,7 @@ namespace LeviathanCore
 				HWND GetHWnd() const { return Handle; }
 				bool SetTitle(std::string_view newTitle);
 				void Reset();
+				bool IsMinimized() const;
 
 				Callback<PlatformWindowDestroyedCallbackType>& GetDestroyedCallback() { return DestroyedCallback; }
 				Callback<PlatformWindowClosedCallbackType>& GetClosedCallback() { return ClosedCallback; }

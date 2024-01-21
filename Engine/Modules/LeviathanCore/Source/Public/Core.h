@@ -37,5 +37,6 @@ namespace LeviathanCore
 		int RunEngine();
 		void Exit();
 		void* GetRuntimeWindowPlatformHandle();
+		bool IsRuntimeWindowMinimized();
 	}
 }

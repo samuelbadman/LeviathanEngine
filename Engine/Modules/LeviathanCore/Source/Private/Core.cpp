@@ -11,8 +11,8 @@ namespace LeviathanCore
 		// Timestep used in fixed tick call. Can be tweaked for a less or more precise simulation.
 		static constexpr float FixedTimestep = 0.1f; 
 
-		static LeviathanCore::Platform::Window::PlatformWindow* RuntimeWindow = {};
 		static bool EngineRunning = false;
+		static LeviathanCore::Platform::Window::PlatformWindow* RuntimeWindow = {};
 		static Callback<PreMainLoopCallbackType> PreMainLoopCallback = {};
 		static Callback<PostMainLoopCallbackType> PostMainLoopCallback = {};
 		static Callback<FixedTickCallbackType> FixedTickCallback = {};
@@ -55,7 +55,7 @@ namespace LeviathanCore
 
 		static void RegisterToRuntimeWindowCallbacks()
 		{
-			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(Exit);
+			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(&Exit);
 			LeviathanCore::Platform::Window::GetPlatformWindowResizedCallback(RuntimeWindow).Register([](int newWidth, int newHeight)
 				{
 					RuntimeWindowResizedCallback.Call(newWidth, newHeight); 
@@ -224,6 +224,11 @@ namespace LeviathanCore
 		void* GetRuntimeWindowPlatformHandle()
 		{
 			return LeviathanCore::Platform::Window::GetPlatformWindowPlatformHandle(RuntimeWindow);
+		}
+
+		bool IsRuntimeWindowMinimized()
+		{
+			return LeviathanCore::Platform::Window::IsPlatformWindowMinimized(RuntimeWindow);
 		}
 	}
 }

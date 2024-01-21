@@ -238,14 +238,14 @@ namespace LeviathanInputCore
 				return false;
 			}
 
-			LeviathanCore::Core::GetPreTickCallback().Register(OnPreTick);
-			LeviathanCore::Core::GetPostTickCallback().Register(OnPostTick);
+			LeviathanCore::Core::GetPreTickCallback().Register(&OnPreTick);
+			LeviathanCore::Core::GetPostTickCallback().Register(&OnPostTick);
 
-			LeviathanCore::Platform::GetGameControllerConnectionEventCallback().Register(OnGameControllerConnectionEvent);
+			LeviathanCore::Platform::GetGameControllerConnectionEventCallback().Register(&OnGameControllerConnectionEvent);
 
-			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadInputCallback().Register(OnXInputGamepadInput);
-			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadConnectedCallback().Register(OnXInputGamepadConnected);
-			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadDisconnectedCallback().Register(OnXInputGamepadDisconnected);
+			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadInputCallback().Register(&OnXInputGamepadInput);
+			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadConnectedCallback().Register(&OnXInputGamepadConnected);
+			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadDisconnectedCallback().Register(&OnXInputGamepadDisconnected);
 
 			return true;
 		}
