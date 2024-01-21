@@ -140,24 +140,28 @@ namespace LeviathanCore
 			{
 				LeviathanCore::Platform::TickPlatform();
 
-				const float deltaSeconds = LeviathanCore::Platform::GetDeltaTimeInSeconds();
-
-				static float accumulator = 0.0;
-				accumulator += deltaSeconds;
-
-				PreTickCallback.Call();
-
-				while (accumulator > SliceSeconds)
+				// Don't update or render the frame if the runtime window is minimized.
+				if (!LeviathanCore::Platform::Window::IsPlatformWindowMinimized(RuntimeWindow))
 				{
-					FixedTickCallback.Call(FixedTimestep);
-					accumulator -= SliceSeconds;
+					const float deltaSeconds = LeviathanCore::Platform::GetDeltaTimeInSeconds();
+
+					static float accumulator = 0.0;
+					accumulator += deltaSeconds;
+
+					PreTickCallback.Call();
+
+					while (accumulator > SliceSeconds)
+					{
+						FixedTickCallback.Call(FixedTimestep);
+						accumulator -= SliceSeconds;
+					}
+
+					TickCallback.Call(deltaSeconds);
+
+					PostTickCallback.Call();
+
+					RenderCallback.Call();
 				}
-
-				TickCallback.Call(deltaSeconds);
-
-				PostTickCallback.Call();
-
-				RenderCallback.Call();
 			}
 
 			PostMainLoopCallback.Call();
@@ -224,11 +228,6 @@ namespace LeviathanCore
 		void* GetRuntimeWindowPlatformHandle()
 		{
 			return LeviathanCore::Platform::Window::GetPlatformWindowPlatformHandle(RuntimeWindow);
-		}
-
-		bool IsRuntimeWindowMinimized()
-		{
-			return LeviathanCore::Platform::Window::IsPlatformWindowMinimized(RuntimeWindow);
 		}
 	}
 }
