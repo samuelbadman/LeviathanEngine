@@ -6,6 +6,9 @@ namespace LeviathanRenderer
 	{
 	private:
 		VkSurfaceKHR VulkanSurface = VK_NULL_HANDLE;
+		VkSurfaceCapabilitiesKHR VulkanSurfaceCapabilities = {};
+		std::vector<VkSurfaceFormatKHR> VulkanSurfaceFormats = {};
+		std::vector<VkPresentModeKHR> VulkanSurfacePresentModes = {};
 		VkSwapchainKHR VulkanSwapchain = VK_NULL_HANDLE;
 		std::vector<VkImage> VulkanSwapchainImages = {};
 		std::vector<VkImageView> VulkanSwapchainImageViews = {};
@@ -67,7 +70,6 @@ namespace LeviathanRenderer
 		VkExtent2D GetSwapchainExtent() const { return SwapchainExtent; }
 
 		bool RecreateSwapchain(VkDevice device,
-			VkPhysicalDevice physicalDevice,
 			VkColorSpaceKHR swapchainColorSpace,
 			VkFormat swapchainFormat,
 			VkRenderPass mainRenderPass,
@@ -79,7 +81,6 @@ namespace LeviathanRenderer
 
 	private:
 		bool CreateSwapchain(VkAllocationCallbacks* const allocator,
-			VkPhysicalDevice physicalDevice,
 			VkColorSpaceKHR swapchainColorSpace,
 			VkFormat swapchainFormat,
 			VkDevice device,

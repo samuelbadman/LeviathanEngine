@@ -72,7 +72,11 @@ namespace LeviathanRenderer
 		void DestroyVulkanSurface(VkInstance const instance, VkSurfaceKHR const surface, VkAllocationCallbacks* const allocator);
 
 		bool CreateVulkanSwapchain(VkSurfaceKHR surface,
-			VkPhysicalDevice physicalDevice,
+			const VkSurfaceCapabilitiesKHR& surfaceCapabilities,
+			size_t surfaceFormatCount,
+			VkSurfaceFormatKHR* const surfaceFormats,
+			size_t presentModeCount,
+			VkPresentModeKHR* const surfacePresentModes,
 			VkColorSpaceKHR colorSpace,
 			VkFormat format,
 			VkPresentModeKHR presentMode,
@@ -146,5 +150,11 @@ namespace LeviathanRenderer
 		bool VulkanQueueSubmit(VkQueue queue, unsigned int submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
 
 		bool VulkanQueuePresent(VkQueue queue, const VkPresentInfoKHR* pPresentInfo);
+
+		bool GetVulkanPhysicalDeviceSurfaceCapabilities(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR& outSurfaceCapabilities);
+
+		bool GetVulkanPhysicalDeviceSurfaceFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, std::vector<VkSurfaceFormatKHR>& outSurfaceFormats);
+
+		bool GetVulkanPhysicalDeviceSurfacePresentModes(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, std::vector<VkPresentModeKHR>& outPresentModes);
 	}
 }

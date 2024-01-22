@@ -433,7 +433,11 @@ namespace LeviathanRenderer
 		}
 
 		bool CreateVulkanSwapchain(VkSurfaceKHR surface,
-			VkPhysicalDevice physicalDevice,
+			const VkSurfaceCapabilitiesKHR& surfaceCapabilities,
+			size_t surfaceFormatCount,
+			VkSurfaceFormatKHR* const surfaceFormats,
+			size_t presentModeCount,
+			VkPresentModeKHR* const surfacePresentModes,
 			VkColorSpaceKHR colorSpace,
 			VkFormat format,
 			VkPresentModeKHR presentMode,
@@ -445,36 +449,13 @@ namespace LeviathanRenderer
 			VkExtent2D& outExtent,
 			VkFormat& outFormat)
 		{
-			// Get surface capabilities.
-			VkSurfaceCapabilitiesKHR surfaceCapabilities = {};
-
-			if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities) != VK_SUCCESS)
-			{
-				return false;
-			}
-
-			// Get surface format count then formats.
-			uint32_t formatCount = 0;
-
-			if (vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr) != VK_SUCCESS)
-			{
-				return false;
-			}
-
-			std::vector<VkSurfaceFormatKHR> formats(static_cast<size_t>(formatCount));
-
-			if (vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, formats.data()) != VK_SUCCESS)
-			{
-				return false;
-			}
-
 			// Select surface format.
-			unsigned int formatIndex = std::numeric_limits<unsigned int>::max();
+			size_t formatIndex = std::numeric_limits<unsigned int>::max();
 
-			for (unsigned int i = 0; i < formatCount; ++i)
+			for (size_t i = 0; i < surfaceFormatCount; ++i)
 			{
-				if ((formats[static_cast<size_t>(i)].colorSpace == colorSpace) &&
-					(formats[static_cast<size_t>(i)].format == format))
+				if ((surfaceFormats[i].colorSpace == colorSpace) &&
+					(surfaceFormats[i].format == format))
 				{
 					formatIndex = i;
 					break;
@@ -486,27 +467,12 @@ namespace LeviathanRenderer
 				return false;
 			}
 
-			// Get present mode count then present modes.
-			uint32_t presentModeCount = 0;
-
-			if (vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr) != VK_SUCCESS)
-			{
-				return false;
-			}
-
-			std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-
-			if (vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes.data()) != VK_SUCCESS)
-			{
-				return false;
-			}
-
 			// Select present mode.
-			unsigned int presentModeIndex = std::numeric_limits<unsigned int>::max();
+			size_t presentModeIndex = std::numeric_limits<unsigned int>::max();
 
-			for (unsigned int i = 0; i < presentModeCount; ++i)
+			for (size_t i = 0; i < presentModeCount; ++i)
 			{
-				if (presentModes[static_cast<size_t>(i)] == presentMode)
+				if (surfacePresentModes[i] == presentMode)
 				{
 					presentModeIndex = i;
 					break;
@@ -533,9 +499,9 @@ namespace LeviathanRenderer
 			swapchainCreateInfo.minImageCount = std::clamp(imageCount,
 				surfaceCapabilities.minImageCount,
 				((surfaceCapabilities.maxImageCount != 0) ? surfaceCapabilities.maxImageCount : std::numeric_limits<unsigned int>::max()));
-			swapchainCreateInfo.imageFormat = formats[static_cast<size_t>(formatIndex)].format;
-			swapchainCreateInfo.imageColorSpace = formats[static_cast<size_t>(formatIndex)].colorSpace;
-			swapchainCreateInfo.presentMode = presentModes[static_cast<size_t>(presentModeIndex)];
+			swapchainCreateInfo.imageFormat = surfaceFormats[static_cast<size_t>(formatIndex)].format;
+			swapchainCreateInfo.imageColorSpace = surfaceFormats[static_cast<size_t>(formatIndex)].colorSpace;
+			swapchainCreateInfo.presentMode = surfacePresentModes[static_cast<size_t>(presentModeIndex)];
 
 			// Set output swapchain extent and format.
 			outExtent = swapchainCreateInfo.imageExtent;
@@ -737,4 +703,39 @@ bool LeviathanRenderer::VulkanApi::VulkanQueueSubmit(VkQueue queue, unsigned int
 bool LeviathanRenderer::VulkanApi::VulkanQueuePresent(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
 {
 	return (vkQueuePresentKHR(queue, pPresentInfo) == VK_SUCCESS);
+}
+
+bool LeviathanRenderer::VulkanApi::GetVulkanPhysicalDeviceSurfaceCapabilities(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR& outSurfaceCapabilities)
+{
+	return (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &outSurfaceCapabilities) == VK_SUCCESS);
+}
+
+bool LeviathanRenderer::VulkanApi::GetVulkanPhysicalDeviceSurfaceFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, std::vector<VkSurfaceFormatKHR>& outSurfaceFormats)
+{
+	// Get surface format count then formats.
+	uint32_t formatCount = 0;
+
+	if (vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr) != VK_SUCCESS)
+	{
+		return false;
+	}
+
+	outSurfaceFormats.resize(static_cast<size_t>(formatCount));
+
+	return (vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, outSurfaceFormats.data()) == VK_SUCCESS);
+}
+
+bool LeviathanRenderer::VulkanApi::GetVulkanPhysicalDeviceSurfacePresentModes(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, std::vector<VkPresentModeKHR>& outPresentModes)
+{
+	// Get present mode count then present modes.
+	uint32_t presentModeCount = 0;
+
+	if (vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr) != VK_SUCCESS)
+	{
+		return false;
+	}
+
+	outPresentModes.resize(presentModeCount);
+
+	return (vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, outPresentModes.data()) == VK_SUCCESS);
 }

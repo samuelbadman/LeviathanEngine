@@ -40,8 +40,26 @@ namespace LeviathanRenderer
 			return false;
 		}
 
+		// Get the surface capabilities.
+		if (!VulkanApi::GetVulkanPhysicalDeviceSurfaceCapabilities(physicalDevice, VulkanSurface, VulkanSurfaceCapabilities))
+		{
+			return false;
+		}
+
+		// Get the surface formats.
+		if (!VulkanApi::GetVulkanPhysicalDeviceSurfaceFormats(physicalDevice, VulkanSurface, VulkanSurfaceFormats))
+		{
+			return false;
+		}
+
+		// Get the surface present modes.
+		if (!VulkanApi::GetVulkanPhysicalDeviceSurfacePresentModes(physicalDevice, VulkanSurface, VulkanSurfacePresentModes))
+		{
+			return false;
+		}
+
 		// Create the swapchain.
-		if (!CreateSwapchain(allocator, physicalDevice, swapchainColorSpace, swapchainFormat, device, mainRenderPass))
+		if (!CreateSwapchain(allocator, swapchainColorSpace, swapchainFormat, device, mainRenderPass))
 		{
 			return false;
 		}
@@ -89,9 +107,9 @@ namespace LeviathanRenderer
 
 	bool RenderContextInstance::Shutdown(VkInstance instance, VkAllocationCallbacks* const allocator, VkDevice device, VkCommandPool graphicsCommandPool)
 	{
-		VulkanApi::DestroyVulkanSurface(instance, VulkanSurface, allocator);
-
 		DestroySwapchain(device, allocator);
+
+		VulkanApi::DestroyVulkanSurface(instance, VulkanSurface, allocator);
 
 		VulkanApi::FreeCommandBuffers(device, graphicsCommandPool, InFlightFrameCount, GraphicsVulkanCommandBuffers.data());
 
@@ -122,8 +140,7 @@ namespace LeviathanRenderer
 			CurrentImageIndex);
 	}
 
-	bool RenderContextInstance::RecreateSwapchain(VkDevice device, 
-		VkPhysicalDevice physicalDevice, 
+	bool RenderContextInstance::RecreateSwapchain(VkDevice device,
 		VkColorSpaceKHR swapchainColorSpace,
 		VkFormat swapchainFormat,
 		VkRenderPass mainRenderPass,
@@ -131,23 +148,21 @@ namespace LeviathanRenderer
 	{
 		DestroySwapchain(device, allocator);
 
-		return CreateSwapchain(allocator,
-			physicalDevice,
-			swapchainColorSpace,
-			swapchainFormat,
-			device,
-			mainRenderPass);
+		return CreateSwapchain(allocator, swapchainColorSpace, swapchainFormat, device, mainRenderPass);
 	}
 
 	bool RenderContextInstance::CreateSwapchain(VkAllocationCallbacks* const allocator,
-		VkPhysicalDevice physicalDevice,
 		VkColorSpaceKHR swapchainColorSpace,
 		VkFormat swapchainFormat,
 		VkDevice device,
 		VkRenderPass mainRenderPass)
 	{
 		if (!VulkanApi::CreateVulkanSwapchain(VulkanSurface,
-			physicalDevice,
+			VulkanSurfaceCapabilities,
+			VulkanSurfaceFormats.size(),
+			VulkanSurfaceFormats.data(),
+			VulkanSurfacePresentModes.size(),
+			VulkanSurfacePresentModes.data(),
 			swapchainColorSpace,
 			swapchainFormat,
 			VulkanApi::GetPresentModeForVSyncState(VSyncEnabled),

@@ -197,17 +197,15 @@ namespace LeviathanRenderer
 			const VkFence currentInFlightFrameFence = context->GetCurrentInFlightFrameFence();
 			const VkCommandBuffer GraphicsCommandBufferForCurrentInFlightFrame = context->GetGraphicsCommandBufferForCurrentInFlightFrame();
 
+			//LEVIATHAN_LOG("Waiting for in flight fence %d", context->GetCurrentInFlightFrameIndex());
+
 			// Wait for the context's current in flight frame resources to be finished with from the previous frame before resetting them for this frame.
 			if (!VulkanApi::WaitForFences(VulkanDevice, 1, &currentInFlightFrameFence, VK_TRUE, static_cast<unsigned long long>(LeviathanCore::Timing::MaxNanoseconds)))
 			{
 				return false;
 			}
 
-			// Reset the fence to an unsignalled state now that it has been signalled by the command queue.
-			if (!VulkanApi::ResetFences(VulkanDevice, 1, &currentInFlightFrameFence))
-			{
-				return false;
-			}
+			//LEVIATHAN_LOG("Finished waiting for in flight fence %d", context->GetCurrentInFlightFrameIndex());
 
 			// Acquire next image index for the current frame. Next image index is stored within the render context instance as the current image index.
 			if (!context->AcquireCurrentImageIndex(VulkanDevice, static_cast<unsigned long long>(LeviathanCore::Timing::MaxNanoseconds)))
@@ -259,6 +257,14 @@ namespace LeviathanRenderer
 
 		bool SubmitRecordedFrameCommands(RenderContextInstance* const context)
 		{
+			// Reset the fence to an unsignalled state now that work is being submitted for the frame.
+			const VkFence inFlightFrameFence = context->GetCurrentInFlightFrameFence();
+
+			if (!VulkanApi::ResetFences(VulkanDevice, 1, &inFlightFrameFence))
+			{
+				return false;
+			}
+
 			// Submit command buffer for current in flight frame. This sets the current in flight frame's render finished semaphore to be signalled once the GPU has 
 			// finished processing the submitted command buffer. The current in flight frame's fence is also signalled once the GPU has finished processing the submitted
 			// command buffer.
@@ -308,7 +314,7 @@ namespace LeviathanRenderer
 				return false;
 			}
 
-			return context->RecreateSwapchain(VulkanDevice, VulkanPhysicalDevice, SwapchainColorSpace, SwapchainFormat, MainVulkanRenderPass, VulkanAllocator);
+			return context->RecreateSwapchain(VulkanDevice, SwapchainColorSpace, SwapchainFormat, MainVulkanRenderPass, VulkanAllocator);
 		}
 
 		namespace RenderCommands
