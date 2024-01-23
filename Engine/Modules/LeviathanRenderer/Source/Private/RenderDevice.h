@@ -12,10 +12,10 @@ namespace LeviathanRenderer
 		void DestroyRenderContextInstance(RenderContextInstance* const context);
 		bool InitializeRenderContextInstance(RenderContextInstance* const context);
 		bool ShutdownRenderContextInstance(RenderContextInstance* const context);
-		bool BeginFrameCommandRecording(RenderContextInstance* const context);
-		bool EndFrameCommandRecording(RenderContextInstance* const context);
-		bool SubmitRecordedFrameCommands(RenderContextInstance* const context);
-		bool Present(RenderContextInstance* const context);
+		bool BeginFrame(RenderContextInstance* const context);
+		bool EndFrame(RenderContextInstance* const context);
+		bool SubmitFrame(RenderContextInstance* const context);
+		bool PresentFrame(RenderContextInstance* const context);
 		bool ResizeRenderContextInstance(RenderContextInstance* const context);
 
 		namespace RenderCommands

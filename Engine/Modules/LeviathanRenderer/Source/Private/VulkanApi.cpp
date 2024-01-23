@@ -739,3 +739,61 @@ bool LeviathanRenderer::VulkanApi::GetVulkanPhysicalDeviceSurfacePresentModes(Vk
 
 	return (vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, outPresentModes.data()) == VK_SUCCESS);
 }
+
+bool LeviathanRenderer::VulkanApi::CreateVulkanRenderPass(VkDevice device,
+	const unsigned int attachmentCount,
+	VkAttachmentDescription* const pAttachments,
+	const unsigned int subpassCount,
+	VkSubpassDescription* const pSubpasses, 
+	const unsigned int dependencyCount, 
+	VkSubpassDependency* const pDependencies,
+	VkAllocationCallbacks* const allocator,
+	VkRenderPass& outRenderPass)
+{
+	VkRenderPassCreateInfo mainRenderPassCreateInfo = {};
+	mainRenderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	mainRenderPassCreateInfo.attachmentCount = attachmentCount;
+	mainRenderPassCreateInfo.pAttachments = pAttachments;
+	mainRenderPassCreateInfo.subpassCount = subpassCount;
+	mainRenderPassCreateInfo.pSubpasses = pSubpasses;
+	mainRenderPassCreateInfo.dependencyCount = dependencyCount;
+	mainRenderPassCreateInfo.pDependencies = pDependencies;
+
+	return (vkCreateRenderPass(device, &mainRenderPassCreateInfo, allocator, &outRenderPass) == VK_SUCCESS);
+}
+
+void LeviathanRenderer::VulkanApi::DestroyVulkanRenderPass(VkDevice device, VkRenderPass renderPass, VkAllocationCallbacks* const allocator)
+{
+	vkDestroyRenderPass(device, renderPass, allocator);
+}
+
+bool LeviathanRenderer::VulkanApi::VulkanQueueWaitIdle(VkQueue queue)
+{
+	return (vkQueueWaitIdle(queue) == VK_SUCCESS);
+}
+
+void LeviathanRenderer::VulkanApi::Commands::CommandBeginRenderPass(VkCommandBuffer commandBuffer,
+	VkRenderPass renderPass, 
+	VkFramebuffer framebuffer,
+	const VkOffset2D& renderAreaOffset, 
+	const VkExtent2D& renderAreaExtent,
+	const float* const pColorClearValue)
+{
+	VkClearValue clearValue = {};
+	memcpy(&clearValue.color, pColorClearValue, sizeof(float) * 4);
+
+	VkRenderPassBeginInfo beginInfo = {};
+	beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	beginInfo.renderPass = renderPass;
+	beginInfo.framebuffer = framebuffer;
+	beginInfo.renderArea.offset = renderAreaOffset;
+	beginInfo.renderArea.extent = renderAreaExtent;
+	beginInfo.clearValueCount = 1;
+	beginInfo.pClearValues = &clearValue;
+	vkCmdBeginRenderPass(commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void LeviathanRenderer::VulkanApi::Commands::CommandEndRenderPass(VkCommandBuffer commandBuffer)
+{
+	vkCmdEndRenderPass(commandBuffer);
+}

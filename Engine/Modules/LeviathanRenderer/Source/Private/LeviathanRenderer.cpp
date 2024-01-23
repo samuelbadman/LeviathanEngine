@@ -79,24 +79,24 @@ namespace LeviathanRenderer
 	bool Render()
 	{
 		// Render runtime window render context.
-		if (!RenderDevice::BeginFrameCommandRecording(RuntimeWindowRenderContext))
+		if (!RenderDevice::BeginFrame(RuntimeWindowRenderContext))
 		{
 			return false;
 		}
 
 		// TODO: Commands...
 
-		if (!RenderDevice::EndFrameCommandRecording(RuntimeWindowRenderContext))
+		if (!RenderDevice::EndFrame(RuntimeWindowRenderContext))
 		{
 			return false;
 		}
 
-		if (!RenderDevice::SubmitRecordedFrameCommands(RuntimeWindowRenderContext))
+		if (!RenderDevice::SubmitFrame(RuntimeWindowRenderContext))
 		{
 			return false;
 		}
 
-		if (!RenderDevice::Present(RuntimeWindowRenderContext))
+		if (!RenderDevice::PresentFrame(RuntimeWindowRenderContext))
 		{
 			return false;
 		}

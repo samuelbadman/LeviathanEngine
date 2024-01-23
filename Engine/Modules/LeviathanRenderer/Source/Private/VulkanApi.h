@@ -7,6 +7,18 @@ namespace LeviathanRenderer
 		static constexpr VkPresentModeKHR PresentModeVSyncEnabled = VK_PRESENT_MODE_FIFO_KHR;
 		static constexpr VkPresentModeKHR PresentModeVSyncDisabled = VK_PRESENT_MODE_MAILBOX_KHR;
 
+		namespace Commands
+		{
+			void CommandBeginRenderPass(VkCommandBuffer commandBuffer,
+				VkRenderPass renderPass,
+				VkFramebuffer framebuffer,
+				const VkOffset2D& renderAreaOffset,
+				const VkExtent2D& renderAreaExtent,
+				const float* const pColorClearValue);
+
+			void CommandEndRenderPass(VkCommandBuffer commandBuffer);
+		}
+
 		struct VulkanPhysicalDeviceQueueFamilyIndices
 		{
 			std::optional<unsigned int> Graphics = {};
@@ -156,5 +168,19 @@ namespace LeviathanRenderer
 		bool GetVulkanPhysicalDeviceSurfaceFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, std::vector<VkSurfaceFormatKHR>& outSurfaceFormats);
 
 		bool GetVulkanPhysicalDeviceSurfacePresentModes(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, std::vector<VkPresentModeKHR>& outPresentModes);
+
+		bool CreateVulkanRenderPass(VkDevice device,
+			const unsigned int attachmentCount,
+			VkAttachmentDescription* const pAttachments,
+			const unsigned int subpassCount,
+			VkSubpassDescription* const pSubpasses,
+			const unsigned int dependencyCount,
+			VkSubpassDependency* const pDependencies,
+			VkAllocationCallbacks* const allocator,
+			VkRenderPass& outRenderPass);
+
+		void DestroyVulkanRenderPass(VkDevice device, VkRenderPass renderPass, VkAllocationCallbacks* const allocator);
+
+		bool VulkanQueueWaitIdle(VkQueue queue);
 	}
 }
