@@ -14,7 +14,7 @@ set(BUILD_RENDERER_API_VULKAN ON)
 
 # Set SDK directories.
 # TODO: Remove hard coded file path.
-set(VULKAN_SDK_DIRECTORY "C:/SDKs/Vulkan_SDK_1.3.268.0")
+set(VULKAN_SDK_DIRECTORY_PATH "C:/SDKs/Vulkan_SDK_1.3.268.0")
 
 # Set project configuration types.
 set(CMAKE_CONFIGURATION_TYPES Debug;Release;RelWithDebInfo;MinSizeRel;Master)
@@ -289,11 +289,11 @@ elseif(BUILD_RENDERER_API_VULKAN MATCHES ON)
 	)
 	set(LEVIATHAN_RENDERER_INCLUDE_DIRECTORIES 
 		"${LEVIATHAN_RENDERER_INCLUDE_DIRECTORIES}"
-		"${VULKAN_SDK_DIRECTORY}/Include"
+		"${VULKAN_SDK_DIRECTORY_PATH}/Include"
 	)
 	set(LEVIATHAN_RENDERER_LINK_LIBRARIES 
 		"${LEVIATHAN_RENDERER_LINK_LIBRARIES}"
-		"${VULKAN_SDK_DIRECTORY}/Lib/vulkan-1.lib"
+		"${VULKAN_SDK_DIRECTORY_PATH}/Lib/vulkan-1.lib"
 	)
 endif()
 
