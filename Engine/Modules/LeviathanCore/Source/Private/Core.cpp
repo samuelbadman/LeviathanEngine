@@ -13,6 +13,10 @@ namespace LeviathanCore
 
 		static bool EngineRunning = false;
 		static LeviathanCore::Platform::Window::PlatformWindow* RuntimeWindow = {};
+
+		static unsigned int Fps = 0;
+		static float Ms = 0.f;
+
 		static Callback<PreMainLoopCallbackType> PreMainLoopCallback = {};
 		static Callback<PostMainLoopCallbackType> PostMainLoopCallback = {};
 		static Callback<FixedTickCallbackType> FixedTickCallback = {};
@@ -140,11 +144,15 @@ namespace LeviathanCore
 			{
 				LeviathanCore::Platform::TickPlatform();
 
+				const float deltaSeconds = LeviathanCore::Platform::GetDeltaTimeInSeconds();
+
+				const float AvgFps = (1.f / deltaSeconds);
+				Ms = 1.f / AvgFps;
+				Fps = static_cast<unsigned int>(AvgFps);
+
 				// Don't update or render the frame if the runtime window is minimized.
 				if (!LeviathanCore::Platform::Window::IsPlatformWindowMinimized(RuntimeWindow))
 				{
-					const float deltaSeconds = LeviathanCore::Platform::GetDeltaTimeInSeconds();
-
 					static float accumulator = 0.0;
 					accumulator += deltaSeconds;
 
