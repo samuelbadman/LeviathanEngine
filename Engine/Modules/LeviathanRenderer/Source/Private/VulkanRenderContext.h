@@ -1,10 +1,14 @@
 #pragma once
 
+#include "RenderContextSettings.h"
+
 namespace LeviathanRenderer
 {
 	class RenderContextInstance
 	{
 	private:
+		RenderContextSettings Settings = {};
+
 		VkSurfaceKHR VulkanSurface = VK_NULL_HANDLE;
 		VkSurfaceCapabilitiesKHR VulkanSurfaceCapabilities = {};
 		std::vector<VkSurfaceFormatKHR> VulkanSurfaceFormats = {};
@@ -25,10 +29,6 @@ namespace LeviathanRenderer
 		unsigned int CurrentInFlightFrameIndex = 0;
 		unsigned int InFlightFrameCount = 0;
 		unsigned int CurrentImageIndex = 0;
-
-		// Render context settings. Need to be set before calling Initialize. Must be applied with RenderContext::ApplyRenderContextSettings() when changing after context initialization.
-		bool VSyncEnabled = false;
-		unsigned int SwapchainImageCount = 0;
 
 	public:
 		bool Initialize(VkInstance instance,
@@ -75,14 +75,15 @@ namespace LeviathanRenderer
 			VkRenderPass mainRenderPass,
 			VkAllocationCallbacks* const allocator);
 
-		// Functions to set render context settings.
-		void SetVSyncEnabled(const bool enabled) { VSyncEnabled = enabled; }
-		void SetSwapchainImageCount(const unsigned int count) { SwapchainImageCount = count; }
+		const RenderContextSettings& GetSettings() const { return Settings; }
+
+		RenderContextSettings& GetSettings() { return Settings; }
 
 	private:
 		bool CreateSwapchain(VkAllocationCallbacks* const allocator,
 			VkColorSpaceKHR swapchainColorSpace,
 			VkFormat swapchainFormat,
+			unsigned int swapchainImageCount,
 			VkDevice device,
 			VkRenderPass mainRenderPass);
 

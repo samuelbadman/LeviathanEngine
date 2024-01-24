@@ -6,20 +6,9 @@ namespace LeviathanRenderer
 {
 	namespace RenderContext
 	{
-		void SetVSyncEnabled(RenderContextInstance* const context, const bool vsyncEnabled)
+		RenderContextSettings& GetRenderContextSettings(RenderContextInstance* context)
 		{
-			context->SetVSyncEnabled(vsyncEnabled);
-		}
-
-		void SetSwapChainBackBufferCount(RenderContextInstance* const context, const unsigned int count)
-		{
-			context->SetSwapchainImageCount(count);
-		}
-
-		[[maybe_unused]] bool ApplyRenderContextSettings([[maybe_unused]] RenderContextInstance* const context)
-		{
-			// TODO: Recreate swapchain resources.
-			return true;
+			return context->GetSettings();
 		}
 	}
 
@@ -59,7 +48,7 @@ namespace LeviathanRenderer
 		}
 
 		// Create the swapchain.
-		if (!CreateSwapchain(allocator, swapchainColorSpace, swapchainFormat, device, mainRenderPass))
+		if (!CreateSwapchain(allocator, swapchainColorSpace, swapchainFormat, Settings.SwapChainBackBufferCount, device, mainRenderPass))
 		{
 			return false;
 		}
@@ -148,12 +137,13 @@ namespace LeviathanRenderer
 	{
 		DestroySwapchain(device, allocator);
 
-		return CreateSwapchain(allocator, swapchainColorSpace, swapchainFormat, device, mainRenderPass);
+		return CreateSwapchain(allocator, swapchainColorSpace, swapchainFormat, Settings.SwapChainBackBufferCount, device, mainRenderPass);
 	}
 
 	bool RenderContextInstance::CreateSwapchain(VkAllocationCallbacks* const allocator,
 		VkColorSpaceKHR swapchainColorSpace,
 		VkFormat swapchainFormat,
+		unsigned int swapchainImageCount,
 		VkDevice device,
 		VkRenderPass mainRenderPass)
 	{
@@ -165,9 +155,9 @@ namespace LeviathanRenderer
 			VulkanSurfacePresentModes.data(),
 			swapchainColorSpace,
 			swapchainFormat,
-			VulkanApi::GetPresentModeForVSyncState(VSyncEnabled),
+			VulkanApi::GetPresentModeForVSyncState(Settings.VSyncEnabled),
 			VK_NULL_HANDLE,
-			SwapchainImageCount,
+			swapchainImageCount,
 			device,
 			allocator,
 			VulkanSwapchain,
@@ -178,7 +168,7 @@ namespace LeviathanRenderer
 		}
 
 		// Retreive the swapchain images.
-		VulkanSwapchainImages.resize(static_cast<size_t>(SwapchainImageCount));
+		VulkanSwapchainImages.resize(static_cast<size_t>(Settings.SwapChainBackBufferCount));
 
 		if (!VulkanApi::RetreiveSwapchainImages(device, VulkanSwapchain, VulkanSwapchainImages))
 		{
@@ -186,10 +176,10 @@ namespace LeviathanRenderer
 		}
 
 		// Create swapchain image views and framebuffers.
-		VulkanSwapchainImageViews.resize(static_cast<size_t>(SwapchainImageCount));
-		VulkanSwapchainFramebuffers.resize(static_cast<size_t>(SwapchainImageCount));
+		VulkanSwapchainImageViews.resize(static_cast<size_t>(Settings.SwapChainBackBufferCount));
+		VulkanSwapchainFramebuffers.resize(static_cast<size_t>(Settings.SwapChainBackBufferCount));
 
-		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
+		for (size_t i = 0; i < static_cast<size_t>(Settings.SwapChainBackBufferCount); ++i)
 		{
 			if (!VulkanApi::CreateVulkanImageView(device,
 				VulkanSwapchainImages[i],
@@ -229,7 +219,7 @@ namespace LeviathanRenderer
 	{
 		VulkanApi::DestroyVulkanSwapchain(device, VulkanSwapchain, allocator);
 
-		for (size_t i = 0; i < static_cast<size_t>(SwapchainImageCount); ++i)
+		for (size_t i = 0; i < static_cast<size_t>(Settings.SwapChainBackBufferCount); ++i)
 		{
 			VulkanApi::DestroyVulkanFramebuffer(device, VulkanSwapchainFramebuffers[i], allocator);
 			VulkanApi::DestroyVulkanImageView(device, VulkanSwapchainImageViews[i], allocator);

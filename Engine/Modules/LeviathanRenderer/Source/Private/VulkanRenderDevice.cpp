@@ -305,5 +305,15 @@ namespace LeviathanRenderer
 
 			return context->RecreateSwapchain(VulkanDevice, SwapchainColorSpace, SwapchainFormat, MainVulkanRenderPass, VulkanAllocator);
 		}
+
+		bool ApplyRenderContextSettings(RenderContextInstance* const context)
+		{
+			if (!VulkanApi::VulkanQueueWaitIdle(GraphicsVulkanQueue))
+			{
+				return false;
+			}
+
+			return context->RecreateSwapchain(VulkanDevice, SwapchainColorSpace, SwapchainFormat, MainVulkanRenderPass, VulkanAllocator);
+		}
 	}
 }

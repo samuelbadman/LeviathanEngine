@@ -23,8 +23,10 @@ namespace LeviathanRenderer
 		RuntimeWindowRenderContext = RenderDevice::CreateRenderContextInstance();
 
 		// Set default render context state before intializing.
-		RenderContext::SetVSyncEnabled(RuntimeWindowRenderContext, DefaultRenderContextVSyncEnabledState);
-		RenderContext::SetSwapChainBackBufferCount(RuntimeWindowRenderContext, RenderContextSwapChainBackBufferCount);
+		RenderContextSettings& RuntimeWindowRenderContextSettings = RenderContext::GetRenderContextSettings(RuntimeWindowRenderContext);
+		RuntimeWindowRenderContextSettings.VSyncEnabled = DefaultRenderContextVSyncEnabledState;
+		RuntimeWindowRenderContextSettings.SwapChainBackBufferCount = RenderContextSwapChainBackBufferCount;
+
 		return RenderDevice::InitializeRenderContextInstance(RuntimeWindowRenderContext);
 	}
 
