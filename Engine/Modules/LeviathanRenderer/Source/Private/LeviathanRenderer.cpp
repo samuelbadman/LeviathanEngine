@@ -6,9 +6,6 @@
 
 namespace LeviathanRenderer
 {
-	static constexpr bool DefaultRenderContextVSyncEnabledState = true;
-	static constexpr unsigned int RenderContextSwapChainBackBufferCount = 3;
-
 	static RenderContextInstance* RuntimeWindowRenderContext = nullptr;
 
 	static void OnRuntimeWindowResized([[maybe_unused]] int newWidth, [[maybe_unused]] int newHeight)
@@ -21,11 +18,6 @@ namespace LeviathanRenderer
 	static bool CreateAndInitializeRuntimeWindowRenderContext()
 	{
 		RuntimeWindowRenderContext = RenderDevice::CreateRenderContextInstance();
-
-		// Set default render context state before intializing.
-		RenderContextSettings& RuntimeWindowRenderContextSettings = RenderContext::GetRenderContextSettings(RuntimeWindowRenderContext);
-		RuntimeWindowRenderContextSettings.VSyncEnabled = DefaultRenderContextVSyncEnabledState;
-		RuntimeWindowRenderContextSettings.SwapChainBackBufferCount = RenderContextSwapChainBackBufferCount;
 
 		return RenderDevice::InitializeRenderContextInstance(RuntimeWindowRenderContext);
 	}
