@@ -3,12 +3,7 @@
 
 static bool InitializeTitleModule()
 {
-	if (!TestTitle::Initialize())
-	{
-		return false;
-	}
-
-	return true;
+	return TestTitle::Initialize();
 }
 
 LEVIATHAN_ENTRY_PROTOTYPE
