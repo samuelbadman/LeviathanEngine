@@ -45,6 +45,10 @@ namespace LeviathanCore
 				int ClientAreaWidth = 0;
 				int ClientAreaHeight = 0;
 
+				bool Fullscreen = false;
+				RECT RectPreLastFullscreen = {};
+				DWORD WinStyle = 0;
+
 			public:
 				bool Initialize(std::string_view uniqueName, std::string_view windowTitle, DWORD style, int positionX,
 					int positionY, int width, int height, HWND hWndParent, bool messageWindow);
@@ -54,6 +58,8 @@ namespace LeviathanCore
 				bool SetTitle(std::string_view newTitle);
 				void Reset();
 				bool IsMinimized() const;
+				bool EnterFullscreen();
+				bool ExitFullscreen();
 
 				Callback<PlatformWindowDestroyedCallbackType>& GetDestroyedCallback() { return DestroyedCallback; }
 				Callback<PlatformWindowClosedCallbackType>& GetClosedCallback() { return ClosedCallback; }

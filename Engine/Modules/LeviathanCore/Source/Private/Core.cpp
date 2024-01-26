@@ -144,6 +144,7 @@ namespace LeviathanCore
 			{
 				LeviathanCore::Platform::TickPlatform();
 
+				// Calculate frame time and frames per second.
 				const float deltaSeconds = LeviathanCore::Platform::GetDeltaTimeInSeconds();
 
 				const float AvgFps = (1.f / deltaSeconds);

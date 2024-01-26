@@ -24,11 +24,12 @@
 
 #endif
 
-#ifdef LEVIATHAN_BUILD_RENDERER_API_VULKAN
+#ifdef LEVIATHAN_BUILD_RENDERER_API_DIRECT3D12_PC
+// Direct3D12 PC.
+
+#elif defined LEVIATHAN_BUILD_RENDERER_API_VULKAN
 // Vulkan.
 #include <vulkan/vulkan.h>
-#elif defined LEVIATHAN_BUILD_RENDERER_API_DIRECT3D12_PC
-// Direct3D12 PC.
 
 #endif
 

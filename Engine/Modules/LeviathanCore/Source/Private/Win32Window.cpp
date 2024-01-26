@@ -69,6 +69,16 @@ namespace LeviathanCore
 				return platformWindow->IsMinimized();
 			}
 
+			bool EnterPlatformWindowFullscreen(PlatformWindow* const platformWindow)
+			{
+				return platformWindow->EnterFullscreen();
+			}
+
+			bool ExitPlatformWindowFullscreen(PlatformWindow* const platformWindow)
+			{
+				return platformWindow->ExitFullscreen();
+			}
+
 			Callback<PlatformWindowDestroyedCallbackType>& GetPlatformWindowDestroyedCallback(PlatformWindow* const platformWindow)
 			{
 				return platformWindow->GetDestroyedCallback();
@@ -182,6 +192,7 @@ namespace LeviathanCore
 			{
 				InSizeMove = false;
 				ClassName = uniqueName;
+				WinStyle = style;
 
 				// Register window class
 				WNDCLASSEX wndClass = {};
@@ -503,6 +514,83 @@ namespace LeviathanCore
 			bool PlatformWindow::IsMinimized() const
 			{
 				return IsIconic(Handle);
+			}
+
+			bool PlatformWindow::EnterFullscreen()
+			{
+				if (Fullscreen)
+				{
+					return false;
+				}
+
+				// Retrieve info of the nearest monitor to the window.
+				HMONITOR hMonitor = MonitorFromWindow(Handle, MONITOR_DEFAULTTONEAREST);
+				MONITORINFO monitorInfo = {};
+				monitorInfo.cbSize = sizeof(MONITORINFO);
+
+				if (!GetMonitorInfo(hMonitor, &monitorInfo))
+				{
+					return false;
+				}
+
+				// Calculate monitor width and height.
+				int width = static_cast<int>(monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left);
+				int height = static_cast<int>(monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
+
+				// Store the current window rect and style to restore to after exiting fullscreen.
+				if (!GetWindowRect(Handle, &RectPreLastFullscreen))
+				{
+					return false;
+				}
+
+				// Update position and size of the window.
+				if (!SetWindowPos(Handle, HWND_TOP, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, width, height, SWP_FRAMECHANGED | SWP_NOACTIVATE))
+				{
+					return false;
+				}
+
+				// Update window style.
+				if (!SetWindowLong(Handle, GWL_STYLE, 0))
+				{
+					return false;
+				}
+
+				// Show the window maximized.
+				ShowWindow(Handle, SW_MAXIMIZE);
+				Fullscreen = true;
+
+				return true;
+			}
+
+			bool PlatformWindow::ExitFullscreen()
+			{
+				if (!Fullscreen)
+				{
+					return false;
+				}
+
+				// Update position and size of the window.
+				if (!SetWindowPos(Handle,
+					HWND_TOP,
+					RectPreLastFullscreen.left,
+					RectPreLastFullscreen.top,
+					RectPreLastFullscreen.right - RectPreLastFullscreen.left,
+					RectPreLastFullscreen.bottom - RectPreLastFullscreen.top,
+					SWP_FRAMECHANGED | SWP_NOACTIVATE))
+				{
+					return false;
+				}
+
+				// Update window style.
+				if (!SetWindowLong(Handle, GWL_STYLE, WinStyle))
+				{
+					return false;
+				}
+
+				// Show the window.
+				ShowWindow(Handle, SW_SHOW);
+
+				return true;
 			}
 
 			void PlatformWindow::WndProcDestroyed()

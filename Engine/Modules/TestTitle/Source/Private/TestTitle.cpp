@@ -78,7 +78,7 @@ namespace TestTitle
 
 	static void OnRender()
 	{
-		LeviathanRenderer::Render();
+
 	}
 
 	bool Initialize()
