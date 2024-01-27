@@ -10,14 +10,14 @@ namespace LeviathanRenderer
 		static Microsoft::WRL::ComPtr<IDXGISwapChain> SwapChain = {};
 		static D3D_FEATURE_LEVEL FeatureLevel = {};
 
-		// Render target view for the swap chain back buffer.
-		static Microsoft::WRL::ComPtr<ID3D11RenderTargetView> RenderTargetView = {};
+		// Render target views of the swap chain back buffers.
+		static std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> BackBufferRenderTargetViews = {};
 
-		// Depth/stencil target view for the swap chain depth/stencil buffer.
+		// Depth/stencil target view of the depth/stencil buffer.
 		static Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthStencilView = {};
 
 		// Texture resource to associate to the depth stencil view.
-		static Microsoft::WRL::ComPtr<ID3D11Resource> DepthStencilBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11Texture2D> DepthStencilBuffer = {};
 
 		// Define the functionality of the depth/stencil stage.
 		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthStencilState = {};
@@ -73,7 +73,56 @@ namespace LeviathanRenderer
 				return false;
 			}
 
-			// Create render target view.
+			// Create render target views.
+			BackBufferRenderTargetViews.resize(static_cast<size_t>(bufferCount));
+
+			for (unsigned int i = 0; i < bufferCount; ++i)
+			{
+				Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
+				hr = SwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
+
+				if (FAILED(hr))
+				{
+					return false;
+				}
+
+				hr = D3D11Device->CreateRenderTargetView(backBuffer.Get(), nullptr, &BackBufferRenderTargetViews[static_cast<size_t>(i)]);
+
+				if (FAILED(hr))
+				{
+					return false;
+				}
+			}
+
+			// Create the depth/stencil buffer.
+			D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
+			depthStencilBufferDesc.ArraySize = 1;
+			depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+			depthStencilBufferDesc.CPUAccessFlags = 0;
+			depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+			depthStencilBufferDesc.Width = width;
+			depthStencilBufferDesc.Height = height;
+			depthStencilBufferDesc.MipLevels = 1;
+			depthStencilBufferDesc.SampleDesc.Count = 1;
+			depthStencilBufferDesc.SampleDesc.Quality = 0;
+			depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+
+			hr = D3D11Device->CreateTexture2D(&depthStencilBufferDesc, nullptr, &DepthStencilBuffer);
+
+			if (FAILED(hr))
+			{
+				return false;
+			}
+
+			// Create depth stencil view.
+			hr = D3D11Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr, &DepthStencilView);
+
+			if (FAILED(hr))
+			{
+				return false;
+			}
+
+			// Create depth stencil state.
 
 
 			return true;
