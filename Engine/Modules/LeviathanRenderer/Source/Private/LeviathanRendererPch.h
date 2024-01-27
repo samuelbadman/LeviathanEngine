@@ -22,14 +22,18 @@
 #undef min
 #endif // min.
 
-#endif
+#endif // LEVIATHAN_BUILD_PLATFORM_WIN32.
 
-#ifdef LEVIATHAN_BUILD_RENDERER_API_DIRECT3D12_PC
+#ifdef LEVIATHAN_BUILD_RENDERER_API_DIRECT3D11_PC
+// Direct3D11 PC.
+#include <d3d11.h>
+
+#elif LEVIATHAN_BUILD_RENDERER_API_DIRECT3D12_PC
 // Direct3D12 PC.
 
 #elif defined LEVIATHAN_BUILD_RENDERER_API_VULKAN
 // Vulkan.
 #include <vulkan/vulkan.h>
 
-#endif
+#endif // LEVIATHAN_BUILD_RENDERER_API_DIRECT3D11_PC.
 

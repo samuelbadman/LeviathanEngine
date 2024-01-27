@@ -79,6 +79,11 @@ namespace LeviathanCore
 				return platformWindow->ExitFullscreen();
 			}
 
+			bool SetPlatformWindowTitle(PlatformWindow* const platformWindow, std::string_view newTitle)
+			{
+				return platformWindow->SetTitle(newTitle);
+			}
+
 			Callback<PlatformWindowDestroyedCallbackType>& GetPlatformWindowDestroyedCallback(PlatformWindow* const platformWindow)
 			{
 				return platformWindow->GetDestroyedCallback();
@@ -205,7 +210,7 @@ namespace LeviathanCore
 				wndClass.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
 				wndClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
 				wndClass.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
-				wndClass.hbrBackground = (HBRUSH)(COLOR_BACKGROUND);
+				wndClass.hbrBackground = CreateSolidBrush(RGB(0, 0, 0));
 				wndClass.lpszMenuName = nullptr;
 
 				const ATOM windowClassId = RegisterClassExA(&wndClass);
@@ -484,7 +489,7 @@ namespace LeviathanCore
 
 			bool PlatformWindow::SetTitle(std::string_view newTitle)
 			{
-				return SetWindowTextA(Handle, newTitle.data());
+				return SetWindowText(Handle, newTitle.data());
 			}
 
 			bool PlatformWindow::GetClientAreaDimensions(int& outWidth, int& outHeight)

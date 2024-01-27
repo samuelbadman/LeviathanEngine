@@ -54,6 +54,7 @@ namespace LeviathanCore
 			bool IsPlatformWindowMinimized(PlatformWindow* const platformWindow);
 			bool EnterPlatformWindowFullscreen(PlatformWindow* const platformWindow);
 			bool ExitPlatformWindowFullscreen(PlatformWindow* const platformWindow);
+			bool SetPlatformWindowTitle(PlatformWindow* const platformWindow, std::string_view newTitle);
 
 			Callback<PlatformWindowDestroyedCallbackType>& GetPlatformWindowDestroyedCallback(PlatformWindow* const platformWindow);
 			Callback<PlatformWindowClosedCallbackType>& GetPlatformWindowClosedCallback(PlatformWindow* const platformWindow);

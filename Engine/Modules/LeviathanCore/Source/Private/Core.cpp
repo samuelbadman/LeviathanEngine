@@ -1,15 +1,16 @@
 #include "Core.h"
 #include "Platform.h"
 #include "PlatformWindow.h"
+#include "LeviathanString.h"
 
 namespace LeviathanCore
 {
 	namespace Core
 	{
 		// Seconds elapsed between fixed ticks. FixedTick is called every SliceSeconds seconds.
-		static constexpr float SliceSeconds = 0.1f; 
+		static constexpr float SliceSeconds = 0.1f;
 		// Timestep used in fixed tick call. Can be tweaked for a less or more precise simulation.
-		static constexpr float FixedTimestep = 0.1f; 
+		static constexpr float FixedTimestep = 0.1f;
 
 		static bool EngineRunning = false;
 		static LeviathanCore::Platform::Window::PlatformWindow* RuntimeWindow = {};
@@ -62,7 +63,7 @@ namespace LeviathanCore
 			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(&Exit);
 			LeviathanCore::Platform::Window::GetPlatformWindowResizedCallback(RuntimeWindow).Register([](int newWidth, int newHeight)
 				{
-					RuntimeWindowResizedCallback.Call(newWidth, newHeight); 
+					RuntimeWindowResizedCallback.Call(newWidth, newHeight);
 				});
 			LeviathanCore::Platform::Window::GetPlatformWindowMinimizedCallback(RuntimeWindow).Register([]() { RuntimeWindowMinimizedCallback.Call(); });
 			LeviathanCore::Platform::Window::GetPlatformWindowMaximizedCallback(RuntimeWindow).Register([]() { RuntimeWindowMaximizedCallback.Call(); });
