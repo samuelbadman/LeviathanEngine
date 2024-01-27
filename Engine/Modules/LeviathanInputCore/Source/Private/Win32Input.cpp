@@ -259,9 +259,14 @@ namespace LeviathanInputCore
 
 			MouseHook = nullptr;
 
-			LeviathanCore::Core::GetPostTickCallback().Deregister(OnPostTick);
+			LeviathanCore::Core::GetPreTickCallback().Deregister(&OnPreTick);
+			LeviathanCore::Core::GetPostTickCallback().Deregister(&OnPostTick);
 
-			LeviathanCore::Platform::GetGameControllerConnectionEventCallback().Deregister(OnGameControllerConnectionEvent);
+			LeviathanCore::Platform::GetGameControllerConnectionEventCallback().Deregister(&OnGameControllerConnectionEvent);
+
+			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadInputCallback().Deregister(&OnXInputGamepadInput);
+			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadConnectedCallback().Deregister(&OnXInputGamepadConnected);
+			LeviathanInputCore::PlatformInput::XInputGamepad::GetXInputGamepadDisconnectedCallback().Deregister(&OnXInputGamepadDisconnected);
 
 			return true;
 		}
