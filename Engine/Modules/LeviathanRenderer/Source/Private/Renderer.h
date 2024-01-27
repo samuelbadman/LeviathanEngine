@@ -4,6 +4,6 @@ namespace LeviathanRenderer
 {
 	namespace Renderer
 	{
-		bool InitializeRendererApi(unsigned int windowWidth, unsigned int windowHeight, unsigned int refreshRate, void* windowPlatformHandle);
+		bool InitializeRendererApi(unsigned int width, unsigned int height, unsigned int verticalRefreshRate, void* windowPlatformHandle, bool vsync, unsigned int bufferCount);
 	}
 }

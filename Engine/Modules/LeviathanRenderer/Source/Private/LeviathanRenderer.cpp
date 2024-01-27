@@ -27,7 +27,14 @@ namespace LeviathanRenderer
 
 		void* platformHandle = LeviathanCore::Core::GetRuntimeWindowPlatformHandle();
 
-		if (!Renderer::InitializeRendererApi(width, height, display.VerticalRefreshRateHertz, platformHandle))
+		static constexpr unsigned int bufferCount = 3;
+
+		if (!Renderer::InitializeRendererApi(static_cast<unsigned int>(width),
+			static_cast<unsigned int>(height), 
+			display.VerticalRefreshRateHertz, 
+			platformHandle, 
+			false,
+			bufferCount))
 		{
 			return false;
 		}
