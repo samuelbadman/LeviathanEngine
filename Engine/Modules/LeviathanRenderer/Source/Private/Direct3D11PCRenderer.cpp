@@ -11,7 +11,7 @@ namespace LeviathanRenderer
 		static D3D_FEATURE_LEVEL FeatureLevel = {};
 
 		// Render target views of the swap chain back buffers.
-		static std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> BackBufferRenderTargetViews = {};
+		static Microsoft::WRL::ComPtr<ID3D11RenderTargetView> BackBufferRenderTargetView = {};
 
 		// Depth/stencil target view of the depth/stencil buffer.
 		static Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthStencilView = {};
@@ -26,8 +26,13 @@ namespace LeviathanRenderer
 		static Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState = {};
 		static D3D11_VIEWPORT Viewport = {};
 
+		// Renderer state.
+		static bool VSync = false;
+
 		bool InitializeRendererApi(unsigned int width, unsigned int height, unsigned int verticalRefreshRate, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
+			VSync = vsync;
+
 			// Create device and swap chain.
 			DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 			swapChainDesc.BufferCount = bufferCount;
@@ -74,24 +79,19 @@ namespace LeviathanRenderer
 			}
 
 			// Create render target views.
-			BackBufferRenderTargetViews.resize(static_cast<size_t>(bufferCount));
+			Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
+			hr = SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
 
-			for (unsigned int i = 0; i < bufferCount; ++i)
+			if (FAILED(hr))
 			{
-				Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
-				hr = SwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
+				return false;
+			}
 
-				if (FAILED(hr))
-				{
-					return false;
-				}
+			hr = D3D11Device->CreateRenderTargetView(backBuffer.Get(), nullptr, &BackBufferRenderTargetView);
 
-				hr = D3D11Device->CreateRenderTargetView(backBuffer.Get(), nullptr, &BackBufferRenderTargetViews[static_cast<size_t>(i)]);
-
-				if (FAILED(hr))
-				{
-					return false;
-				}
+			if (FAILED(hr))
+			{
+				return false;
 			}
 
 			// Create the depth/stencil buffer.
@@ -123,9 +123,59 @@ namespace LeviathanRenderer
 			}
 
 			// Create depth stencil state.
+			D3D11_DEPTH_STENCIL_DESC depthStencilStateDesc = {};
+			depthStencilStateDesc.DepthEnable = TRUE;
+			depthStencilStateDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+			depthStencilStateDesc.DepthFunc = D3D11_COMPARISON_LESS;
+			depthStencilStateDesc.StencilEnable = FALSE;
 
+			hr = D3D11Device->CreateDepthStencilState(&depthStencilStateDesc, &DepthStencilState);
+
+			if (FAILED(hr))
+			{
+				return false;
+			}
+
+			// Create rasterizer state.
+			D3D11_RASTERIZER_DESC rasterizerStateDesc = {};
+			rasterizerStateDesc.AntialiasedLineEnable = FALSE;
+			rasterizerStateDesc.CullMode = D3D11_CULL_NONE;
+			rasterizerStateDesc.DepthBias = 0;
+			rasterizerStateDesc.DepthBiasClamp = 0.f;
+			rasterizerStateDesc.DepthClipEnable = TRUE;
+			rasterizerStateDesc.FillMode = D3D11_FILL_SOLID;
+			rasterizerStateDesc.FrontCounterClockwise = FALSE;
+			rasterizerStateDesc.MultisampleEnable = FALSE;
+			rasterizerStateDesc.ScissorEnable = FALSE;
+			rasterizerStateDesc.SlopeScaledDepthBias = 0.f;
+
+			hr = D3D11Device->CreateRasterizerState(&rasterizerStateDesc, &RasterizerState);
+
+			if (FAILED(hr))
+			{
+				return false;
+			}
+
+			// Initialize viewport.
+			Viewport.Width = static_cast<float>(width);
+			Viewport.Height = static_cast<float>(height);
+			Viewport.TopLeftX = 0.f;
+			Viewport.TopLeftY = 0.f;
+			Viewport.MinDepth = 0.f;
+			Viewport.MaxDepth = 1.f;
 
 			return true;
+		}
+
+		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
+		{
+			D3D11DeviceContext->ClearRenderTargetView(BackBufferRenderTargetView.Get(), clearColor);
+			D3D11DeviceContext->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, clearDepth, clearStencil);
+		}
+
+		void Present()
+		{
+			SwapChain->Present(((VSync) ? 1 : 0), 0);
 		}
 	}
 }

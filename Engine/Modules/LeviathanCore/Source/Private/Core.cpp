@@ -2,6 +2,7 @@
 #include "Platform.h"
 #include "PlatformWindow.h"
 #include "LeviathanString.h"
+#include "Logging.h"
 
 namespace LeviathanCore
 {
@@ -151,6 +152,7 @@ namespace LeviathanCore
 				const float AvgFps = (1.f / deltaSeconds);
 				Ms = 1.f / AvgFps;
 				Fps = static_cast<unsigned int>(AvgFps);
+				LEVIATHAN_LOG("FPS: %d, MS: %f", Fps, Ms);
 
 				// Don't update or render the frame if the runtime window is minimized.
 				if (!LeviathanCore::Platform::Window::IsPlatformWindowMinimized(RuntimeWindow))

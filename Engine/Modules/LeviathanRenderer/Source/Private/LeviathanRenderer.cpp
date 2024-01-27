@@ -13,9 +13,13 @@ namespace LeviathanRenderer
 
 	bool Initialize()
 	{
+		static constexpr unsigned int bufferCount = 3;
+		static constexpr bool vsync = false;
+
 		// Register to runtime window callbacks.
 		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(&OnRuntimeWindowResized);
 
+		// Initialize renderer api.
 		int width = 0;
 		int height = 0;
 		if (!LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(width, height))
@@ -27,13 +31,11 @@ namespace LeviathanRenderer
 
 		void* platformHandle = LeviathanCore::Core::GetRuntimeWindowPlatformHandle();
 
-		static constexpr unsigned int bufferCount = 3;
-
 		if (!Renderer::InitializeRendererApi(static_cast<unsigned int>(width),
 			static_cast<unsigned int>(height), 
 			display.VerticalRefreshRateHertz, 
 			platformHandle, 
-			false,
+			vsync,
 			bufferCount))
 		{
 			return false;
@@ -44,6 +46,18 @@ namespace LeviathanRenderer
 
 	bool Shutdown()
 	{
+		return true;
+	}
+
+	bool Render()
+	{
+		static constexpr float clearColor[] = { 1.f, 0.f, 0.f, 1.f };
+		static constexpr float clearDepth = 1.f;
+		static constexpr unsigned char clearStencil = 0;
+
+		Renderer::Clear(clearColor, clearDepth, clearStencil);
+		Renderer::Present();
+
 		return true;
 	}
 }
