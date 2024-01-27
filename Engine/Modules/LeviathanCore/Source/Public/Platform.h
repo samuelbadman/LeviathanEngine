@@ -20,11 +20,11 @@ namespace LeviathanCore
 		{
 			struct DisplayDetails
 			{
-				int32_t TopLeftX = 0;
-				int32_t TopLeftY = 0;
-				uint32_t Width = 0;
-				uint32_t Height = 0;
-				uint32_t VerticalRefreshRateHertz = 0;
+				int TopLeftX = 0;
+				int TopLeftY = 0;
+				unsigned int Width = 0;
+				unsigned int Height = 0;
+				unsigned int VerticalRefreshRateHertz = 0;
 				std::string Name = {};
 				std::string AdapterName = {};
 			};

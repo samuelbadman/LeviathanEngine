@@ -239,5 +239,10 @@ namespace LeviathanCore
 		{
 			return LeviathanCore::Platform::Window::GetPlatformWindowPlatformHandle(RuntimeWindow);
 		}
+
+		bool GetRuntimeWindowRenderAreaDimensions(int& outWidth, int& outHeight)
+		{
+			return LeviathanCore::Platform::Window::GetPlatformWindowRenderAreaDimensions(RuntimeWindow, outWidth, outHeight);
+		}
 	}
 }

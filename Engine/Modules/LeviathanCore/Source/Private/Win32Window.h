@@ -60,6 +60,7 @@ namespace LeviathanCore
 				bool IsMinimized() const;
 				bool EnterFullscreen();
 				bool ExitFullscreen();
+				bool GetRenderAreaDimensions(int& outWidth, int& outHeight);
 
 				Callback<PlatformWindowDestroyedCallbackType>& GetDestroyedCallback() { return DestroyedCallback; }
 				Callback<PlatformWindowClosedCallbackType>& GetClosedCallback() { return ClosedCallback; }

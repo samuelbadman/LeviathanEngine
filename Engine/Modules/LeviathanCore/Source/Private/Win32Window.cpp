@@ -79,9 +79,9 @@ namespace LeviathanCore
 				return platformWindow->ExitFullscreen();
 			}
 
-			bool SetPlatformWindowTitle(PlatformWindow* const platformWindow, std::string_view newTitle)
+			bool GetPlatformWindowRenderAreaDimensions(PlatformWindow* const platformWindow, int& outWidth, int& outHeight)
 			{
-				return platformWindow->SetTitle(newTitle);
+				return platformWindow->GetRenderAreaDimensions(outWidth, outHeight);
 			}
 
 			Callback<PlatformWindowDestroyedCallbackType>& GetPlatformWindowDestroyedCallback(PlatformWindow* const platformWindow)
@@ -596,6 +596,11 @@ namespace LeviathanCore
 				ShowWindow(Handle, SW_SHOW);
 
 				return true;
+			}
+
+			bool PlatformWindow::GetRenderAreaDimensions(int& outWidth, int& outHeight)
+			{
+				return GetClientAreaDimensions(outWidth, outHeight);
 			}
 
 			void PlatformWindow::WndProcDestroyed()
