@@ -4,6 +4,11 @@ namespace LeviathanRenderer
 {
 	namespace Renderer
 	{
+		// DXGI factory and adapter.
+		static Microsoft::WRL::ComPtr<IDXGIFactory7> DXGIFactory = {};
+		static DXGI_ADAPTER_DESC1 DXGIAdapterDesc = {};
+		static Microsoft::WRL::ComPtr<IDXGIAdapter4> DXGIAdapter = {};
+
 		// Device, device context and swap chain.
 		static Microsoft::WRL::ComPtr<ID3D11Device> D3D11Device = {};
 		static Microsoft::WRL::ComPtr<ID3D11DeviceContext> D3D11DeviceContext = {};
@@ -33,6 +38,36 @@ namespace LeviathanRenderer
 		{
 			VSync = vsync;
 
+			HRESULT hr = {};
+
+			// Create the DXGI factory.
+			UINT createFactoryFlags = 0;
+#ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
+			createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+#endif //LEVIATHAN_BUILD_CONFIG_DEBUG
+
+			hr = CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&DXGIFactory));
+
+			if (FAILED(hr))
+			{
+				return false;
+			}
+
+			// Select adapter.
+			hr = DXGIFactory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&DXGIAdapter));
+
+			if (FAILED(hr))
+			{
+				return false;
+			}
+
+			hr = DXGIAdapter->GetDesc1(&DXGIAdapterDesc);
+
+			if (FAILED(hr))
+			{
+				return false;
+			}
+
 			// Create device.
 			UINT createDeviceFlags = 0;
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
@@ -50,8 +85,8 @@ namespace LeviathanRenderer
 				D3D_FEATURE_LEVEL_9_1
 			};
 
-			HRESULT hr = D3D11CreateDevice(nullptr,
-				D3D_DRIVER_TYPE_HARDWARE,
+			hr = D3D11CreateDevice(DXGIAdapter.Get(),
+				D3D_DRIVER_TYPE_UNKNOWN,
 				NULL,
 				createDeviceFlags,
 				featureLevels.data(), static_cast<unsigned int>(featureLevels.size()),
@@ -63,32 +98,7 @@ namespace LeviathanRenderer
 				return false;
 			}
 
-			// Create swap chain.
-			// Get the dxgi factory used to create the device.
-			Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice = {};
-			hr = D3D11Device->QueryInterface(IID_PPV_ARGS(&dxgiDevice));
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
-
-			Microsoft::WRL::ComPtr<IDXGIAdapter> dxgiAdapter = {};
-			hr = dxgiDevice->GetParent(IID_PPV_ARGS(&dxgiAdapter));
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
-
-			Microsoft::WRL::ComPtr<IDXGIFactory5> dxgiFactory = {};
-			hr = dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory));
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
-
+			// Create the swap chain.
 			DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 			swapChainDesc.Width = width;
 			swapChainDesc.Height = height;
@@ -105,7 +115,7 @@ namespace LeviathanRenderer
 			swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 
 			Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1 = {};
-			hr = dxgiFactory->CreateSwapChainForHwnd(D3D11Device.Get(), static_cast<HWND>(windowPlatformHandle), &swapChainDesc, nullptr, nullptr, &swapChain1);
+			hr = DXGIFactory->CreateSwapChainForHwnd(D3D11Device.Get(), static_cast<HWND>(windowPlatformHandle), &swapChainDesc, nullptr, nullptr, &swapChain1);
 
 			if (FAILED(hr))
 			{
@@ -113,7 +123,7 @@ namespace LeviathanRenderer
 			}
 
 			// Disable alt + enter fullscreen shortcut. Must be called after creating the swap chain.
-			hr = dxgiFactory->MakeWindowAssociation(static_cast<HWND>(windowPlatformHandle), DXGI_MWA_NO_ALT_ENTER);
+			hr = DXGIFactory->MakeWindowAssociation(static_cast<HWND>(windowPlatformHandle), DXGI_MWA_NO_ALT_ENTER);
 
 			if (FAILED(hr))
 			{
