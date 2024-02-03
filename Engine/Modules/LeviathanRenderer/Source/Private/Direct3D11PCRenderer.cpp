@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "LeviathanAssert.h"
 
 namespace LeviathanRenderer
 {
@@ -34,6 +35,12 @@ namespace LeviathanRenderer
 		// Renderer state.
 		static bool VSync = false;
 
+#ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
+#define CHECK_HRESULT(hResult) LEVIATHAN_ASSERT(SUCCEEDED(hResult))
+#else
+#define CHECK_HRESULT(hResult)
+#endif // LEVIATHAN_BUILD_CONFIG_DEBUG.
+
 		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
 			VSync = vsync;
@@ -44,35 +51,23 @@ namespace LeviathanRenderer
 			UINT createFactoryFlags = 0;
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
 			createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-#endif //LEVIATHAN_BUILD_CONFIG_DEBUG
+#endif //LEVIATHAN_BUILD_CONFIG_DEBUG.
 
 			hr = CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&DXGIFactory));
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Select adapter.
 			hr = DXGIFactory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&DXGIAdapter));
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			hr = DXGIAdapter->GetDesc1(&DXGIAdapterDesc);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Create device.
 			UINT createDeviceFlags = 0;
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
 			createDeviceFlags = D3D11_CREATE_DEVICE_DEBUG;
-#endif //LEVIATHAN_BUILD_CONFIG_DEBUG
+#endif //LEVIATHAN_BUILD_CONFIG_DEBUG.
 
 			std::array<D3D_FEATURE_LEVEL, 7> featureLevels =
 			{
@@ -92,11 +87,7 @@ namespace LeviathanRenderer
 				featureLevels.data(), static_cast<unsigned int>(featureLevels.size()),
 				D3D11_SDK_VERSION,
 				&D3D11Device, &FeatureLevel, &D3D11DeviceContext);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Create the swap chain.
 			DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -116,43 +107,23 @@ namespace LeviathanRenderer
 
 			Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1 = {};
 			hr = DXGIFactory->CreateSwapChainForHwnd(D3D11Device.Get(), static_cast<HWND>(windowPlatformHandle), &swapChainDesc, nullptr, nullptr, &swapChain1);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Disable alt + enter fullscreen shortcut. Must be called after creating the swap chain.
 			hr = DXGIFactory->MakeWindowAssociation(static_cast<HWND>(windowPlatformHandle), DXGI_MWA_NO_ALT_ENTER);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Convert swap chain 1 interface to swap chain 4 interface.
 			hr = swapChain1.As(&SwapChain);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Create render target views.
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
 			hr = SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			hr = D3D11Device->CreateRenderTargetView(backBuffer.Get(), nullptr, &BackBufferRenderTargetView);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Create the depth/stencil buffer.
 			D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
@@ -168,19 +139,11 @@ namespace LeviathanRenderer
 			depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 
 			hr = D3D11Device->CreateTexture2D(&depthStencilBufferDesc, nullptr, &DepthStencilBuffer);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Create depth stencil view.
 			hr = D3D11Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr, &DepthStencilView);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Create depth stencil state.
 			D3D11_DEPTH_STENCIL_DESC depthStencilStateDesc = {};
@@ -190,11 +153,7 @@ namespace LeviathanRenderer
 			depthStencilStateDesc.StencilEnable = FALSE;
 
 			hr = D3D11Device->CreateDepthStencilState(&depthStencilStateDesc, &DepthStencilState);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Create rasterizer state.
 			D3D11_RASTERIZER_DESC rasterizerStateDesc = {};
@@ -210,11 +169,7 @@ namespace LeviathanRenderer
 			rasterizerStateDesc.SlopeScaledDepthBias = 0.f;
 
 			hr = D3D11Device->CreateRasterizerState(&rasterizerStateDesc, &RasterizerState);
-
-			if (FAILED(hr))
-			{
-				return false;
-			}
+			CHECK_HRESULT(hr);
 
 			// Initialize viewport.
 			Viewport.Width = static_cast<float>(width);
