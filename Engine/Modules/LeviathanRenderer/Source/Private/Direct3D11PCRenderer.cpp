@@ -50,6 +50,7 @@ namespace LeviathanRenderer
 		// Define the renderer pipeline.
 		static Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout = {};
 		static std::vector<unsigned char> VertexShaderBuffer = {};
+		static std::vector<unsigned char> PixelShaderBuffer = {};
 
 		// Renderer state.
 		static bool VSync = false;
@@ -60,6 +61,39 @@ namespace LeviathanRenderer
 #else
 #define CHECK_HRESULT(hResult)
 #endif // LEVIATHAN_BUILD_CONFIG_DEBUG.
+
+		// Shader source code.
+		static std::string VertexShaderSourceCode = R"(
+			struct VertexInput
+			{
+				float3 Position : POSITION;
+			};
+
+			struct VertexOutput
+			{
+				float4 Position : SV_POSITION;
+			};
+
+			VertexOutput main(VertexInput input)
+			{
+				VertexOutput output;
+				output.Position = float4(input.Position, 1.0f);
+				
+				return output;
+			}
+		)";
+
+		static std::string PixelShaderSourceCode = R"(
+			struct PixelInput
+			{
+				float4 Position : SV_POSITION;
+			};
+
+			float4 main(PixelInput input) : SV_TARGET
+			{
+				return float4(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+		)";
 
 		static bool CompileHLSLString(const std::string_view string, const std::string_view entryPoint, const std::string_view name, const ShaderStage stage,
 			std::vector<unsigned char>& outBuffer)
@@ -264,12 +298,27 @@ namespace LeviathanRenderer
 			Viewport.MinDepth = 0.f;
 			Viewport.MaxDepth = 1.f;
 
+			// Set render targets and viewports.
+			D3D11DeviceContext->OMSetRenderTargets(1, BackBufferRenderTargetView.GetAddressOf(), DepthStencilView.Get());
+			D3D11DeviceContext->RSSetViewports(1, &Viewport);
+
 			// Initialize shader compilation.
 			hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
 			CHECK_HRESULT(hr);
 
 			hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
 			CHECK_HRESULT(hr);
+
+			// Compile shaders.
+			if (!CompileHLSLString(VertexShaderSourceCode, "main", "VertexShader", ShaderStage::Vertex, VertexShaderBuffer))
+			{
+				return false;
+			}
+
+			if (!CompileHLSLString(PixelShaderSourceCode, "main", "PixelShader", ShaderStage::Pixel, PixelShaderBuffer))
+			{
+				return false;
+			}
 
 			// Create input layout.
 			std::array<D3D11_INPUT_ELEMENT_DESC, 1> inputLayoutDesc =
@@ -286,7 +335,7 @@ namespace LeviathanRenderer
 				}
 			};
 
-			hr = D3D11Device->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()), 
+			hr = D3D11Device->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()),
 				static_cast<void*>(VertexShaderBuffer.data()), VertexShaderBuffer.size(), &InputLayout);
 			CHECK_HRESULT(hr);
 
