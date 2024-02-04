@@ -1,7 +1,6 @@
 #include "Core.h"
 #include "Platform.h"
 #include "PlatformWindow.h"
-#include "LeviathanString.h"
 #include "Logging.h"
 
 namespace LeviathanCore

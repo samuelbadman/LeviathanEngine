@@ -8,4 +8,4 @@ namespace LeviathanCore
 	}
 }
 
-#define LEVIATHAN_STRING(format, ...) LeviathanCore::String::Printf(format, __VA_ARGS__)
+#define LEVIATHAN_PRINTF(format, ...) LeviathanCore::String::Printf(format, __VA_ARGS__)
