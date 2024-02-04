@@ -35,22 +35,20 @@ namespace LeviathanRenderer
 		static D3D11_VIEWPORT Viewport = {};
 
 		// Shader compilation.
-		static constexpr const wchar_t* SHADER_MODEL_6_VERTEX_SHADER = L"vs_6_0";
-		static constexpr const wchar_t* SHADER_MODEL_6_PIXEL_SHADER = L"ps_6_0";
+		static constexpr const char* SHADER_MODEL_5_VERTEX_SHADER = "vs_5_0";
+		static constexpr const char* SHADER_MODEL_5_PIXEL_SHADER = "ps_5_0";
+		//static constexpr const wchar_t* SHADER_MODEL_6_VERTEX_SHADER = L"vs_6_0";
+		//static constexpr const wchar_t* SHADER_MODEL_6_PIXEL_SHADER = L"ps_6_0";
 
-		enum class ShaderStage : unsigned char
-		{
-			Vertex,
-			Pixel
-		};
-
-		static Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
-		static Microsoft::WRL::ComPtr<IDxcCompiler> dxcCompiler = nullptr;
+		//static Microsoft::WRL::ComPtr<IDxcUtils> DxcUtils = nullptr;
+		//static Microsoft::WRL::ComPtr<IDxcCompiler> DxcCompiler = nullptr;
 
 		// Define the renderer pipeline.
 		static Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout = {};
 		static std::vector<unsigned char> VertexShaderBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader = {};
 		static std::vector<unsigned char> PixelShaderBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader = {};
 
 		// Renderer state.
 		static bool VSync = false;
@@ -95,70 +93,91 @@ namespace LeviathanRenderer
 			}
 		)";
 
-		static bool CompileHLSLString(const std::string_view string, const std::string_view entryPoint, const std::string_view name, const ShaderStage stage,
-			std::vector<unsigned char>& outBuffer)
+		static bool CompileHLSLStringFXC(const std::string_view string, const std::string_view entryPoint, const std::string_view name,
+			const std::string_view target, std::vector<unsigned char>& outBuffer)
 		{
 			HRESULT hr = {};
 
-			// Create blob with source code.
-			Microsoft::WRL::ComPtr<IDxcBlobEncoding> sourceBlob = nullptr;
-			hr = dxcUtils->CreateBlob(string.data(), static_cast<UINT32>(string.size()), CP_UTF8, &sourceBlob);
-			CHECK_HRESULT(hr);
+			Microsoft::WRL::ComPtr<ID3DBlob> blob = {};
+			Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = {};
+			hr = D3DCompile(static_cast<const void*>(string.data()), string.size(), name.data(), nullptr, nullptr, entryPoint.data(),
+				target.data(), D3DCOMPILE_ENABLE_STRICTNESS, 0, &blob, &errorBlob);
 
-			// Compile blob containing source code.
-			LPCWSTR target = L"";
-			switch (stage)
+			if (FAILED(hr))
 			{
-			case ShaderStage::Vertex: target = SHADER_MODEL_6_VERTEX_SHADER; break;
-			case ShaderStage::Pixel: target = SHADER_MODEL_6_PIXEL_SHADER; break;
-			default: return false;
-			}
-
-			Microsoft::WRL::ComPtr<IDxcOperationResult> opResult = nullptr;
-			hr = dxcCompiler->Compile(sourceBlob.Get(),
-				std::wstring(name.begin(), name.end()).c_str(),
-				std::wstring(entryPoint.begin(), entryPoint.end()).c_str(),
-				target,
-				nullptr,
-				0,
-				nullptr,
-				0,
-				nullptr,
-				&opResult);
-			CHECK_HRESULT(hr);
-
-			// Check compilation result.
-			HRESULT opResultStatus = 0;
-			hr = opResult->GetStatus(&opResultStatus);
-			CHECK_HRESULT(hr);
-
-			if (FAILED(opResultStatus))
-			{
-				Microsoft::WRL::ComPtr<IDxcBlobEncoding> errorBlob = nullptr;
-				hr = opResult->GetErrorBuffer(&errorBlob);
-				CHECK_HRESULT(hr);
-
-				if (errorBlob == nullptr)
+				if (errorBlob)
 				{
+					LEVIATHAN_LOG("Failed to compile shader: %s, Error message: %s", name.data(), static_cast<const char*>(errorBlob->GetBufferPointer()));
 					return false;
 				}
-
-				LEVIATHAN_LOG("Failed to compile shader: %s, Error: %s", name.data(), static_cast<const char*>(errorBlob->GetBufferPointer()));
-
-				return false;
 			}
 
 			// Copy result blob to output buffer.
-			Microsoft::WRL::ComPtr<IDxcBlob> compiledBlob = nullptr;
-			hr = opResult->GetResult(&compiledBlob);
-			CHECK_HRESULT(hr);
-
-			const SIZE_T compiledBlobSize = compiledBlob->GetBufferSize();
+			const SIZE_T compiledBlobSize = blob->GetBufferSize();
 			outBuffer.resize(compiledBlobSize, 0);
-			memcpy(outBuffer.data(), compiledBlob->GetBufferPointer(), compiledBlobSize);
+			memcpy(outBuffer.data(), blob->GetBufferPointer(), compiledBlobSize);
 
 			return true;
 		}
+
+		// Direct3D11 only supports shaders compiled with FXC which can only compile shader model 5 and below. Shader model 6 and above shaders must be compiled with
+		// DXC and can only be used with Direct3D12.
+		//static bool CompileHLSLStringDXC(IDxcUtils* dxcUtils, IDxcCompiler* dxcCompiler, const std::string_view string, const std::string_view entryPoint,
+		//	const std::string_view name, const std::string_view target, std::vector<unsigned char>& outBuffer)
+		//{
+		//	HRESULT hr = {};
+
+		//	// Create blob with source code.
+		//	Microsoft::WRL::ComPtr<IDxcBlobEncoding> sourceBlob = nullptr;
+		//	hr = dxcUtils->CreateBlob(string.data(), static_cast<UINT32>(string.size()), CP_UTF8, &sourceBlob);
+		//	CHECK_HRESULT(hr);
+
+		//	// Compile blob containing source code.
+		//	Microsoft::WRL::ComPtr<IDxcOperationResult> opResult = nullptr;
+		//	hr = dxcCompiler->Compile(sourceBlob.Get(),
+		//		std::wstring(name.begin(), name.end()).c_str(),
+		//		std::wstring(entryPoint.begin(), entryPoint.end()).c_str(),
+		//		std::wstring(target.begin(), target.end()).c_str(),
+		//		nullptr,
+		//		0,
+		//		nullptr,
+		//		0,
+		//		nullptr,
+		//		&opResult);
+		//	CHECK_HRESULT(hr);
+
+		//	// Check compilation result.
+		//	HRESULT opResultStatus = 0;
+		//	hr = opResult->GetStatus(&opResultStatus);
+		//	CHECK_HRESULT(hr);
+
+		//	if (FAILED(opResultStatus))
+		//	{
+		//		Microsoft::WRL::ComPtr<IDxcBlobEncoding> errorBlob = nullptr;
+		//		hr = opResult->GetErrorBuffer(&errorBlob);
+		//		CHECK_HRESULT(hr);
+
+		//		if (errorBlob == nullptr)
+		//		{
+		//			return false;
+		//		}
+
+		//		LEVIATHAN_LOG("Failed to compile shader: %s, Error message: %s", name.data(), static_cast<const char*>(errorBlob->GetBufferPointer()));
+
+		//		return false;
+		//	}
+
+		//	// Copy result blob to output buffer.
+		//	Microsoft::WRL::ComPtr<IDxcBlob> compiledBlob = nullptr;
+		//	hr = opResult->GetResult(&compiledBlob);
+		//	CHECK_HRESULT(hr);
+
+		//	const SIZE_T compiledBlobSize = compiledBlob->GetBufferSize();
+		//	outBuffer.resize(compiledBlobSize, 0);
+		//	memcpy(outBuffer.data(), compiledBlob->GetBufferPointer(), compiledBlobSize);
+
+		//	return true;
+		//}
 
 		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
@@ -303,22 +322,28 @@ namespace LeviathanRenderer
 			D3D11DeviceContext->RSSetViewports(1, &Viewport);
 
 			// Initialize shader compilation.
-			hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
-			CHECK_HRESULT(hr);
+			//hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+			//CHECK_HRESULT(hr);
 
-			hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
-			CHECK_HRESULT(hr);
+			//hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+			//CHECK_HRESULT(hr);
 
-			// Compile shaders.
-			if (!CompileHLSLString(VertexShaderSourceCode, "main", "VertexShader", ShaderStage::Vertex, VertexShaderBuffer))
+			// Create shaders.
+			if (!CompileHLSLStringFXC(VertexShaderSourceCode, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, VertexShaderBuffer))
 			{
-				return false;
+				LEVIATHAN_ASSERT(false);
 			}
 
-			if (!CompileHLSLString(PixelShaderSourceCode, "main", "PixelShader", ShaderStage::Pixel, PixelShaderBuffer))
+			hr = D3D11Device->CreateVertexShader(VertexShaderBuffer.data(), VertexShaderBuffer.size(), nullptr, &VertexShader);
+			CHECK_HRESULT(hr);
+
+			if (!CompileHLSLStringFXC(PixelShaderSourceCode, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, PixelShaderBuffer))
 			{
-				return false;
+				LEVIATHAN_ASSERT(false);
 			}
+
+			hr = D3D11Device->CreatePixelShader(static_cast<void*>(PixelShaderBuffer.data()), PixelShaderBuffer.size(), nullptr, &PixelShader);
+			CHECK_HRESULT(hr);
 
 			// Create input layout.
 			std::array<D3D11_INPUT_ELEMENT_DESC, 1> inputLayoutDesc =
