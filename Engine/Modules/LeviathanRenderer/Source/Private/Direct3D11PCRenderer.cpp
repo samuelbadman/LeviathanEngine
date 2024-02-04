@@ -53,6 +53,9 @@ namespace LeviathanRenderer
 		// Renderer state.
 		static bool VSync = false;
 
+		// Scene resources.
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer = {};
+
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
 #define CHECK_HRESULT(hResult) LEVIATHAN_ASSERT(SUCCEEDED(hResult))
@@ -318,7 +321,6 @@ namespace LeviathanRenderer
 			Viewport.MaxDepth = 1.f;
 
 			// Set render targets and viewports.
-			D3D11DeviceContext->OMSetRenderTargets(1, BackBufferRenderTargetView.GetAddressOf(), DepthStencilView.Get());
 			D3D11DeviceContext->RSSetViewports(1, &Viewport);
 
 			// Initialize shader compilation.
@@ -364,6 +366,27 @@ namespace LeviathanRenderer
 				static_cast<void*>(VertexShaderBuffer.data()), VertexShaderBuffer.size(), &InputLayout);
 			CHECK_HRESULT(hr);
 
+			// Create scene resources.
+			std::array<Vertices::Vertex1Pos, 3> triangleVertices =
+			{
+				Vertices::Vertex1Pos{ -0.5f, -0.5f, 0.0f },
+				Vertices::Vertex1Pos{ 0.0f, 0.5f, 0.0f },
+				Vertices::Vertex1Pos{ 0.5f, -0.5f, 0.0f }
+			};
+
+			D3D11_BUFFER_DESC vertexBufferDesc = {};
+			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+			vertexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(Vertices::Vertex1Pos) * triangleVertices.size());
+			vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			vertexBufferDesc.CPUAccessFlags = 0;
+			vertexBufferDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA vertexBufferData = {};
+			vertexBufferData.pSysMem = triangleVertices.data();
+
+			hr = D3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &VertexBuffer);
+			CHECK_HRESULT(hr);
+
 			return true;
 		}
 
@@ -371,6 +394,21 @@ namespace LeviathanRenderer
 		{
 			D3D11DeviceContext->ClearRenderTargetView(BackBufferRenderTargetView.Get(), clearColor);
 			D3D11DeviceContext->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, clearDepth, clearStencil);
+
+			// TODO: Refactor out of clear.
+			D3D11DeviceContext->IASetInputLayout(InputLayout.Get());
+			D3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			UINT stride = sizeof(Vertices::Vertex1Pos);
+			UINT offset = 0;
+			D3D11DeviceContext->IASetVertexBuffers(0, 1, VertexBuffer.GetAddressOf(), &stride, &offset);
+
+			D3D11DeviceContext->VSSetShader(VertexShader.Get(), nullptr, 0);
+			D3D11DeviceContext->PSSetShader(PixelShader.Get(), nullptr, 0);
+
+			D3D11DeviceContext->OMSetRenderTargets(1, BackBufferRenderTargetView.GetAddressOf(), DepthStencilView.Get());
+
+			D3D11DeviceContext->Draw(3, 0);
 		}
 
 		void Present()
