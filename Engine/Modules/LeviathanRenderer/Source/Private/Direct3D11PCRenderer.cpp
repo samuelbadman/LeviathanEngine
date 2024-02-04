@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "LeviathanAssert.h"
+#include "Vertices.h"
 
 namespace LeviathanRenderer
 {
@@ -34,6 +35,9 @@ namespace LeviathanRenderer
 
 		// Renderer state.
 		static bool VSync = false;
+
+		static Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout = {};
+		static std::vector<unsigned char> VertexShaderBuffer = {};
 
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
 #define CHECK_HRESULT(hResult) LEVIATHAN_ASSERT(SUCCEEDED(hResult))
@@ -178,6 +182,25 @@ namespace LeviathanRenderer
 			Viewport.TopLeftY = 0.f;
 			Viewport.MinDepth = 0.f;
 			Viewport.MaxDepth = 1.f;
+
+			// Create input layout.
+			std::array<D3D11_INPUT_ELEMENT_DESC, 1> inputLayoutDesc =
+			{
+				D3D11_INPUT_ELEMENT_DESC
+				{
+					.SemanticName = "POSITION",
+					.SemanticIndex = 0,
+					.Format = DXGI_FORMAT_R32G32B32_FLOAT,
+					.InputSlot = 0,
+					.AlignedByteOffset = 0,
+					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+					.InstanceDataStepRate = 0
+				}
+			};
+
+			hr = D3D11Device->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()), 
+				static_cast<void*>(VertexShaderBuffer.data()), VertexShaderBuffer.size(), &InputLayout);
+			CHECK_HRESULT(hr);
 
 			return true;
 		}
