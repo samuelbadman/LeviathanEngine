@@ -374,6 +374,7 @@ set(EXE_HEADERS
 set(EXE_SOURCES 
 	"${EXE_SOURCE_DIRECTORY}/LauncherMain.cpp"
 )
+
 # NOTE: Need to link any module libraries that the title module uses to the launcher executable.
 set(EXE_LINK_LIBRARIES
 	"${LEVIATHAN_CORE_NAME}"
@@ -381,6 +382,7 @@ set(EXE_LINK_LIBRARIES
 	"${LEVIATHAN_RENDERER_NAME}"
 	"${TEST_TITLE_NAME}"
 )
+
 # NOTE: Need to include Leviathan core module and the title module building for.
 set(EXE_INCLUDE_DIRECTORIES
 	"${PROJECT_SOURCE_DIR}/${LEVIATHAN_CORE_SOURCE_DIRECTORY}/Public"
@@ -397,6 +399,11 @@ add_executable_target(
 	"${CPP_STANDARD}"
 	"${ENABLE_STRICT_WARNINGS}"
 )
+
+# Add build commands.
+if(BUILD_RENDERER_API_DIRECT3D11_PC MATCHES ON OR BUILD_RENDERER_API_DIRECT3D12_PC MATCHES ON)
+add_custom_command(TARGET "${EXE_NAME}" POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/Redist/DirectX" "$<TARGET_FILE_DIR:${EXE_NAME}>")
+endif()
 
 # Set Visual Studio startup project.
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "${EXE_NAME}")
