@@ -65,7 +65,7 @@ namespace LeviathanRenderer
 #endif // LEVIATHAN_BUILD_CONFIG_DEBUG.
 
 		// Shader source code.
-		static std::string VertexShaderSourceCode = R"(
+		static const std::string gVertexShaderSourceCode = R"(
 			struct VertexInput
 			{
 				float3 Position : POSITION;
@@ -85,7 +85,7 @@ namespace LeviathanRenderer
 			}
 		)";
 
-		static std::string PixelShaderSourceCode = R"(
+		static const std::string gPixelShaderSourceCode = R"(
 			struct PixelInput
 			{
 				float4 Position : SV_POSITION;
@@ -350,7 +350,7 @@ namespace LeviathanRenderer
 			//CHECK_HRESULT(hr);
 
 			// Create shaders.
-			if (!CompileHLSLStringFXC(VertexShaderSourceCode, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, gVertexShaderBuffer))
+			if (!CompileHLSLStringFXC(gVertexShaderSourceCode, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, gVertexShaderBuffer))
 			{
 				LEVIATHAN_ASSERT(false);
 			}
@@ -358,7 +358,7 @@ namespace LeviathanRenderer
 			hr = gD3D11Device->CreateVertexShader(gVertexShaderBuffer.data(), gVertexShaderBuffer.size(), nullptr, &gVertexShader);
 			CHECK_HRESULT(hr);
 
-			if (!CompileHLSLStringFXC(PixelShaderSourceCode, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, gPixelShaderBuffer))
+			if (!CompileHLSLStringFXC(gPixelShaderSourceCode, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, gPixelShaderBuffer))
 			{
 				LEVIATHAN_ASSERT(false);
 			}
