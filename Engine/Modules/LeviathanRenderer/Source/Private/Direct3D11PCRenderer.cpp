@@ -1,6 +1,6 @@
 #include "Renderer.h"
 #include "LeviathanAssert.h"
-#include "Vertices.h"
+#include "VertexTypes.h"
 #include "Logging.h"
 
 namespace LeviathanRenderer
@@ -183,7 +183,7 @@ namespace LeviathanRenderer
 		//	return true;
 		//}
 
-		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
+		void InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
 			VSync = vsync;
 
@@ -313,15 +313,13 @@ namespace LeviathanRenderer
 			hr = D3D11Device->CreateRasterizerState(&rasterizerStateDesc, &RasterizerState);
 			CHECK_HRESULT(hr);
 
-			// Initialize viewport.
+			// Set up the viewport.
 			Viewport.Width = static_cast<float>(width);
 			Viewport.Height = static_cast<float>(height);
 			Viewport.TopLeftX = 0.f;
 			Viewport.TopLeftY = 0.f;
 			Viewport.MinDepth = 0.f;
 			Viewport.MaxDepth = 1.f;
-
-			// Set render targets and viewports.
 			D3D11DeviceContext->RSSetViewports(1, &Viewport);
 
 			// Initialize shader compilation.
@@ -369,17 +367,17 @@ namespace LeviathanRenderer
 
 			// Create scene resources.
 			// Vertex buffer.
-			std::array<Vertices::Vertex1Pos, 4> quadVertices =
+			std::array<VertexTypes::Vertex1Pos, 4> quadVertices =
 			{
-				Vertices::Vertex1Pos{ -0.5f, -0.5f, 0.0f }, // Bottom left.
-				Vertices::Vertex1Pos{ -0.5f, 0.5f, 0.0f }, // Top left.
-				Vertices::Vertex1Pos{ 0.5f, 0.5f, 0.0f }, // Top right.
-				Vertices::Vertex1Pos{ 0.5f, -0.5f, 0.0f } // Bottom right.
+				VertexTypes::Vertex1Pos{ -0.5f, -0.5f, 0.0f }, // Bottom left.
+				VertexTypes::Vertex1Pos{ -0.5f, 0.5f, 0.0f }, // Top left.
+				VertexTypes::Vertex1Pos{ 0.5f, 0.5f, 0.0f }, // Top right.
+				VertexTypes::Vertex1Pos{ 0.5f, -0.5f, 0.0f } // Bottom right.
 			};
 
 			D3D11_BUFFER_DESC vertexBufferDesc = {};
 			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			vertexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(Vertices::Vertex1Pos) * quadVertices.size());
+			vertexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(VertexTypes::Vertex1Pos) * quadVertices.size());
 			vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 			vertexBufferDesc.CPUAccessFlags = 0;
 			vertexBufferDesc.MiscFlags = 0;
@@ -408,8 +406,62 @@ namespace LeviathanRenderer
 
 			hr = D3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &IndexBuffer);
 			CHECK_HRESULT(hr);
+		}
 
-			return true;
+		void ResizeWindowResources(unsigned int width, unsigned int height)
+		{
+			D3D11DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+
+			// Release all outstanding references to the swap chain's buffers.
+			BackBufferRenderTargetView.Reset();
+
+			HRESULT hr = {};
+
+			// Preserve the existing buffer count and format.
+			// Automatically choose the width and height to match the client rect for HWNDS.
+			hr = SwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+			CHECK_HRESULT(hr);
+
+			// Get buffer and create a render target view.
+			Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
+			hr = SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+			CHECK_HRESULT(hr);
+
+			hr = D3D11Device->CreateRenderTargetView(backBuffer.Get(), nullptr, &BackBufferRenderTargetView);
+			CHECK_HRESULT(hr);
+
+			// Release references to the depth stencil buffer.
+			DepthStencilBuffer.Reset();
+			DepthStencilView.Reset();
+
+			// Recreate depth stencil buffer.
+			D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
+			depthStencilBufferDesc.ArraySize = 1;
+			depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+			depthStencilBufferDesc.CPUAccessFlags = 0;
+			depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+			depthStencilBufferDesc.Width = width;
+			depthStencilBufferDesc.Height = height;
+			depthStencilBufferDesc.MipLevels = 1;
+			depthStencilBufferDesc.SampleDesc.Count = 1;
+			depthStencilBufferDesc.SampleDesc.Quality = 0;
+			depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+
+			hr = D3D11Device->CreateTexture2D(&depthStencilBufferDesc, nullptr, &DepthStencilBuffer);
+			CHECK_HRESULT(hr);
+
+			// Recreate depth stencil view.
+			hr = D3D11Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr, &DepthStencilView);
+			CHECK_HRESULT(hr);
+
+			// Set up the viewport.
+			Viewport.Width = static_cast<float>(width);
+			Viewport.Height = static_cast<float>(height);
+			Viewport.TopLeftX = 0.f;
+			Viewport.TopLeftY = 0.f;
+			Viewport.MinDepth = 0.f;
+			Viewport.MaxDepth = 1.f;
+			D3D11DeviceContext->RSSetViewports(1, &Viewport);
 		}
 
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
@@ -421,7 +473,7 @@ namespace LeviathanRenderer
 			D3D11DeviceContext->IASetInputLayout(InputLayout.Get());
 			D3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			UINT stride = sizeof(Vertices::Vertex1Pos);
+			UINT stride = sizeof(VertexTypes::Vertex1Pos);
 			UINT offset = 0;
 			D3D11DeviceContext->IASetVertexBuffers(0, 1, VertexBuffer.GetAddressOf(), &stride, &offset);
 			D3D11DeviceContext->IASetIndexBuffer(IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);

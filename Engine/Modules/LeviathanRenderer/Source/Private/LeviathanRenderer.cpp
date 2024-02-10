@@ -5,9 +5,9 @@
 
 namespace LeviathanRenderer
 {
-	static void OnRuntimeWindowResized([[maybe_unused]] int newWidth, [[maybe_unused]] int newHeight)
+	static void OnRuntimeWindowResized(int newWidth, int newHeight)
 	{
-
+		Renderer::ResizeWindowResources(newWidth, newHeight);
 	}
 
 	bool Initialize()
@@ -19,23 +19,16 @@ namespace LeviathanRenderer
 		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(&OnRuntimeWindowResized);
 
 		// Initialize renderer api.
+		void* platformHandle = LeviathanCore::Core::GetRuntimeWindowPlatformHandle();
 		int width = 0;
 		int height = 0;
+
 		if (!LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(width, height))
 		{
 			return false;
 		}
 
-		void* platformHandle = LeviathanCore::Core::GetRuntimeWindowPlatformHandle();
-
-		if (!Renderer::InitializeRendererApi(static_cast<unsigned int>(width),
-			static_cast<unsigned int>(height), 
-			platformHandle, 
-			vsync,
-			bufferCount))
-		{
-			return false;
-		}
+		Renderer::InitializeRendererApi(static_cast<unsigned int>(width), static_cast<unsigned int>(height), platformHandle, vsync, bufferCount);
 
 		return true;
 	}

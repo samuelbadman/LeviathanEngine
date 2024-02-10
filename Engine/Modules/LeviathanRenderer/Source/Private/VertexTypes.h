@@ -2,7 +2,7 @@
 
 namespace LeviathanRenderer
 {
-	namespace Vertices
+	namespace VertexTypes
 	{
 		struct Vertex1Pos
 		{
