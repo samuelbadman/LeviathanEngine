@@ -55,6 +55,7 @@ namespace LeviathanRenderer
 
 		// Scene resources.
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = {};
 
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
@@ -367,24 +368,45 @@ namespace LeviathanRenderer
 			CHECK_HRESULT(hr);
 
 			// Create scene resources.
-			std::array<Vertices::Vertex1Pos, 3> triangleVertices =
+			// Vertex buffer.
+			std::array<Vertices::Vertex1Pos, 4> quadVertices =
 			{
-				Vertices::Vertex1Pos{ -0.5f, -0.5f, 0.0f },
-				Vertices::Vertex1Pos{ 0.0f, 0.5f, 0.0f },
-				Vertices::Vertex1Pos{ 0.5f, -0.5f, 0.0f }
+				Vertices::Vertex1Pos{ -0.5f, -0.5f, 0.0f }, // Bottom left.
+				Vertices::Vertex1Pos{ -0.5f, 0.5f, 0.0f }, // Top left.
+				Vertices::Vertex1Pos{ 0.5f, 0.5f, 0.0f }, // Top right.
+				Vertices::Vertex1Pos{ 0.5f, -0.5f, 0.0f } // Bottom right.
 			};
 
 			D3D11_BUFFER_DESC vertexBufferDesc = {};
 			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			vertexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(Vertices::Vertex1Pos) * triangleVertices.size());
+			vertexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(Vertices::Vertex1Pos) * quadVertices.size());
 			vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 			vertexBufferDesc.CPUAccessFlags = 0;
 			vertexBufferDesc.MiscFlags = 0;
 
 			D3D11_SUBRESOURCE_DATA vertexBufferData = {};
-			vertexBufferData.pSysMem = triangleVertices.data();
+			vertexBufferData.pSysMem = quadVertices.data();
 
 			hr = D3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &VertexBuffer);
+			CHECK_HRESULT(hr);
+
+			// Index buffer.
+			std::array<unsigned int, 6> quadIndices =
+			{
+				0, 1, 2, 0, 2, 3
+			};
+
+			D3D11_BUFFER_DESC indexBufferDesc = {};
+			indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+			indexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(unsigned int) * quadIndices.size());
+			indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			indexBufferDesc.CPUAccessFlags = 0;
+			indexBufferDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA indexBufferData = {};
+			indexBufferData.pSysMem = quadIndices.data();
+
+			hr = D3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &IndexBuffer);
 			CHECK_HRESULT(hr);
 
 			return true;
@@ -402,13 +424,14 @@ namespace LeviathanRenderer
 			UINT stride = sizeof(Vertices::Vertex1Pos);
 			UINT offset = 0;
 			D3D11DeviceContext->IASetVertexBuffers(0, 1, VertexBuffer.GetAddressOf(), &stride, &offset);
+			D3D11DeviceContext->IASetIndexBuffer(IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
 			D3D11DeviceContext->VSSetShader(VertexShader.Get(), nullptr, 0);
 			D3D11DeviceContext->PSSetShader(PixelShader.Get(), nullptr, 0);
 
 			D3D11DeviceContext->OMSetRenderTargets(1, BackBufferRenderTargetView.GetAddressOf(), DepthStencilView.Get());
 
-			D3D11DeviceContext->Draw(3, 0);
+			D3D11DeviceContext->DrawIndexed(6, 0, 0);
 		}
 
 		void Present()
