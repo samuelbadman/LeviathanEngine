@@ -8,31 +8,31 @@ namespace LeviathanRenderer
 	namespace Renderer
 	{
 		// DXGI factory and adapter.
-		static Microsoft::WRL::ComPtr<IDXGIFactory7> DXGIFactory = {};
-		static DXGI_ADAPTER_DESC1 DXGIAdapterDesc = {};
-		static Microsoft::WRL::ComPtr<IDXGIAdapter4> DXGIAdapter = {};
+		static Microsoft::WRL::ComPtr<IDXGIFactory7> gDXGIFactory = {};
+		static DXGI_ADAPTER_DESC1 gDXGIAdapterDesc = {};
+		static Microsoft::WRL::ComPtr<IDXGIAdapter4> gDXGIAdapter = {};
 
 		// Device, device context and swap chain.
-		static Microsoft::WRL::ComPtr<ID3D11Device> D3D11Device = {};
-		static Microsoft::WRL::ComPtr<ID3D11DeviceContext> D3D11DeviceContext = {};
-		static Microsoft::WRL::ComPtr<IDXGISwapChain> SwapChain = {};
-		static D3D_FEATURE_LEVEL FeatureLevel = {};
+		static Microsoft::WRL::ComPtr<ID3D11Device> gD3D11Device = {};
+		static Microsoft::WRL::ComPtr<ID3D11DeviceContext> gD3D11DeviceContext = {};
+		static Microsoft::WRL::ComPtr<IDXGISwapChain> gSwapChain = {};
+		static D3D_FEATURE_LEVEL gFeatureLevel = {};
 
 		// Render target views of the swap chain back buffers.
-		static Microsoft::WRL::ComPtr<ID3D11RenderTargetView> BackBufferRenderTargetView = {};
+		static Microsoft::WRL::ComPtr<ID3D11RenderTargetView> gBackBufferRenderTargetView = {};
 
 		// Depth/stencil target view of the depth/stencil buffer.
-		static Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthStencilView = {};
+		static Microsoft::WRL::ComPtr<ID3D11DepthStencilView> gDepthStencilView = {};
 
 		// Texture resource to associate to the depth stencil view.
-		static Microsoft::WRL::ComPtr<ID3D11Texture2D> DepthStencilBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11Texture2D> gDepthStencilBuffer = {};
 
 		// Define the functionality of the depth/stencil stage.
-		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthStencilState = {};
+		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilState = {};
 
 		// Define the functionality of the rasterizer stage.
-		static Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState = {};
-		static D3D11_VIEWPORT Viewport = {};
+		static Microsoft::WRL::ComPtr<ID3D11RasterizerState> gRasterizerState = {};
+		static D3D11_VIEWPORT gViewport = {};
 
 		// Shader compilation.
 		static constexpr const char* SHADER_MODEL_5_VERTEX_SHADER = "vs_5_0";
@@ -44,18 +44,18 @@ namespace LeviathanRenderer
 		//static Microsoft::WRL::ComPtr<IDxcCompiler> DxcCompiler = nullptr;
 
 		// Define the renderer pipeline.
-		static Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout = {};
-		static std::vector<unsigned char> VertexShaderBuffer = {};
-		static Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader = {};
-		static std::vector<unsigned char> PixelShaderBuffer = {};
-		static Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader = {};
+		static Microsoft::WRL::ComPtr<ID3D11InputLayout> gInputLayout = {};
+		static std::vector<unsigned char> gVertexShaderBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11VertexShader> gVertexShader = {};
+		static std::vector<unsigned char> gPixelShaderBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gPixelShader = {};
 
 		// Renderer state.
-		static bool VSync = false;
+		static bool gVSync = false;
 
 		// Scene resources.
-		static Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer = {};
-		static Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> gVertexBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> gIndexBuffer = {};
 
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
@@ -183,9 +183,57 @@ namespace LeviathanRenderer
 		//	return true;
 		//}
 
+		static void SetupViewport(unsigned int width, unsigned int height)
+		{
+			gViewport.Width = static_cast<float>(width);
+			gViewport.Height = static_cast<float>(height);
+			gViewport.TopLeftX = 0.f;
+			gViewport.TopLeftY = 0.f;
+			gViewport.MinDepth = 0.f;
+			gViewport.MaxDepth = 1.f;
+			gD3D11DeviceContext->RSSetViewports(1, &gViewport);
+		}
+
+		static void CreateBackBufferRenderTargetView()
+		{
+			HRESULT hr = {};
+
+			Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
+			hr = gSwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+			CHECK_HRESULT(hr);
+
+			hr = gD3D11Device->CreateRenderTargetView(backBuffer.Get(), nullptr, &gBackBufferRenderTargetView);
+			CHECK_HRESULT(hr);
+		}
+
+		static void CreateDepthStencilBufferAndView(unsigned int width, unsigned int height)
+		{
+			HRESULT hr = {};
+
+			// Create the depth/stencil buffer.
+			D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
+			depthStencilBufferDesc.ArraySize = 1;
+			depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+			depthStencilBufferDesc.CPUAccessFlags = 0;
+			depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+			depthStencilBufferDesc.Width = width;
+			depthStencilBufferDesc.Height = height;
+			depthStencilBufferDesc.MipLevels = 1;
+			depthStencilBufferDesc.SampleDesc.Count = 1;
+			depthStencilBufferDesc.SampleDesc.Quality = 0;
+			depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+
+			hr = gD3D11Device->CreateTexture2D(&depthStencilBufferDesc, nullptr, &gDepthStencilBuffer);
+			CHECK_HRESULT(hr);
+
+			// Create depth stencil view.
+			hr = gD3D11Device->CreateDepthStencilView(gDepthStencilBuffer.Get(), nullptr, &gDepthStencilView);
+			CHECK_HRESULT(hr);
+		}
+
 		void InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
-			VSync = vsync;
+			gVSync = vsync;
 
 			HRESULT hr = {};
 
@@ -195,14 +243,14 @@ namespace LeviathanRenderer
 			createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif //LEVIATHAN_BUILD_CONFIG_DEBUG.
 
-			hr = CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&DXGIFactory));
+			hr = CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&gDXGIFactory));
 			CHECK_HRESULT(hr);
 
 			// Select adapter.
-			hr = DXGIFactory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&DXGIAdapter));
+			hr = gDXGIFactory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&gDXGIAdapter));
 			CHECK_HRESULT(hr);
 
-			hr = DXGIAdapter->GetDesc1(&DXGIAdapterDesc);
+			hr = gDXGIAdapter->GetDesc1(&gDXGIAdapterDesc);
 			CHECK_HRESULT(hr);
 
 			// Create device.
@@ -222,13 +270,13 @@ namespace LeviathanRenderer
 				D3D_FEATURE_LEVEL_9_1
 			};
 
-			hr = D3D11CreateDevice(DXGIAdapter.Get(),
+			hr = D3D11CreateDevice(gDXGIAdapter.Get(),
 				D3D_DRIVER_TYPE_UNKNOWN,
 				NULL,
 				createDeviceFlags,
 				featureLevels.data(), static_cast<unsigned int>(featureLevels.size()),
 				D3D11_SDK_VERSION,
-				&D3D11Device, &FeatureLevel, &D3D11DeviceContext);
+				&gD3D11Device, &gFeatureLevel, &gD3D11DeviceContext);
 			CHECK_HRESULT(hr);
 
 			// Create the swap chain.
@@ -248,44 +296,22 @@ namespace LeviathanRenderer
 			swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 
 			Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1 = {};
-			hr = DXGIFactory->CreateSwapChainForHwnd(D3D11Device.Get(), static_cast<HWND>(windowPlatformHandle), &swapChainDesc, nullptr, nullptr, &swapChain1);
+			hr = gDXGIFactory->CreateSwapChainForHwnd(gD3D11Device.Get(), static_cast<HWND>(windowPlatformHandle), &swapChainDesc, nullptr, nullptr, &swapChain1);
 			CHECK_HRESULT(hr);
 
 			// Disable alt + enter fullscreen shortcut. Must be called after creating the swap chain.
-			hr = DXGIFactory->MakeWindowAssociation(static_cast<HWND>(windowPlatformHandle), DXGI_MWA_NO_ALT_ENTER);
+			hr = gDXGIFactory->MakeWindowAssociation(static_cast<HWND>(windowPlatformHandle), DXGI_MWA_NO_ALT_ENTER);
 			CHECK_HRESULT(hr);
 
 			// Convert swap chain 1 interface to swap chain 4 interface.
-			hr = swapChain1.As(&SwapChain);
+			hr = swapChain1.As(&gSwapChain);
 			CHECK_HRESULT(hr);
 
-			// Create render target views.
-			Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
-			hr = SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
-			CHECK_HRESULT(hr);
+			// Create render target view.
+			CreateBackBufferRenderTargetView();
 
-			hr = D3D11Device->CreateRenderTargetView(backBuffer.Get(), nullptr, &BackBufferRenderTargetView);
-			CHECK_HRESULT(hr);
-
-			// Create the depth/stencil buffer.
-			D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
-			depthStencilBufferDesc.ArraySize = 1;
-			depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-			depthStencilBufferDesc.CPUAccessFlags = 0;
-			depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-			depthStencilBufferDesc.Width = width;
-			depthStencilBufferDesc.Height = height;
-			depthStencilBufferDesc.MipLevels = 1;
-			depthStencilBufferDesc.SampleDesc.Count = 1;
-			depthStencilBufferDesc.SampleDesc.Quality = 0;
-			depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-
-			hr = D3D11Device->CreateTexture2D(&depthStencilBufferDesc, nullptr, &DepthStencilBuffer);
-			CHECK_HRESULT(hr);
-
-			// Create depth stencil view.
-			hr = D3D11Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr, &DepthStencilView);
-			CHECK_HRESULT(hr);
+			// Create the depth/stencil buffer and view.
+			CreateDepthStencilBufferAndView(width, height);
 
 			// Create depth stencil state.
 			D3D11_DEPTH_STENCIL_DESC depthStencilStateDesc = {};
@@ -294,7 +320,7 @@ namespace LeviathanRenderer
 			depthStencilStateDesc.DepthFunc = D3D11_COMPARISON_LESS;
 			depthStencilStateDesc.StencilEnable = FALSE;
 
-			hr = D3D11Device->CreateDepthStencilState(&depthStencilStateDesc, &DepthStencilState);
+			hr = gD3D11Device->CreateDepthStencilState(&depthStencilStateDesc, &gDepthStencilState);
 			CHECK_HRESULT(hr);
 
 			// Create rasterizer state.
@@ -310,17 +336,11 @@ namespace LeviathanRenderer
 			rasterizerStateDesc.ScissorEnable = FALSE;
 			rasterizerStateDesc.SlopeScaledDepthBias = 0.f;
 
-			hr = D3D11Device->CreateRasterizerState(&rasterizerStateDesc, &RasterizerState);
+			hr = gD3D11Device->CreateRasterizerState(&rasterizerStateDesc, &gRasterizerState);
 			CHECK_HRESULT(hr);
 
 			// Set up the viewport.
-			Viewport.Width = static_cast<float>(width);
-			Viewport.Height = static_cast<float>(height);
-			Viewport.TopLeftX = 0.f;
-			Viewport.TopLeftY = 0.f;
-			Viewport.MinDepth = 0.f;
-			Viewport.MaxDepth = 1.f;
-			D3D11DeviceContext->RSSetViewports(1, &Viewport);
+			SetupViewport(width, height);
 
 			// Initialize shader compilation.
 			//hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
@@ -330,20 +350,20 @@ namespace LeviathanRenderer
 			//CHECK_HRESULT(hr);
 
 			// Create shaders.
-			if (!CompileHLSLStringFXC(VertexShaderSourceCode, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, VertexShaderBuffer))
+			if (!CompileHLSLStringFXC(VertexShaderSourceCode, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, gVertexShaderBuffer))
 			{
 				LEVIATHAN_ASSERT(false);
 			}
 
-			hr = D3D11Device->CreateVertexShader(VertexShaderBuffer.data(), VertexShaderBuffer.size(), nullptr, &VertexShader);
+			hr = gD3D11Device->CreateVertexShader(gVertexShaderBuffer.data(), gVertexShaderBuffer.size(), nullptr, &gVertexShader);
 			CHECK_HRESULT(hr);
 
-			if (!CompileHLSLStringFXC(PixelShaderSourceCode, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, PixelShaderBuffer))
+			if (!CompileHLSLStringFXC(PixelShaderSourceCode, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, gPixelShaderBuffer))
 			{
 				LEVIATHAN_ASSERT(false);
 			}
 
-			hr = D3D11Device->CreatePixelShader(static_cast<void*>(PixelShaderBuffer.data()), PixelShaderBuffer.size(), nullptr, &PixelShader);
+			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gPixelShaderBuffer.data()), gPixelShaderBuffer.size(), nullptr, &gPixelShader);
 			CHECK_HRESULT(hr);
 
 			// Create input layout.
@@ -361,8 +381,8 @@ namespace LeviathanRenderer
 				}
 			};
 
-			hr = D3D11Device->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()),
-				static_cast<void*>(VertexShaderBuffer.data()), VertexShaderBuffer.size(), &InputLayout);
+			hr = gD3D11Device->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()),
+				static_cast<void*>(gVertexShaderBuffer.data()), gVertexShaderBuffer.size(), &gInputLayout);
 			CHECK_HRESULT(hr);
 
 			// Create scene resources.
@@ -385,13 +405,18 @@ namespace LeviathanRenderer
 			D3D11_SUBRESOURCE_DATA vertexBufferData = {};
 			vertexBufferData.pSysMem = quadVertices.data();
 
-			hr = D3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &VertexBuffer);
+			hr = gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &gVertexBuffer);
 			CHECK_HRESULT(hr);
 
 			// Index buffer.
 			std::array<unsigned int, 6> quadIndices =
 			{
-				0, 1, 2, 0, 2, 3
+				0, // Bottom left.
+				1, // Top left.
+				2, // Top right.
+				0, // Bottom left.
+				2, // Top right.
+				3 // Bottom right.
 			};
 
 			D3D11_BUFFER_DESC indexBufferDesc = {};
@@ -404,91 +429,63 @@ namespace LeviathanRenderer
 			D3D11_SUBRESOURCE_DATA indexBufferData = {};
 			indexBufferData.pSysMem = quadIndices.data();
 
-			hr = D3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &IndexBuffer);
+			hr = gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &gIndexBuffer);
 			CHECK_HRESULT(hr);
 		}
 
 		void ResizeWindowResources(unsigned int width, unsigned int height)
 		{
-			D3D11DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+			gD3D11DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 
 			// Release all outstanding references to the swap chain's buffers.
-			BackBufferRenderTargetView.Reset();
+			gBackBufferRenderTargetView.Reset();
 
 			HRESULT hr = {};
 
 			// Preserve the existing buffer count and format.
 			// Automatically choose the width and height to match the client rect for HWNDS.
-			hr = SwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+			hr = gSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
 			CHECK_HRESULT(hr);
 
 			// Get buffer and create a render target view.
-			Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
-			hr = SwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
-			CHECK_HRESULT(hr);
+			CreateBackBufferRenderTargetView();
 
-			hr = D3D11Device->CreateRenderTargetView(backBuffer.Get(), nullptr, &BackBufferRenderTargetView);
-			CHECK_HRESULT(hr);
+			// Release all outstanding references to the depth stencil buffer.
+			gDepthStencilBuffer.Reset();
+			gDepthStencilView.Reset();
 
-			// Release references to the depth stencil buffer.
-			DepthStencilBuffer.Reset();
-			DepthStencilView.Reset();
-
-			// Recreate depth stencil buffer.
-			D3D11_TEXTURE2D_DESC depthStencilBufferDesc = {};
-			depthStencilBufferDesc.ArraySize = 1;
-			depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-			depthStencilBufferDesc.CPUAccessFlags = 0;
-			depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-			depthStencilBufferDesc.Width = width;
-			depthStencilBufferDesc.Height = height;
-			depthStencilBufferDesc.MipLevels = 1;
-			depthStencilBufferDesc.SampleDesc.Count = 1;
-			depthStencilBufferDesc.SampleDesc.Quality = 0;
-			depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-
-			hr = D3D11Device->CreateTexture2D(&depthStencilBufferDesc, nullptr, &DepthStencilBuffer);
-			CHECK_HRESULT(hr);
-
-			// Recreate depth stencil view.
-			hr = D3D11Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr, &DepthStencilView);
-			CHECK_HRESULT(hr);
+			// Recreate depth stencil buffer and view.
+			CreateDepthStencilBufferAndView(width, height);
 
 			// Set up the viewport.
-			Viewport.Width = static_cast<float>(width);
-			Viewport.Height = static_cast<float>(height);
-			Viewport.TopLeftX = 0.f;
-			Viewport.TopLeftY = 0.f;
-			Viewport.MinDepth = 0.f;
-			Viewport.MaxDepth = 1.f;
-			D3D11DeviceContext->RSSetViewports(1, &Viewport);
+			SetupViewport(width, height);
 		}
 
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
 		{
-			D3D11DeviceContext->ClearRenderTargetView(BackBufferRenderTargetView.Get(), clearColor);
-			D3D11DeviceContext->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, clearDepth, clearStencil);
+			gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
+			gD3D11DeviceContext->ClearDepthStencilView(gDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, clearDepth, clearStencil);
 
 			// TODO: Refactor out of clear.
-			D3D11DeviceContext->IASetInputLayout(InputLayout.Get());
-			D3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			gD3D11DeviceContext->IASetInputLayout(gInputLayout.Get());
+			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			UINT stride = sizeof(VertexTypes::Vertex1Pos);
 			UINT offset = 0;
-			D3D11DeviceContext->IASetVertexBuffers(0, 1, VertexBuffer.GetAddressOf(), &stride, &offset);
-			D3D11DeviceContext->IASetIndexBuffer(IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+			gD3D11DeviceContext->IASetVertexBuffers(0, 1, gVertexBuffer.GetAddressOf(), &stride, &offset);
+			gD3D11DeviceContext->IASetIndexBuffer(gIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-			D3D11DeviceContext->VSSetShader(VertexShader.Get(), nullptr, 0);
-			D3D11DeviceContext->PSSetShader(PixelShader.Get(), nullptr, 0);
+			gD3D11DeviceContext->VSSetShader(gVertexShader.Get(), nullptr, 0);
+			gD3D11DeviceContext->PSSetShader(gPixelShader.Get(), nullptr, 0);
 
-			D3D11DeviceContext->OMSetRenderTargets(1, BackBufferRenderTargetView.GetAddressOf(), DepthStencilView.Get());
+			gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
 
-			D3D11DeviceContext->DrawIndexed(6, 0, 0);
+			gD3D11DeviceContext->DrawIndexed(6, 0, 0);
 		}
 
 		void Present()
 		{
-			SwapChain->Present(((VSync) ? 1 : 0), 0);
+			gSwapChain->Present(((gVSync) ? 1 : 0), 0);
 		}
 	}
 }
