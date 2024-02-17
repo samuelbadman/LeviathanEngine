@@ -2,6 +2,7 @@
 #include "LeviathanAssert.h"
 #include "VertexTypes.h"
 #include "Logging.h"
+#include "Serialize.h"
 
 namespace LeviathanRenderer
 {
@@ -231,6 +232,83 @@ namespace LeviathanRenderer
 			CHECK_HRESULT(hr);
 		}
 
+		static void CompileShaderSourceCodeString(std::string_view shaderSourceCode, std::string_view entryPoint, std::string_view name, std::string_view target, 
+			std::string_view cacheFile, std::vector<unsigned char>& outBuffer)
+		{
+			// Compile shader from source string.
+			[[maybe_unused]] bool success = CompileHLSLStringFXC(shaderSourceCode, entryPoint, name, target, outBuffer);
+			LEVIATHAN_ASSERT(success);
+
+			// Write compiled buffer to file on disk.
+			success = LeviathanCore::Serialize::WriteBytesToFile(cacheFile, outBuffer);
+			LEVIATHAN_ASSERT(success);
+		}
+
+		static void CreateShaderBuffer(bool forceRecompile, std::string_view shaderSourceCode, std::string_view entryPoint, std::string_view name, std::string_view target,
+			std::string_view cacheFile, std::vector<unsigned char>& outBuffer)
+		{
+			if (forceRecompile)
+			{
+				LEVIATHAN_LOG("%s forced recompile.", name.data());
+
+				CompileShaderSourceCodeString(shaderSourceCode, entryPoint, name, target, cacheFile, outBuffer);
+			}
+			else
+			{
+				if (LeviathanCore::Serialize::FileExists(cacheFile))
+				{
+					LEVIATHAN_LOG("%s cache file exists. Reading file.", name.data());
+
+					[[maybe_unused]] bool success = LeviathanCore::Serialize::ReadBytesFromFile(cacheFile, outBuffer);
+					LEVIATHAN_ASSERT(success);
+				}
+				else
+				{
+					LEVIATHAN_LOG("%s cache file does not exist. Recompiling shader source.", name.data());
+
+					CompileShaderSourceCodeString(shaderSourceCode, entryPoint, name, target, cacheFile, outBuffer);
+				}
+			}
+		}
+
+		static void InitializeShaders(bool forceRecompile)
+		{
+			static constexpr const char* ShaderCacheDirectory = "Shaders/";
+
+			HRESULT hr = {};
+
+			// Create shader directory if it does not exist.
+			if (!LeviathanCore::Serialize::FileExists(ShaderCacheDirectory))
+			{
+				LeviathanCore::Serialize::MakeDirectory(ShaderCacheDirectory);
+			}
+
+			// Initialize shader compilation.
+			//hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+			//CHECK_HRESULT(hr);
+
+			//hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+			//CHECK_HRESULT(hr);
+
+			// Compile shaders.
+			// Compile vertex shader from source string or load cached compiled buffer.
+			std::string VertexShaderCacheFile(ShaderCacheDirectory);
+			VertexShaderCacheFile += "VertexShader";
+
+			std::string PixelShaderCacheFile(ShaderCacheDirectory);
+			PixelShaderCacheFile += "PixelShader";
+
+			CreateShaderBuffer(forceRecompile, gVertexShaderSourceCode, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, VertexShaderCacheFile, gVertexShaderBuffer);
+			CreateShaderBuffer(forceRecompile, gPixelShaderSourceCode, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, PixelShaderCacheFile, gPixelShaderBuffer);
+
+			// Create shaders.
+			hr = gD3D11Device->CreateVertexShader(gVertexShaderBuffer.data(), gVertexShaderBuffer.size(), nullptr, &gVertexShader);
+			CHECK_HRESULT(hr);
+
+			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gPixelShaderBuffer.data()), gPixelShaderBuffer.size(), nullptr, &gPixelShader);
+			CHECK_HRESULT(hr);
+		}
+
 		void InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
 			gVSync = vsync;
@@ -342,29 +420,13 @@ namespace LeviathanRenderer
 			// Set up the viewport.
 			SetupViewport(width, height);
 
-			// Initialize shader compilation.
-			//hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
-			//CHECK_HRESULT(hr);
+			// Initialize shaders.
+			bool forceRecompile = true;
+#ifdef LEVIATHAN_BUILD_CONFIG_MASTER
+			forceRecompile = false;
+#endif
 
-			//hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
-			//CHECK_HRESULT(hr);
-
-			// Create shaders.
-			if (!CompileHLSLStringFXC(gVertexShaderSourceCode, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, gVertexShaderBuffer))
-			{
-				LEVIATHAN_ASSERT(false);
-			}
-
-			hr = gD3D11Device->CreateVertexShader(gVertexShaderBuffer.data(), gVertexShaderBuffer.size(), nullptr, &gVertexShader);
-			CHECK_HRESULT(hr);
-
-			if (!CompileHLSLStringFXC(gPixelShaderSourceCode, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, gPixelShaderBuffer))
-			{
-				LEVIATHAN_ASSERT(false);
-			}
-
-			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gPixelShaderBuffer.data()), gPixelShaderBuffer.size(), nullptr, &gPixelShader);
-			CHECK_HRESULT(hr);
+			InitializeShaders(forceRecompile);
 
 			// Create input layout.
 			std::array<D3D11_INPUT_ELEMENT_DESC, 1> inputLayoutDesc =

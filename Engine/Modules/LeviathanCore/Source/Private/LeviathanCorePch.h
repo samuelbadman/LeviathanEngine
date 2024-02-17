@@ -8,6 +8,9 @@
 #include <type_traits>
 #include <cassert>
 #include <chrono>
+#include <array>
+#include <fstream>
+#include <filesystem>
 
 #ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
 // Win32.
