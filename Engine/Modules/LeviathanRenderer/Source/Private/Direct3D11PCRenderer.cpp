@@ -3,6 +3,7 @@
 #include "VertexTypes.h"
 #include "Logging.h"
 #include "Serialize.h"
+#include "LeviathanRenderer.h"
 
 namespace LeviathanRenderer
 {
@@ -55,8 +56,8 @@ namespace LeviathanRenderer
 		static bool gVSync = false;
 
 		// Scene resources.
-		static Microsoft::WRL::ComPtr<ID3D11Buffer> gVertexBuffer = {};
-		static Microsoft::WRL::ComPtr<ID3D11Buffer> gIndexBuffer = {};
+		static std::vector<Microsoft::WRL::ComPtr<ID3D11Buffer>> gVertexBuffers = {};
+		static std::vector<Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
 
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
@@ -276,8 +277,6 @@ namespace LeviathanRenderer
 					return CompileShaderSourceCodeString(shaderSourceCode, entryPoint, name, target, cacheFile, outBuffer);
 				}
 			}
-
-			return false;
 		}
 
 		[[nodiscard]] static bool InitializeShaders(bool forceRecompile)
@@ -466,53 +465,6 @@ namespace LeviathanRenderer
 				static_cast<void*>(gVertexShaderBuffer.data()), gVertexShaderBuffer.size(), &gInputLayout);
 			if (FAILED(hr)) { return false; };
 
-			// Create scene resources.
-			// Vertex buffer.
-			std::array<VertexTypes::Vertex1Pos, 4> quadVertices =
-			{
-				VertexTypes::Vertex1Pos{ -0.5f, -0.5f, 0.0f }, // Bottom left.
-				VertexTypes::Vertex1Pos{ -0.5f, 0.5f, 0.0f }, // Top left.
-				VertexTypes::Vertex1Pos{ 0.5f, 0.5f, 0.0f }, // Top right.
-				VertexTypes::Vertex1Pos{ 0.5f, -0.5f, 0.0f } // Bottom right.
-			};
-
-			D3D11_BUFFER_DESC vertexBufferDesc = {};
-			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			vertexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(VertexTypes::Vertex1Pos) * quadVertices.size());
-			vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			vertexBufferDesc.CPUAccessFlags = 0;
-			vertexBufferDesc.MiscFlags = 0;
-
-			D3D11_SUBRESOURCE_DATA vertexBufferData = {};
-			vertexBufferData.pSysMem = quadVertices.data();
-
-			hr = gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &gVertexBuffer);
-			if (FAILED(hr)) { return false; };
-
-			// Index buffer.
-			std::array<unsigned int, 6> quadIndices =
-			{
-				0, // Bottom left.
-				1, // Top left.
-				2, // Top right.
-				0, // Bottom left.
-				2, // Top right.
-				3 // Bottom right.
-			};
-
-			D3D11_BUFFER_DESC indexBufferDesc = {};
-			indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			indexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(unsigned int) * quadIndices.size());
-			indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			indexBufferDesc.CPUAccessFlags = 0;
-			indexBufferDesc.MiscFlags = 0;
-
-			D3D11_SUBRESOURCE_DATA indexBufferData = {};
-			indexBufferData.pSysMem = quadIndices.data();
-
-			hr = gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &gIndexBuffer);
-			if (FAILED(hr)) { return false; };
-
 			return success;
 		}
 
@@ -554,31 +506,76 @@ namespace LeviathanRenderer
 			return success;
 		}
 
+		bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, int& outId)
+		{
+			outId = LeviathanRenderer::InvalidId;
+
+			D3D11_BUFFER_DESC vertexBufferDesc = {};
+			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+			vertexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(VertexTypes::Vertex1Pos) * vertexCount);
+			vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+			vertexBufferDesc.CPUAccessFlags = 0;
+			vertexBufferDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA vertexBufferData = {};
+			vertexBufferData.pSysMem = vertexData;
+
+			Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer = gVertexBuffers.emplace_back();
+			outId = static_cast<int>(gVertexBuffers.size() - 1);
+
+			return SUCCEEDED(gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &buffer));
+		}
+
+		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, int& outId)
+		{
+			outId = LeviathanRenderer::InvalidId;
+
+			D3D11_BUFFER_DESC indexBufferDesc = {};
+			indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+			indexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(unsigned int) * indexCount);
+			indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			indexBufferDesc.CPUAccessFlags = 0;
+			indexBufferDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA indexBufferData = {};
+			indexBufferData.pSysMem = indexData;
+
+			Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer = gIndexBuffers.emplace_back();
+			outId = static_cast<int>(gIndexBuffers.size() - 1);
+
+			return SUCCEEDED(gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &buffer));
+		}
+
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
 		{
 			gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
 			gD3D11DeviceContext->ClearDepthStencilView(gDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, clearDepth, clearStencil);
+		}
 
-			// TODO: Refactor out of clear.
+		void BeginRenderPass()
+		{
 			gD3D11DeviceContext->IASetInputLayout(gInputLayout.Get());
 			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-			UINT stride = sizeof(VertexTypes::Vertex1Pos);
-			UINT offset = 0;
-			gD3D11DeviceContext->IASetVertexBuffers(0, 1, gVertexBuffer.GetAddressOf(), &stride, &offset);
-			gD3D11DeviceContext->IASetIndexBuffer(gIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
 			gD3D11DeviceContext->VSSetShader(gVertexShader.Get(), nullptr, 0);
 			gD3D11DeviceContext->PSSetShader(gPixelShader.Get(), nullptr, 0);
 
 			gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
-
-			gD3D11DeviceContext->DrawIndexed(6, 0, 0);
 		}
 
 		void Present()
 		{
 			gSwapChain->Present(((gVSync) ? 1 : 0), 0);
+		}
+
+		void DrawIndexed(const unsigned int indexCount, const int vertexBufferId, const int indexBufferId)
+		{
+			UINT stride = sizeof(VertexTypes::Vertex1Pos);
+			UINT offset = 0;
+			gD3D11DeviceContext->IASetVertexBuffers(0, 1, gVertexBuffers[static_cast<size_t>(vertexBufferId)].GetAddressOf(), &stride, &offset);
+			gD3D11DeviceContext->IASetIndexBuffer(gIndexBuffers[static_cast<size_t>(indexBufferId)].Get(), DXGI_FORMAT_R32_UINT, 0);
+
+			gD3D11DeviceContext->DrawIndexed(indexCount, 0, 0);
 		}
 	}
 }

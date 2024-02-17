@@ -5,36 +5,9 @@
 
 namespace TestTitle
 {
-	static bool Shutdown()
-	{
-		// Shutdown engine modules used by title.
-		if (!LeviathanInputCore::Shutdown())
-		{
-			return false;
-		}
-
-		if (!LeviathanRenderer::Shutdown())
-		{
-			return false;
-		}
-
-		// Deregister callbacks.
-		LeviathanCore::Core::GetCleanupCallback().Deregister(&OnCleanup);
-		LeviathanCore::Core::GetPreMainLoopCallback().Deregister(&OnPreMainLoop);
-		LeviathanCore::Core::GetPostMainLoopCallback().Deregister(&OnPostMainLoop);
-		LeviathanCore::Core::GetPreTickCallback().Deregister(&OnPreTick);
-		LeviathanCore::Core::GetFixedTickCallback().Deregister(&OnFixedTick);
-		LeviathanCore::Core::GetTickCallback().Deregister(&OnTick);
-		LeviathanCore::Core::GetPostTickCallback().Deregister(&OnPostTick);
-		LeviathanCore::Core::GetRenderCallback().Deregister(&OnRender);
-
-		LeviathanInputCore::PlatformInput::GetInputCallback().Deregister(&OnInput);
-		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Deregister(&OnGameControllerInput);
-		LeviathanInputCore::PlatformInput::GetGameControllerConnectedCallback().Deregister(&OnGameControllerConnected);
-		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Deregister(&OnGameControllerDisconnected);
-
-		return true;
-	}
+	static constexpr unsigned int gIndexCount = 6;
+	static int gVertexBufferId = LeviathanRenderer::InvalidId;
+	static int gIndexBufferid = LeviathanRenderer::InvalidId;
 
 	static void OnPreMainLoop()
 	{
@@ -66,11 +39,6 @@ namespace TestTitle
 
 	}
 
-	static void OnCleanup()
-	{
-		Shutdown();
-	}
-
 	static void OnInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data)
 	{
 
@@ -78,7 +46,7 @@ namespace TestTitle
 
 	static void OnGameControllerInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data, [[maybe_unused]] unsigned int gameControllerId)
 	{
-		
+
 	}
 
 	static void OnGameControllerConnected([[maybe_unused]] unsigned int gameControllerId)
@@ -93,7 +61,31 @@ namespace TestTitle
 
 	static void OnRender()
 	{
-		LeviathanRenderer::RenderFrame();
+		LeviathanRenderer::BeginFrame();
+		LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferid);
+		LeviathanRenderer::EndFrame();
+	}
+
+	static void OnCleanup()
+	{
+		// Shutdown engine modules used by title.
+		LeviathanInputCore::Shutdown();
+		LeviathanRenderer::Shutdown();
+
+		// Deregister callbacks.
+		LeviathanCore::Core::GetCleanupCallback().Deregister(&OnCleanup);
+		LeviathanCore::Core::GetPreMainLoopCallback().Deregister(&OnPreMainLoop);
+		LeviathanCore::Core::GetPostMainLoopCallback().Deregister(&OnPostMainLoop);
+		LeviathanCore::Core::GetPreTickCallback().Deregister(&OnPreTick);
+		LeviathanCore::Core::GetFixedTickCallback().Deregister(&OnFixedTick);
+		LeviathanCore::Core::GetTickCallback().Deregister(&OnTick);
+		LeviathanCore::Core::GetPostTickCallback().Deregister(&OnPostTick);
+		LeviathanCore::Core::GetRenderCallback().Deregister(&OnRender);
+
+		LeviathanInputCore::PlatformInput::GetInputCallback().Deregister(&OnInput);
+		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Deregister(&OnGameControllerInput);
+		LeviathanInputCore::PlatformInput::GetGameControllerConnectedCallback().Deregister(&OnGameControllerConnected);
+		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Deregister(&OnGameControllerDisconnected);
 	}
 
 	bool Initialize()
@@ -123,6 +115,35 @@ namespace TestTitle
 		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Register(&OnGameControllerInput);
 		LeviathanInputCore::PlatformInput::GetGameControllerConnectedCallback().Register(&OnGameControllerConnected);
 		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Register(&OnGameControllerDisconnected);
+
+		// Create scene.
+		std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
+		{
+			LeviathanRenderer::VertexTypes::Vertex1Pos{ -0.5f, -0.5f, 0.0f }, // Bottom left.
+			LeviathanRenderer::VertexTypes::Vertex1Pos{ -0.5f, 0.5f, 0.0f }, // Top left.
+			LeviathanRenderer::VertexTypes::Vertex1Pos{ 0.5f, 0.5f, 0.0f }, // Top right.
+			LeviathanRenderer::VertexTypes::Vertex1Pos{ 0.5f, -0.5f, 0.0f } // Bottom right.
+		};
+
+		std::array<unsigned int, 6> quadIndices =
+		{
+			0, // Bottom left.
+			1, // Top left.
+			2, // Top right.
+			0, // Bottom left.
+			2, // Top right.
+			3 // Bottom right.
+		};
+
+		if (!LeviathanRenderer::CreateVertexBuffer(quadVertices.data(), static_cast<unsigned int>(quadVertices.size()), gVertexBufferId))
+		{
+			return false;
+		}
+
+		if (!LeviathanRenderer::CreateIndexBuffer(quadIndices.data(), static_cast<unsigned int>(quadIndices.size()), gIndexBufferid))
+		{
+			return false;
+		}
 
 		return true;
 	}

@@ -41,13 +41,33 @@ namespace LeviathanRenderer
 		return Renderer::ShutdownRendererApi();
 	}
 
-	void RenderFrame()
+	bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, int& outId)
+	{
+		return Renderer::CreateVertexBuffer(vertexData, vertexCount, outId);
+	}
+
+	bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, int& outId)
+	{
+		return Renderer::CreateIndexBuffer(indexData, indexCount, outId);
+	}
+
+	void BeginFrame()
 	{
 		static constexpr float clearColor[] = { 1.f, 0.f, 0.f, 1.f };
 		static constexpr float clearDepth = 1.f;
 		static constexpr unsigned char clearStencil = 0;
 
 		Renderer::Clear(clearColor, clearDepth, clearStencil);
+		Renderer::BeginRenderPass();
+	}
+
+	void EndFrame()
+	{
 		Renderer::Present();
+	}
+
+	void Draw(const unsigned int indexCount, const int vertexBufferId, const int indexBufferId)
+	{
+		Renderer::DrawIndexed(indexCount, vertexBufferId, indexBufferId);
 	}
 }

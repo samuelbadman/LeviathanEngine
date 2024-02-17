@@ -1,8 +1,18 @@
 #pragma once
 
+#include "VertexTypes.h"
+
 namespace LeviathanRenderer
 {
-	bool Initialize();
+	static constexpr int InvalidId = -1;
+
+	[[nodiscard]] bool Initialize();
 	bool Shutdown();
-	void RenderFrame();
+
+	[[nodiscard]] bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, int& outId);
+	[[nodiscard]] bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, int& outId);
+
+	void BeginFrame();
+	void EndFrame();
+	void Draw(const unsigned int indexCount, const int vertexBufferId, const int indexBufferId);
 }
