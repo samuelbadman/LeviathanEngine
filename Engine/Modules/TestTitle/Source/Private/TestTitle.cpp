@@ -18,6 +18,21 @@ namespace TestTitle
 			return false;
 		}
 
+		// Deregister callbacks.
+		LeviathanCore::Core::GetCleanupCallback().Deregister(&OnCleanup);
+		LeviathanCore::Core::GetPreMainLoopCallback().Deregister(&OnPreMainLoop);
+		LeviathanCore::Core::GetPostMainLoopCallback().Deregister(&OnPostMainLoop);
+		LeviathanCore::Core::GetPreTickCallback().Deregister(&OnPreTick);
+		LeviathanCore::Core::GetFixedTickCallback().Deregister(&OnFixedTick);
+		LeviathanCore::Core::GetTickCallback().Deregister(&OnTick);
+		LeviathanCore::Core::GetPostTickCallback().Deregister(&OnPostTick);
+		LeviathanCore::Core::GetRenderCallback().Deregister(&OnRender);
+
+		LeviathanInputCore::PlatformInput::GetInputCallback().Deregister(&OnInput);
+		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Deregister(&OnGameControllerInput);
+		LeviathanInputCore::PlatformInput::GetGameControllerConnectedCallback().Deregister(&OnGameControllerConnected);
+		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Deregister(&OnGameControllerDisconnected);
+
 		return true;
 	}
 
