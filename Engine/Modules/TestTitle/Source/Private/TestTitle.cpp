@@ -78,10 +78,7 @@ namespace TestTitle
 
 	static void OnRender()
 	{
-		if (!LeviathanRenderer::Render())
-		{
-			LEVIATHAN_LOG("Render failed.");
-		}
+		LeviathanRenderer::RenderFrame();
 	}
 
 	bool Initialize()

@@ -19,7 +19,7 @@ namespace LeviathanRenderer
 		static Microsoft::WRL::ComPtr<IDXGISwapChain> gSwapChain = {};
 		static D3D_FEATURE_LEVEL gFeatureLevel = {};
 
-		// Render target views of the swap chain back buffers.
+		// RenderFrame target views of the swap chain back buffers.
 		static Microsoft::WRL::ComPtr<ID3D11RenderTargetView> gBackBufferRenderTargetView = {};
 
 		// Depth/stencil target view of the depth/stencil buffer.
@@ -135,7 +135,7 @@ namespace LeviathanRenderer
 		//	// Create blob with source code.
 		//	Microsoft::WRL::ComPtr<IDxcBlobEncoding> sourceBlob = nullptr;
 		//	hr = dxcUtils->CreateBlob(string.data(), static_cast<UINT32>(string.size()), CP_UTF8, &sourceBlob);
-		//	CHECK_HRESULT(hr);
+		//	   if (FAILED(hr)) {return false;};
 
 		//	// Compile blob containing source code.
 		//	Microsoft::WRL::ComPtr<IDxcOperationResult> opResult = nullptr;
@@ -149,18 +149,18 @@ namespace LeviathanRenderer
 		//		0,
 		//		nullptr,
 		//		&opResult);
-		//	CHECK_HRESULT(hr);
+		//	   if (FAILED(hr)) {return false;};
 
 		//	// Check compilation result.
 		//	HRESULT opResultStatus = 0;
 		//	hr = opResult->GetStatus(&opResultStatus);
-		//	CHECK_HRESULT(hr);
+		//	   if (FAILED(hr)) {return false;};
 
 		//	if (FAILED(opResultStatus))
 		//	{
 		//		Microsoft::WRL::ComPtr<IDxcBlobEncoding> errorBlob = nullptr;
 		//		hr = opResult->GetErrorBuffer(&errorBlob);
-		//		CHECK_HRESULT(hr);
+		//		   if (FAILED(hr)) {return false;};
 
 		//		if (errorBlob == nullptr)
 		//		{
@@ -175,7 +175,7 @@ namespace LeviathanRenderer
 		//	// Copy result blob to output buffer.
 		//	Microsoft::WRL::ComPtr<IDxcBlob> compiledBlob = nullptr;
 		//	hr = opResult->GetResult(&compiledBlob);
-		//	CHECK_HRESULT(hr);
+		//	   if (FAILED(hr)) {return false;};
 
 		//	const SIZE_T compiledBlobSize = compiledBlob->GetBufferSize();
 		//	outBuffer.resize(compiledBlobSize, 0);
@@ -195,19 +195,21 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->RSSetViewports(1, &gViewport);
 		}
 
-		static void CreateBackBufferRenderTargetView()
+		[[nodiscard]] static bool CreateBackBufferRenderTargetView()
 		{
 			HRESULT hr = {};
 
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
 			hr = gSwapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			hr = gD3D11Device->CreateRenderTargetView(backBuffer.Get(), nullptr, &gBackBufferRenderTargetView);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
+
+			return true;
 		}
 
-		static void CreateDepthStencilBufferAndView(unsigned int width, unsigned int height)
+		[[nodiscard]] static bool CreateDepthStencilBufferAndView(unsigned int width, unsigned int height)
 		{
 			HRESULT hr = {};
 
@@ -225,33 +227,39 @@ namespace LeviathanRenderer
 			depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 
 			hr = gD3D11Device->CreateTexture2D(&depthStencilBufferDesc, nullptr, &gDepthStencilBuffer);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Create depth stencil view.
 			hr = gD3D11Device->CreateDepthStencilView(gDepthStencilBuffer.Get(), nullptr, &gDepthStencilView);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
+
+			return true;
 		}
 
-		static void CompileShaderSourceCodeString(std::string_view shaderSourceCode, std::string_view entryPoint, std::string_view name, std::string_view target, 
+		[[nodiscard]] static bool CompileShaderSourceCodeString(std::string_view shaderSourceCode, std::string_view entryPoint, std::string_view name, std::string_view target,
 			std::string_view cacheFile, std::vector<unsigned char>& outBuffer)
 		{
+			bool success = true;
+
 			// Compile shader from source string.
-			[[maybe_unused]] bool success = CompileHLSLStringFXC(shaderSourceCode, entryPoint, name, target, outBuffer);
-			LEVIATHAN_ASSERT(success);
+			success = CompileHLSLStringFXC(shaderSourceCode, entryPoint, name, target, outBuffer);
+			if (!success) { return false; }
 
 			// Write compiled buffer to file on disk.
 			success = LeviathanCore::Serialize::WriteBytesToFile(cacheFile, outBuffer);
-			LEVIATHAN_ASSERT(success);
+			if (!success) { return false; }
+
+			return success;
 		}
 
-		static void CreateShaderBuffer(bool forceRecompile, std::string_view shaderSourceCode, std::string_view entryPoint, std::string_view name, std::string_view target,
-			std::string_view cacheFile, std::vector<unsigned char>& outBuffer)
+		[[nodiscard]] static bool CreateShaderBuffer(bool forceRecompile, std::string_view shaderSourceCode, std::string_view entryPoint, std::string_view name,
+			std::string_view target, std::string_view cacheFile, std::vector<unsigned char>& outBuffer)
 		{
 			if (forceRecompile)
 			{
 				LEVIATHAN_LOG("%s forced recompile.", name.data());
 
-				CompileShaderSourceCodeString(shaderSourceCode, entryPoint, name, target, cacheFile, outBuffer);
+				return CompileShaderSourceCodeString(shaderSourceCode, entryPoint, name, target, cacheFile, outBuffer);
 			}
 			else
 			{
@@ -259,23 +267,22 @@ namespace LeviathanRenderer
 				{
 					LEVIATHAN_LOG("%s cache file exists. Reading file.", name.data());
 
-					[[maybe_unused]] bool success = LeviathanCore::Serialize::ReadBytesFromFile(cacheFile, outBuffer);
-					LEVIATHAN_ASSERT(success);
+					return LeviathanCore::Serialize::ReadBytesFromFile(cacheFile, outBuffer);
 				}
 				else
 				{
 					LEVIATHAN_LOG("%s cache file does not exist. Recompiling shader source.", name.data());
 
-					CompileShaderSourceCodeString(shaderSourceCode, entryPoint, name, target, cacheFile, outBuffer);
+					return CompileShaderSourceCodeString(shaderSourceCode, entryPoint, name, target, cacheFile, outBuffer);
 				}
 			}
+
+			return false;
 		}
 
-		static void InitializeShaders(bool forceRecompile)
+		[[nodiscard]] static bool InitializeShaders(bool forceRecompile)
 		{
 			static constexpr const char* ShaderCacheDirectory = "Shaders/";
-
-			HRESULT hr = {};
 
 			// Create shader directory if it does not exist.
 			if (!LeviathanCore::Serialize::FileExists(ShaderCacheDirectory))
@@ -285,35 +292,44 @@ namespace LeviathanRenderer
 
 			// Initialize shader compilation.
 			//hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
-			//CHECK_HRESULT(hr);
+			//   if (FAILED(hr)) {return false;};
 
 			//hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
-			//CHECK_HRESULT(hr);
+			//   if (FAILED(hr)) {return false;};
 
 			// Compile shaders.
-			// Compile vertex shader from source string or load cached compiled buffer.
+			bool success = true;
+
 			std::string VertexShaderCacheFile(ShaderCacheDirectory);
 			VertexShaderCacheFile += "VertexShader";
 
 			std::string PixelShaderCacheFile(ShaderCacheDirectory);
 			PixelShaderCacheFile += "PixelShader";
 
-			CreateShaderBuffer(forceRecompile, gVertexShaderSourceCode, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, VertexShaderCacheFile, gVertexShaderBuffer);
-			CreateShaderBuffer(forceRecompile, gPixelShaderSourceCode, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, PixelShaderCacheFile, gPixelShaderBuffer);
+			success = CreateShaderBuffer(forceRecompile, gVertexShaderSourceCode, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, VertexShaderCacheFile, gVertexShaderBuffer);
+			if (!success) { return false; }
+
+			success = CreateShaderBuffer(forceRecompile, gPixelShaderSourceCode, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, PixelShaderCacheFile, gPixelShaderBuffer);
+			if (!success) { return false; }
 
 			// Create shaders.
+			HRESULT hr = {};
+
 			hr = gD3D11Device->CreateVertexShader(gVertexShaderBuffer.data(), gVertexShaderBuffer.size(), nullptr, &gVertexShader);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gPixelShaderBuffer.data()), gPixelShaderBuffer.size(), nullptr, &gPixelShader);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
+
+			return true;
 		}
 
-		void InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
+		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
 			gVSync = vsync;
 
 			HRESULT hr = {};
+			bool success = true;
 
 			// Create the DXGI factory.
 			UINT createFactoryFlags = 0;
@@ -322,14 +338,14 @@ namespace LeviathanRenderer
 #endif //LEVIATHAN_BUILD_CONFIG_DEBUG.
 
 			hr = CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&gDXGIFactory));
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Select adapter.
 			hr = gDXGIFactory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&gDXGIAdapter));
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			hr = gDXGIAdapter->GetDesc1(&gDXGIAdapterDesc);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Create device.
 			UINT createDeviceFlags = 0;
@@ -355,7 +371,7 @@ namespace LeviathanRenderer
 				featureLevels.data(), static_cast<unsigned int>(featureLevels.size()),
 				D3D11_SDK_VERSION,
 				&gD3D11Device, &gFeatureLevel, &gD3D11DeviceContext);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Create the swap chain.
 			DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -375,21 +391,23 @@ namespace LeviathanRenderer
 
 			Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1 = {};
 			hr = gDXGIFactory->CreateSwapChainForHwnd(gD3D11Device.Get(), static_cast<HWND>(windowPlatformHandle), &swapChainDesc, nullptr, nullptr, &swapChain1);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Disable alt + enter fullscreen shortcut. Must be called after creating the swap chain.
 			hr = gDXGIFactory->MakeWindowAssociation(static_cast<HWND>(windowPlatformHandle), DXGI_MWA_NO_ALT_ENTER);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Convert swap chain 1 interface to swap chain 4 interface.
 			hr = swapChain1.As(&gSwapChain);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Create render target view.
-			CreateBackBufferRenderTargetView();
+			success = CreateBackBufferRenderTargetView();
+			if (!success) { return false; }
 
 			// Create the depth/stencil buffer and view.
-			CreateDepthStencilBufferAndView(width, height);
+			success = CreateDepthStencilBufferAndView(width, height);
+			if (!success) { return false; }
 
 			// Create depth stencil state.
 			D3D11_DEPTH_STENCIL_DESC depthStencilStateDesc = {};
@@ -399,7 +417,7 @@ namespace LeviathanRenderer
 			depthStencilStateDesc.StencilEnable = FALSE;
 
 			hr = gD3D11Device->CreateDepthStencilState(&depthStencilStateDesc, &gDepthStencilState);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Create rasterizer state.
 			D3D11_RASTERIZER_DESC rasterizerStateDesc = {};
@@ -415,7 +433,7 @@ namespace LeviathanRenderer
 			rasterizerStateDesc.SlopeScaledDepthBias = 0.f;
 
 			hr = gD3D11Device->CreateRasterizerState(&rasterizerStateDesc, &gRasterizerState);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Set up the viewport.
 			SetupViewport(width, height);
@@ -426,7 +444,8 @@ namespace LeviathanRenderer
 			forceRecompile = false;
 #endif
 
-			InitializeShaders(forceRecompile);
+			success = InitializeShaders(forceRecompile);
+			if (!success) { return false; }
 
 			// Create input layout.
 			std::array<D3D11_INPUT_ELEMENT_DESC, 1> inputLayoutDesc =
@@ -445,7 +464,7 @@ namespace LeviathanRenderer
 
 			hr = gD3D11Device->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()),
 				static_cast<void*>(gVertexShaderBuffer.data()), gVertexShaderBuffer.size(), &gInputLayout);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Create scene resources.
 			// Vertex buffer.
@@ -468,7 +487,7 @@ namespace LeviathanRenderer
 			vertexBufferData.pSysMem = quadVertices.data();
 
 			hr = gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &gVertexBuffer);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Index buffer.
 			std::array<unsigned int, 6> quadIndices =
@@ -492,10 +511,17 @@ namespace LeviathanRenderer
 			indexBufferData.pSysMem = quadIndices.data();
 
 			hr = gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &gIndexBuffer);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
+
+			return success;
 		}
 
-		void ResizeWindowResources(unsigned int width, unsigned int height)
+		bool ShutdownRendererApi()
+		{
+			return true;
+		}
+
+		bool ResizeWindowResources(unsigned int width, unsigned int height)
 		{
 			gD3D11DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 
@@ -503,24 +529,29 @@ namespace LeviathanRenderer
 			gBackBufferRenderTargetView.Reset();
 
 			HRESULT hr = {};
+			bool success = true;
 
 			// Preserve the existing buffer count and format.
 			// Automatically choose the width and height to match the client rect for HWNDS.
 			hr = gSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
-			CHECK_HRESULT(hr);
+			if (FAILED(hr)) { return false; };
 
 			// Get buffer and create a render target view.
-			CreateBackBufferRenderTargetView();
+			success = CreateBackBufferRenderTargetView();
+			if (!success) { return false; }
 
 			// Release all outstanding references to the depth stencil buffer.
 			gDepthStencilBuffer.Reset();
 			gDepthStencilView.Reset();
 
 			// Recreate depth stencil buffer and view.
-			CreateDepthStencilBufferAndView(width, height);
+			success = CreateDepthStencilBufferAndView(width, height);
+			if (!success) { return false; }
 
 			// Set up the viewport.
 			SetupViewport(width, height);
+
+			return success;
 		}
 
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)

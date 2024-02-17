@@ -7,7 +7,12 @@ namespace LeviathanRenderer
 {
 	static void OnRuntimeWindowResized(int newWidth, int newHeight)
 	{
-		Renderer::ResizeWindowResources(newWidth, newHeight);
+		bool success = Renderer::ResizeWindowResources(newWidth, newHeight);
+
+		if (!success)
+		{
+			LEVIATHAN_LOG("Failed to resize runtime window renderer resources.");
+		}
 	}
 
 	bool Initialize()
@@ -28,17 +33,15 @@ namespace LeviathanRenderer
 			return false;
 		}
 
-		Renderer::InitializeRendererApi(static_cast<unsigned int>(width), static_cast<unsigned int>(height), platformHandle, vsync, bufferCount);
-
-		return true;
+		return Renderer::InitializeRendererApi(static_cast<unsigned int>(width), static_cast<unsigned int>(height), platformHandle, vsync, bufferCount);
 	}
 
 	bool Shutdown()
 	{
-		return true;
+		return Renderer::ShutdownRendererApi();
 	}
 
-	bool Render()
+	void RenderFrame()
 	{
 		static constexpr float clearColor[] = { 1.f, 0.f, 0.f, 1.f };
 		static constexpr float clearDepth = 1.f;
@@ -46,7 +49,5 @@ namespace LeviathanRenderer
 
 		Renderer::Clear(clearColor, clearDepth, clearStencil);
 		Renderer::Present();
-
-		return true;
 	}
 }

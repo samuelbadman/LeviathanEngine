@@ -4,5 +4,5 @@ namespace LeviathanRenderer
 {
 	bool Initialize();
 	bool Shutdown();
-	bool Render();
+	void RenderFrame();
 }
