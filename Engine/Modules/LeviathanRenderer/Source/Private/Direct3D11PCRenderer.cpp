@@ -4,6 +4,7 @@
 #include "Logging.h"
 #include "Serialize.h"
 #include "LeviathanRenderer.h"
+#include "ConstantBufferTypes.h"
 
 namespace LeviathanRenderer
 {
@@ -47,10 +48,14 @@ namespace LeviathanRenderer
 
 		// Define the renderer pipeline.
 		static Microsoft::WRL::ComPtr<ID3D11InputLayout> gInputLayout = {};
+
 		static std::vector<unsigned char> gVertexShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11VertexShader> gVertexShader = {};
+
 		static std::vector<unsigned char> gPixelShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gPixelShader = {};
+		
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> gMaterialBuffer = {};
 
 		// Renderer state.
 		static bool gVSync = false;
@@ -68,35 +73,40 @@ namespace LeviathanRenderer
 
 		// Shader source code.
 		static const std::string gVertexShaderSourceCode = R"(
-			struct VertexInput
-			{
-				float3 Position : POSITION;
-			};
+struct VertexInput
+{
+    float3 Position : POSITION;
+};
 
-			struct VertexOutput
-			{
-				float4 Position : SV_POSITION;
-			};
+struct VertexOutput
+{
+    float4 Position : SV_POSITION;
+};
 
-			VertexOutput main(VertexInput input)
-			{
-				VertexOutput output;
-				output.Position = float4(input.Position, 1.0f);
+VertexOutput main(VertexInput input)
+{
+    VertexOutput output;
+    output.Position = float4(input.Position, 1.0f);
 				
-				return output;
-			}
+    return output;
+}
 		)";
 
 		static const std::string gPixelShaderSourceCode = R"(
-			struct PixelInput
-			{
-				float4 Position : SV_POSITION;
-			};
+cbuffer MaterialBuffer : register(b0)
+{
+    float4 Color;
+};
 
-			float4 main(PixelInput input) : SV_TARGET
-			{
-				return float4(1.0f, 1.0f, 1.0f, 1.0f);
-			}
+struct PixelInput
+{
+    float4 Position : SV_POSITION;
+};
+
+float4 main(PixelInput input) : SV_TARGET
+{
+    return Color;
+}
 		)";
 
 		static bool CompileHLSLStringFXC(const std::string_view string, const std::string_view entryPoint, const std::string_view name,
@@ -323,6 +333,19 @@ namespace LeviathanRenderer
 			return true;
 		}
 
+		[[nodiscard]] static bool CreateConstantBuffer(UINT byteWidth, ID3D11Buffer** ppOutBuffer)
+		{
+			D3D11_BUFFER_DESC desc = {};
+			desc.Usage = D3D11_USAGE_DYNAMIC;
+			desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			desc.MiscFlags = 0;
+			desc.ByteWidth = byteWidth;
+			desc.StructureByteStride = 0;
+
+			return SUCCEEDED(gD3D11Device->CreateBuffer(&desc, nullptr, ppOutBuffer));
+		}
+
 		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
 			gVSync = vsync;
@@ -465,6 +488,10 @@ namespace LeviathanRenderer
 				static_cast<void*>(gVertexShaderBuffer.data()), gVertexShaderBuffer.size(), &gInputLayout);
 			if (FAILED(hr)) { return false; };
 
+			// Create constant buffers.
+			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::MaterialConstantBuffer), &gMaterialBuffer);
+			if (!success) { return false; }
+
 			return success;
 		}
 
@@ -570,6 +597,20 @@ namespace LeviathanRenderer
 
 		void DrawIndexed(const unsigned int indexCount, const int vertexBufferId, const int indexBufferId)
 		{
+			// TODO: Refactor out of draw to a "change material" function.
+			ConstantBufferTypes::MaterialConstantBuffer materialBufferData = {};
+			materialBufferData.Color[1] = 1.0f;
+
+			D3D11_MAPPED_SUBRESOURCE mappedMaterialBufferResource = {};
+			[[maybe_unused]] HRESULT hr = gD3D11DeviceContext->Map(gMaterialBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMaterialBufferResource);
+			CHECK_HRESULT(hr);
+			memcpy(mappedMaterialBufferResource.pData, &materialBufferData, sizeof(ConstantBufferTypes::MaterialConstantBuffer));
+			gD3D11DeviceContext->Unmap(gMaterialBuffer.Get(), 0);
+
+			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gMaterialBuffer.GetAddressOf());
+
+
+
 			UINT stride = sizeof(VertexTypes::Vertex1Pos);
 			UINT offset = 0;
 			gD3D11DeviceContext->IASetVertexBuffers(0, 1, gVertexBuffers[static_cast<size_t>(vertexBufferId)].GetAddressOf(), &stride, &offset);

@@ -146,16 +146,6 @@ namespace TestTitle
 			return false;
 		}
 
-		using namespace LeviathanCore::MathTypes;
-
-		Vector3 v0 = {};
-		Vector3 v1(1.0f, 0.0f, 0.0f);
-		Vector3 v2(0.0f, 1.0f, 0.0f);
-
-		[[maybe_unused]] float dot = Vector3::DotProduct(v1.AsNormalized(), v2);
-		[[maybe_unused]] Vector3 cross = Vector3::CrossProduct(v1, v2).AsNormalized();
-		[[maybe_unused]] float length = v1.Length();
-
 		return true;
 	}
 }
