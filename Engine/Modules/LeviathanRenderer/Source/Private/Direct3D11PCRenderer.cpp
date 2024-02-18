@@ -510,6 +510,9 @@ float4 main(PixelInput input) : SV_TARGET
 
 			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gMaterialBuffer.GetAddressOf());
 
+			// Set pipeline primitive topology.
+			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 			return success;
 		}
 
@@ -600,12 +603,11 @@ float4 main(PixelInput input) : SV_TARGET
 		void BeginRenderPass()
 		{
 			gD3D11DeviceContext->IASetInputLayout(gInputLayout.Get());
-			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
 
 			gD3D11DeviceContext->VSSetShader(gVertexShader.Get(), nullptr, 0);
 			gD3D11DeviceContext->PSSetShader(gPixelShader.Get(), nullptr, 0);
-
-			gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
 		}
 
 		void Present()

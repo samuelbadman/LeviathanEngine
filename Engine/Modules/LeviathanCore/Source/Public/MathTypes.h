@@ -22,7 +22,7 @@ namespace LeviathanCore
 			// Static vector3 math operations.
 			// Computes the dot product between a and b. Both a and b must be of unit length 1 (normalized).
 			static float DotProduct(const Vector3& a, const Vector3& b);
-			// Computes the orthogonal vector from a and b.
+			// Computes the vector orthogonal to a and b.
 			static Vector3 CrossProduct(const Vector3& a, const Vector3& b);
 
 			// In-place math operations.
