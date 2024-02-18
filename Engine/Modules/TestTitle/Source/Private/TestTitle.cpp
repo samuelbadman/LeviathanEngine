@@ -146,6 +146,13 @@ namespace TestTitle
 			return false;
 		}
 
+		LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
+
+		if (!LeviathanRenderer::SetMaterial(quadMaterialData))
+		{
+			return false;
+		}
+
 		return true;
 	}
 }

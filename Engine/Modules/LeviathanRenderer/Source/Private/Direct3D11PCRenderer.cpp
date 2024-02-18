@@ -333,7 +333,7 @@ float4 main(PixelInput input) : SV_TARGET
 			return true;
 		}
 
-		[[nodiscard]] static bool CreateConstantBuffer(UINT byteWidth, ID3D11Buffer** ppOutBuffer)
+		[[nodiscard]] static bool CreateConstantBuffer(UINT byteWidth, const void* pInitialData, ID3D11Buffer** ppOutBuffer)
 		{
 			D3D11_BUFFER_DESC desc = {};
 			desc.Usage = D3D11_USAGE_DYNAMIC;
@@ -343,7 +343,22 @@ float4 main(PixelInput input) : SV_TARGET
 			desc.ByteWidth = byteWidth;
 			desc.StructureByteStride = 0;
 
-			return SUCCEEDED(gD3D11Device->CreateBuffer(&desc, nullptr, ppOutBuffer));
+			D3D11_SUBRESOURCE_DATA initialData = {};
+			initialData.pSysMem = pInitialData;
+
+			return SUCCEEDED(gD3D11Device->CreateBuffer(&desc, &initialData, ppOutBuffer));
+		}
+
+		[[nodiscard]] static bool UpdateConstantBuffer(ID3D11Buffer* pBuffer, const void* pNewData, size_t byteWidth)
+		{
+			D3D11_MAPPED_SUBRESOURCE mappedResource = {};
+			HRESULT hr = gD3D11DeviceContext->Map(pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			if (FAILED(hr)) { return false; }
+
+			memcpy(mappedResource.pData, pNewData, byteWidth);
+			gD3D11DeviceContext->Unmap(pBuffer, 0);
+
+			return true;
 		}
 
 		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
@@ -489,8 +504,11 @@ float4 main(PixelInput input) : SV_TARGET
 			if (FAILED(hr)) { return false; };
 
 			// Create constant buffers.
-			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::MaterialConstantBuffer), &gMaterialBuffer);
+			ConstantBufferTypes::MaterialConstantBuffer initialMaterialBufferData = {};
+			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::MaterialConstantBuffer), static_cast<const void*>(&initialMaterialBufferData), & gMaterialBuffer);
 			if (!success) { return false; }
+
+			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gMaterialBuffer.GetAddressOf());
 
 			return success;
 		}
@@ -597,26 +615,17 @@ float4 main(PixelInput input) : SV_TARGET
 
 		void DrawIndexed(const unsigned int indexCount, const int vertexBufferId, const int indexBufferId)
 		{
-			// TODO: Refactor out of draw to a "change material" function.
-			ConstantBufferTypes::MaterialConstantBuffer materialBufferData = {};
-			materialBufferData.Color[1] = 1.0f;
-
-			D3D11_MAPPED_SUBRESOURCE mappedMaterialBufferResource = {};
-			[[maybe_unused]] HRESULT hr = gD3D11DeviceContext->Map(gMaterialBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMaterialBufferResource);
-			CHECK_HRESULT(hr);
-			memcpy(mappedMaterialBufferResource.pData, &materialBufferData, sizeof(ConstantBufferTypes::MaterialConstantBuffer));
-			gD3D11DeviceContext->Unmap(gMaterialBuffer.Get(), 0);
-
-			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gMaterialBuffer.GetAddressOf());
-
-
-
 			UINT stride = sizeof(VertexTypes::Vertex1Pos);
 			UINT offset = 0;
 			gD3D11DeviceContext->IASetVertexBuffers(0, 1, gVertexBuffers[static_cast<size_t>(vertexBufferId)].GetAddressOf(), &stride, &offset);
 			gD3D11DeviceContext->IASetIndexBuffer(gIndexBuffers[static_cast<size_t>(indexBufferId)].Get(), DXGI_FORMAT_R32_UINT, 0);
 
 			gD3D11DeviceContext->DrawIndexed(indexCount, 0, 0);
+		}
+
+		bool SetMaterialBufferData(const ConstantBufferTypes::MaterialConstantBuffer& data)
+		{
+			return UpdateConstantBuffer(gMaterialBuffer.Get(), &data, sizeof(ConstantBufferTypes::MaterialConstantBuffer));
 		}
 	}
 }

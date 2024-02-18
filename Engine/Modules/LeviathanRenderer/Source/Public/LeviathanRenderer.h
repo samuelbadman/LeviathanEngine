@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VertexTypes.h"
+#include "ConstantBufferTypes.h"
 
 namespace LeviathanRenderer
 {
@@ -15,4 +16,5 @@ namespace LeviathanRenderer
 	void BeginFrame();
 	void EndFrame();
 	void Draw(const unsigned int indexCount, const int vertexBufferId, const int indexBufferId);
+	bool SetMaterial(const ConstantBufferTypes::MaterialConstantBuffer& materialData);
 }

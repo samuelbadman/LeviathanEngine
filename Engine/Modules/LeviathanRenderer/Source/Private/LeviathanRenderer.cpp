@@ -70,4 +70,9 @@ namespace LeviathanRenderer
 	{
 		Renderer::DrawIndexed(indexCount, vertexBufferId, indexBufferId);
 	}
+
+	bool SetMaterial(const ConstantBufferTypes::MaterialConstantBuffer& materialData)
+	{
+		return Renderer::SetMaterialBufferData(materialData);
+	}
 }
