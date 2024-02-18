@@ -92,7 +92,7 @@ struct VertexOutput
 VertexOutput main(VertexInput input)
 {
     VertexOutput output;
-    output.Position = float4(input.Position, 1.0f);
+    output.Position = mul(World, float4(input.Position, 1.0f));
 				
     return output;
 }
@@ -633,6 +633,11 @@ float4 main(PixelInput input) : SV_TARGET
 			gD3D11DeviceContext->IASetIndexBuffer(gIndexBuffers[static_cast<size_t>(indexBufferId)].Get(), DXGI_FORMAT_R32_UINT, 0);
 
 			gD3D11DeviceContext->DrawIndexed(indexCount, 0, 0);
+		}
+
+		bool SetObjectBufferData(const ConstantBufferTypes::ObjectConstantBuffer& data)
+		{
+			return UpdateConstantBuffer(gObjectBuffer.Get(), &data, sizeof(ConstantBufferTypes::ObjectConstantBuffer));
 		}
 
 		bool SetMaterialBufferData(const ConstantBufferTypes::MaterialConstantBuffer& data)

@@ -9,6 +9,7 @@ namespace LeviathanRenderer
 
 	namespace ConstantBufferTypes
 	{
+		struct ObjectConstantBuffer;
 		struct MaterialConstantBuffer;
 	}
 
@@ -25,6 +26,7 @@ namespace LeviathanRenderer
 		void BeginRenderPass();
 		void Present();
 		void DrawIndexed(const unsigned int indexCount, const int vertexBufferId, const int indexBufferId);
+		[[nodiscard]] bool SetObjectBufferData(const ConstantBufferTypes::ObjectConstantBuffer& data);
 		[[nodiscard]] bool SetMaterialBufferData(const ConstantBufferTypes::MaterialConstantBuffer& data);
 	}
 }

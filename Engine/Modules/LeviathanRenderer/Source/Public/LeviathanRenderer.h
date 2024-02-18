@@ -16,5 +16,6 @@ namespace LeviathanRenderer
 	void BeginFrame();
 	void EndFrame();
 	void Draw(const unsigned int indexCount, const int vertexBufferId, const int indexBufferId);
-	bool SetMaterial(const ConstantBufferTypes::MaterialConstantBuffer& materialData);
+	bool SetObjectData(const ConstantBufferTypes::ObjectConstantBuffer& objectData);
+	bool SetMaterialData(const ConstantBufferTypes::MaterialConstantBuffer& materialData);
 }

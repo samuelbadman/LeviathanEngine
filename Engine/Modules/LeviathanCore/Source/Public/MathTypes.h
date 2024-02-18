@@ -61,6 +61,15 @@ namespace LeviathanCore
 
 			// Returns an identity matrix.
 			static Matrix4x4 Identity();
+
+			// Returns a 4x4 translation matrix.
+			static Matrix4x4 Translation(const Vector3& translation);
+
+			// Returns a 4x4 scale matrix.
+			static Matrix4x4 Scaling(const Vector3& scale);
+
+			// Getters/setters.
+			inline float* GetMatrix() { return Matrix; }
 		};
 	}
 }

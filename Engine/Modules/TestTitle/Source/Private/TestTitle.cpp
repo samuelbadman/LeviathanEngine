@@ -148,10 +148,19 @@ namespace TestTitle
 
 		LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
 
-		if (!LeviathanRenderer::SetMaterial(quadMaterialData))
+		if (!LeviathanRenderer::SetMaterialData(quadMaterialData))
 		{
 			return false;
 		}
+
+		//LeviathanCore::MathTypes::Matrix4x4 mat = {};
+		//mat = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.25f, 0.0f, 0.0f));
+		//mat = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
+
+		//LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
+		//memcpy(quadObjectData.World, mat.GetMatrix(), sizeof(float) * 16);
+
+		//LeviathanRenderer::SetObjectData(quadObjectData);
 
 		return true;
 	}

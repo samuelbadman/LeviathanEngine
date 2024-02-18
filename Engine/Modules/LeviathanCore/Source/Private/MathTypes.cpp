@@ -4,12 +4,12 @@ namespace LeviathanCore
 {
 	namespace MathTypes
 	{
-		static DirectX::XMVECTOR XMVectorFromVector3(const Vector3& vector3)
+		static DirectX::XMVECTOR XMVECTORFromVector3(const Vector3& vector3)
 		{
 			return DirectX::XMVectorSet(vector3.X(), vector3.Y(), vector3.Z(), 1.0f);
 		}
 
-		static Vector3 Vector3FromXMVector(const DirectX::XMVECTOR& xmvector)
+		static Vector3 Vector3FromXMVECTOR(const DirectX::XMVECTOR& xmvector)
 		{
 			DirectX::XMFLOAT3 float3 = {};
 			DirectX::XMStoreFloat3(&float3, xmvector);
@@ -18,9 +18,18 @@ namespace LeviathanCore
 
 		static Vector3 NormalizeVector3(const Vector3& vector3)
 		{
-			const DirectX::XMVECTOR vector = XMVectorFromVector3(vector3);
+			const DirectX::XMVECTOR vector = XMVECTORFromVector3(vector3);
 			const DirectX::XMVECTOR resultVector = DirectX::XMVector3Normalize(vector);
-			return Vector3FromXMVector(resultVector);
+			return Vector3FromXMVECTOR(resultVector);
+		}
+
+		static Matrix4x4 Matrix4x4FromXMMATRIX(const DirectX::XMMATRIX& xmmatrix)
+		{
+			DirectX::XMFLOAT4X4 float4x4 = {};
+			DirectX::XMStoreFloat4x4(&float4x4, xmmatrix);
+			Matrix4x4 result = {};
+			memcpy(result.GetMatrix(), float4x4.m, sizeof(float) * 16);
+			return result;
 		}
 
 		Vector3::Vector3(float x, float y, float z)
@@ -30,8 +39,8 @@ namespace LeviathanCore
 
 		float Vector3::DotProduct(const Vector3& a, const Vector3& b)
 		{
-			const DirectX::XMVECTOR vectorA = XMVectorFromVector3(a);
-			const DirectX::XMVECTOR vectorB = XMVectorFromVector3(b);
+			const DirectX::XMVECTOR vectorA = XMVECTORFromVector3(a);
+			const DirectX::XMVECTOR vectorB = XMVECTORFromVector3(b);
 
 			const DirectX::XMVECTOR resultVector = DirectX::XMVector3Dot(vectorA, vectorB);
 
@@ -43,12 +52,12 @@ namespace LeviathanCore
 
 		Vector3 Vector3::CrossProduct(const Vector3& a, const Vector3& b)
 		{
-			const DirectX::XMVECTOR vectorA = XMVectorFromVector3(a);
-			const DirectX::XMVECTOR vectorB = XMVectorFromVector3(b);
+			const DirectX::XMVECTOR vectorA = XMVECTORFromVector3(a);
+			const DirectX::XMVECTOR vectorB = XMVECTORFromVector3(b);
 
 			const DirectX::XMVECTOR resultVector = DirectX::XMVector3Cross(vectorA, vectorB);
 
-			return Vector3FromXMVector(resultVector);
+			return Vector3FromXMVECTOR(resultVector);
 		}
 
 		void Vector3::Normalize()
@@ -63,7 +72,7 @@ namespace LeviathanCore
 
 		float Vector3::Length() const
 		{
-			const DirectX::XMVECTOR vector = XMVectorFromVector3(*this);
+			const DirectX::XMVECTOR vector = XMVECTORFromVector3(*this);
 
 			const DirectX::XMVECTOR resultVector = DirectX::XMVector3Length(vector);
 
@@ -76,6 +85,20 @@ namespace LeviathanCore
 		Matrix4x4 Matrix4x4::Identity()
 		{
 			return Matrix4x4();
+		}
+
+		Matrix4x4 Matrix4x4::Translation(const Vector3& translation)
+		{
+			const DirectX::XMVECTOR translationMatrix = XMVECTORFromVector3(translation);
+			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixTranslationFromVector(translationMatrix);
+			return Matrix4x4FromXMMATRIX(resultMatrix);
+		}
+
+		Matrix4x4 Matrix4x4::Scaling(const Vector3& scale)
+		{
+			const DirectX::XMVECTOR scaleVector = XMVECTORFromVector3(scale);
+			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixScalingFromVector(scaleVector);
+			return Matrix4x4FromXMMATRIX(resultMatrix);
 		}
 	}
 }
