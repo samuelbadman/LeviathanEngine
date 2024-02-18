@@ -43,5 +43,24 @@ namespace LeviathanCore
 			// Returns the length (magnitude) of the vector.
 			float Length() const;
 		};
+
+		class Matrix4x4
+		{
+		private:
+			float Matrix[4 * 4] =
+			{
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f
+			};
+
+		public:
+			// Constructors.
+			Matrix4x4() = default;
+
+			// Returns an identity matrix.
+			static Matrix4x4 Identity();
+		};
 	}
 }

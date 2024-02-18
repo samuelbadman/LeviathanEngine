@@ -72,5 +72,10 @@ namespace LeviathanCore
 
 			return result;
 		}
+
+		Matrix4x4 Matrix4x4::Identity()
+		{
+			return Matrix4x4();
+		}
 	}
 }

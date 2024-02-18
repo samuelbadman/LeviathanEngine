@@ -55,6 +55,7 @@ namespace LeviathanRenderer
 		static std::vector<unsigned char> gPixelShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gPixelShader = {};
 		
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> gObjectBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gMaterialBuffer = {};
 
 		// Renderer state.
@@ -73,6 +74,11 @@ namespace LeviathanRenderer
 
 		// Shader source code.
 		static const std::string gVertexShaderSourceCode = R"(
+cbuffer ObjectBuffer : register(b0)
+{
+    float4x4 World;
+};
+
 struct VertexInput
 {
     float3 Position : POSITION;
@@ -504,10 +510,14 @@ float4 main(PixelInput input) : SV_TARGET
 			if (FAILED(hr)) { return false; };
 
 			// Create constant buffers.
-			ConstantBufferTypes::MaterialConstantBuffer initialMaterialBufferData = {};
-			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::MaterialConstantBuffer), static_cast<const void*>(&initialMaterialBufferData), & gMaterialBuffer);
+			ConstantBufferTypes::ObjectConstantBuffer initialObjectBufferData = {};
+			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::ObjectConstantBuffer), &initialObjectBufferData, &gObjectBuffer);
 			if (!success) { return false; }
+			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 
+			ConstantBufferTypes::MaterialConstantBuffer initialMaterialBufferData = {};
+			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::MaterialConstantBuffer), static_cast<const void*>(&initialMaterialBufferData), &gMaterialBuffer);
+			if (!success) { return false; }
 			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gMaterialBuffer.GetAddressOf());
 
 			// Set pipeline primitive topology.
