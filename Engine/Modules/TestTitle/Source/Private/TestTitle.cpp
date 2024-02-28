@@ -3,6 +3,7 @@
 #include "LeviathanInputCore.h"
 #include "LeviathanRenderer.h"
 #include "MathTypes.h"
+#include "MathLibrary.h"
 
 namespace TestTitle
 {
@@ -154,9 +155,11 @@ namespace TestTitle
 		}
 
 		LeviathanCore::MathTypes::Matrix4x4 translationMat = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.5f, 0.0f, 0.0f));
+		LeviathanCore::MathTypes::Matrix4x4 rotationMat = LeviathanCore::MathTypes::Matrix4x4::Rotation(
+			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
 		LeviathanCore::MathTypes::Matrix4x4 scalingMat = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
 
-		LeviathanCore::MathTypes::Matrix4x4 transformationMat = scalingMat * translationMat;
+		LeviathanCore::MathTypes::Matrix4x4 transformationMat = scalingMat * rotationMat * translationMat;
 
 		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
 		memcpy(quadObjectData.World, transformationMat.GetMatrix(), sizeof(float) * 16);

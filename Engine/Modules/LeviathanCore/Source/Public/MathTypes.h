@@ -30,12 +30,12 @@ namespace LeviathanCore
 			void Normalize();
 
 			// Getter/setters.
-			inline float X() const { return Components[XComponent]; }
-			inline float Y() const { return Components[YComponent]; }
-			inline float Z() const { return Components[ZComponent]; }
-			inline float X(const float x) { Components[XComponent] = x; }
-			inline float Y(const float y) { Components[YComponent] = y; }
-			inline float Z(const float z) { Components[ZComponent] = z; }
+			inline float GetX() const { return Components[XComponent]; }
+			inline float GetY() const { return Components[YComponent]; }
+			inline float GetZ() const { return Components[ZComponent]; }
+			inline float SetX(const float x) { Components[XComponent] = x; }
+			inline float SetY(const float y) { Components[YComponent] = y; }
+			inline float SetZ(const float z) { Components[ZComponent] = z; }
 
 			// Returns the vector pointing in the same direction with unit length 1.
 			Vector3 AsNormalized() const;
@@ -68,6 +68,15 @@ namespace LeviathanCore
 			// Returns a 4x4 scale matrix.
 			static Matrix4x4 Scaling(const Vector3& scale);
 
+			// Returns a 4x4 rotation matrix from axis and angle in radians.
+			static Matrix4x4 Rotation(const Vector3& axis, const float angleRadians);
+
+			// Returns a 4x4 rotation matrix from euler angles. Rotation is applied roll first, then pitch and then yaw.
+			static Matrix4x4 Rotation(const class Euler& euler);
+
+			// Returns a 4x4 rotation matrix fom a quaternion.
+			static Matrix4x4 Rotation(const class Quaternion& quaternion);
+
 			// Getters/setters.
 			inline float* GetMatrix() { return Matrix; }
 			inline const float* GetMatrix() const { return Matrix; }
@@ -80,9 +89,59 @@ namespace LeviathanCore
 			static Matrix4x4 Multiply(const Matrix4x4& a, const Matrix4x4& b);
 		};
 
+		class Euler
+		{
+		private:
+			static constexpr size_t PitchComponent = 0;
+			static constexpr size_t YawComponent = 1;
+			static constexpr size_t RollComponent = 2;
+
+		private:
+			// Rotation angles in the order pitch, yaw and roll in radians.
+			float Rotation[3] = { 0.0f, 0.0f, 0.0f };
+
+		public:
+			// Constructors.
+			Euler() = default;
+			Euler(float pitchRadians, float yawRadians, float rollRadians);
+
+			// Getters/setters.
+			inline float GetPitchRadians() const { return Rotation[PitchComponent]; }
+			inline float GetYawRadians() const { return Rotation[YawComponent]; }
+			inline float GetRollRadians() const { return Rotation[RollComponent]; }
+			inline void SetPitchRadians(const float pitchRadians) { Rotation[PitchComponent] = pitchRadians; }
+			inline void SetYawRadians(const float yawRadians) { Rotation[YawComponent] = yawRadians; }
+			inline void SetRollRadians(const float rollRadians) { Rotation[RollComponent] = rollRadians; }
+		};
+
 		class Quaternion
 		{
-			void Test();
+		private:
+			static constexpr size_t XComponent = 0;
+			static constexpr size_t YComponent = 1;
+			static constexpr size_t ZComponent = 2;
+			static constexpr size_t WComponent = 3;
+
+		private:
+			float Components[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+		public:
+			// Constructors.
+			Quaternion() = default;
+			Quaternion(float x, float y, float z, float w);
+
+			// Returns the identity quaternion.
+			static inline Quaternion Identity() { return Quaternion(0.0f, 0.0f, 0.0f, 1.0f); }
+
+			// Getters/setters.
+			inline float GetX() const { return Components[XComponent]; }
+			inline float GetY() const { return Components[YComponent]; }
+			inline float GetZ() const { return Components[ZComponent]; }
+			inline float GetW() const { return Components[WComponent]; }
+			inline void SetX(const float x) { Components[XComponent] = x; }
+			inline void SetY(const float y) { Components[YComponent] = y; }
+			inline void SetZ(const float z) { Components[ZComponent] = z; }
+			inline void SetW(const float w) { Components[WComponent] = w; }
 		};
 	}
 }

@@ -6,7 +6,7 @@ namespace LeviathanCore
 	{
 		static DirectX::XMVECTOR XMVECTORFromVector3(const Vector3& vector3)
 		{
-			return DirectX::XMVectorSet(vector3.X(), vector3.Y(), vector3.Z(), 1.0f);
+			return DirectX::XMVectorSet(vector3.GetX(), vector3.GetY(), vector3.GetZ(), 1.0f);
 		}
 
 		static Vector3 Vector3FromXMVECTOR(const DirectX::XMVECTOR& xmvector)
@@ -36,9 +36,15 @@ namespace LeviathanCore
 		{
 			const float* pMatrix = matrix4x4.GetMatrix();
 			return DirectX::XMMatrixSet(pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3],
-										pMatrix[4], pMatrix[5], pMatrix[6], pMatrix[7],
-										pMatrix[8], pMatrix[9], pMatrix[10], pMatrix[11],
-										pMatrix[12], pMatrix[13], pMatrix[14], pMatrix[15]);
+				pMatrix[4], pMatrix[5], pMatrix[6], pMatrix[7],
+				pMatrix[8], pMatrix[9], pMatrix[10], pMatrix[11],
+				pMatrix[12], pMatrix[13], pMatrix[14], pMatrix[15]);
+		}
+
+		static DirectX::XMVECTOR XMVECTORFromQuaternion(const Quaternion& quaternion)
+		{
+			const DirectX::XMVECTOR result = DirectX::XMVectorSet(quaternion.GetX(), quaternion.GetY(), quaternion.GetZ(), quaternion.GetW());
+			return result;
 		}
 
 		Vector3::Vector3(float x, float y, float z)
@@ -110,6 +116,26 @@ namespace LeviathanCore
 			return Matrix4x4FromXMMATRIX(resultMatrix);
 		}
 
+		Matrix4x4 Matrix4x4::Rotation(const Vector3& axis, const float angleRadians)
+		{
+			const DirectX::XMVECTOR axisVector = XMVECTORFromVector3(axis);
+			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixRotationAxis(axisVector, angleRadians);
+			return Matrix4x4FromXMMATRIX(resultMatrix);
+		}
+
+		Matrix4x4 Matrix4x4::Rotation(const Euler& euler)
+		{
+			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixRotationRollPitchYaw(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians());
+			return Matrix4x4FromXMMATRIX(resultMatrix);
+		}
+
+		Matrix4x4 Matrix4x4::Rotation(const Quaternion& quaternion)
+		{
+			const DirectX::XMVECTOR quaternionVector = XMVECTORFromQuaternion(quaternion);
+			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixRotationQuaternion(quaternionVector);
+			return Matrix4x4FromXMMATRIX(resultMatrix);
+		}
+
 		Matrix4x4 Matrix4x4::Multiply(const Matrix4x4& a, const Matrix4x4& b)
 		{
 			const DirectX::XMMATRIX matA = XMMATRIXFromMatrix4x4(a);
@@ -123,7 +149,13 @@ namespace LeviathanCore
 			return Matrix4x4::Multiply(*this, rhs);
 		}
 
-		void Quaternion::Test()
+		Euler::Euler(float pitchRadians, float yawRadians, float rollRadians)
+			: Rotation{ pitchRadians, yawRadians, rollRadians }
+		{
+		}
+
+		Quaternion::Quaternion(float x, float y, float z, float w)
+			: Components{ x, y, z, w }
 		{
 		}
 	}

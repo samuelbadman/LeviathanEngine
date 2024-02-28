@@ -8,6 +8,7 @@ namespace LeviathanRenderer
 
 		struct ObjectConstantBuffer
 		{
+			// 64 bytes.
 			float World[4 * 4] = 
 			{ 
 				1.0f, 0.0f, 0.0f, 0.0f, 
@@ -19,6 +20,7 @@ namespace LeviathanRenderer
 
 		struct MaterialConstantBuffer
 		{
+			// 16 bytes.
 			float Color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		};
 	}
