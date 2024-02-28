@@ -70,6 +70,19 @@ namespace LeviathanCore
 
 			// Getters/setters.
 			inline float* GetMatrix() { return Matrix; }
+			inline const float* GetMatrix() const { return Matrix; }
+
+			// Operators.
+			Matrix4x4 operator*(const Matrix4x4& rhs);
+
+		private:
+			// Returns the result matrix of matrix a multiplied with matrix b.
+			static Matrix4x4 Multiply(const Matrix4x4& a, const Matrix4x4& b);
+		};
+
+		class Quaternion
+		{
+			void Test();
 		};
 	}
 }

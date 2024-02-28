@@ -32,6 +32,15 @@ namespace LeviathanCore
 			return result;
 		}
 
+		static DirectX::XMMATRIX XMMATRIXFromMatrix4x4(const Matrix4x4& matrix4x4)
+		{
+			const float* pMatrix = matrix4x4.GetMatrix();
+			return DirectX::XMMatrixSet(pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3],
+										pMatrix[4], pMatrix[5], pMatrix[6], pMatrix[7],
+										pMatrix[8], pMatrix[9], pMatrix[10], pMatrix[11],
+										pMatrix[12], pMatrix[13], pMatrix[14], pMatrix[15]);
+		}
+
 		Vector3::Vector3(float x, float y, float z)
 			: Components{ x, y, z }
 		{
@@ -99,6 +108,23 @@ namespace LeviathanCore
 			const DirectX::XMVECTOR scaleVector = XMVECTORFromVector3(scale);
 			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixScalingFromVector(scaleVector);
 			return Matrix4x4FromXMMATRIX(resultMatrix);
+		}
+
+		Matrix4x4 Matrix4x4::Multiply(const Matrix4x4& a, const Matrix4x4& b)
+		{
+			const DirectX::XMMATRIX matA = XMMATRIXFromMatrix4x4(a);
+			const DirectX::XMMATRIX matB = XMMATRIXFromMatrix4x4(b);
+			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixMultiply(matA, matB);
+			return Matrix4x4FromXMMATRIX(resultMatrix);
+		}
+
+		Matrix4x4 Matrix4x4::operator*(const Matrix4x4& rhs)
+		{
+			return Matrix4x4::Multiply(*this, rhs);
+		}
+
+		void Quaternion::Test()
+		{
 		}
 	}
 }

@@ -153,14 +153,15 @@ namespace TestTitle
 			return false;
 		}
 
-		//LeviathanCore::MathTypes::Matrix4x4 mat = {};
-		//mat = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.25f, 0.0f, 0.0f));
-		//mat = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
+		LeviathanCore::MathTypes::Matrix4x4 translationMat = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.5f, 0.0f, 0.0f));
+		LeviathanCore::MathTypes::Matrix4x4 scalingMat = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
 
-		//LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
-		//memcpy(quadObjectData.World, mat.GetMatrix(), sizeof(float) * 16);
+		LeviathanCore::MathTypes::Matrix4x4 transformationMat = scalingMat * translationMat;
 
-		//LeviathanRenderer::SetObjectData(quadObjectData);
+		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
+		memcpy(quadObjectData.World, transformationMat.GetMatrix(), sizeof(float) * 16);
+
+		LeviathanRenderer::SetObjectData(quadObjectData);
 
 		return true;
 	}
