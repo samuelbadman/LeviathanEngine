@@ -47,6 +47,14 @@ namespace LeviathanCore
 			return result;
 		}
 
+		static Quaternion QuaternionFromXMVECTOR(const DirectX::XMVECTOR& xmvector)
+		{
+			DirectX::XMFLOAT4 float4 = {};
+			DirectX::XMStoreFloat4(&float4, xmvector);
+
+			return Quaternion(float4.x, float4.y, float4.z, float4.w);
+		}
+
 		Vector3::Vector3(float x, float y, float z)
 			: Components{ x, y, z }
 		{
@@ -97,9 +105,24 @@ namespace LeviathanCore
 			return result;
 		}
 
+		Matrix4x4::Matrix4x4(float e00, float e10, float e20, float e30, float e01, float e11, float e21, float e31, float e02, float e12, float e22, float e32, float e03, float e13, float e23, float e33)
+			: Matrix{  e00,  e10,  e20,  e30,  e01,  e11,  e21,  e31,  e02,  e12,  e22,  e32,  e03,  e13,  e23,  e33 }
+		{
+		}
+
 		Matrix4x4 Matrix4x4::Identity()
 		{
 			return Matrix4x4();
+		}
+
+		Matrix4x4 Matrix4x4::Transpose(const Matrix4x4& matrix4x4)
+		{
+			return Matrix4x4FromXMMATRIX(DirectX::XMMatrixTranspose(XMMATRIXFromMatrix4x4(matrix4x4)));
+		}
+
+		Matrix4x4 Matrix4x4::Inverse(const Matrix4x4& matrix4x4)
+		{
+			return Matrix4x4FromXMMATRIX(DirectX::XMMatrixInverse(nullptr, XMMATRIXFromMatrix4x4(matrix4x4)));
 		}
 
 		Matrix4x4 Matrix4x4::Translation(const Vector3& translation)
@@ -136,6 +159,39 @@ namespace LeviathanCore
 			return Matrix4x4FromXMMATRIX(resultMatrix);
 		}
 
+		Matrix4x4 Matrix4x4::View(const Vector3& cameraTranslation, [[maybe_unused]] const Euler& cameraRotation)
+		{
+			const Matrix4x4 cameraTranslationRotationMatrix = (Matrix4x4::Translation(cameraTranslation) * Matrix4x4::Rotation(cameraRotation));
+			return Matrix4x4FromXMMATRIX(DirectX::XMMatrixInverse(nullptr, XMMATRIXFromMatrix4x4(cameraTranslationRotationMatrix)));
+		}
+
+		Matrix4x4 Matrix4x4::PerspectiveProjection(float fovRadians, float aspectRatio, float nearZ, float farZ)
+		{
+			return Matrix4x4FromXMMATRIX(DirectX::XMMatrixPerspectiveFovLH(fovRadians, aspectRatio, nearZ, farZ));
+		}
+
+		Matrix4x4 Matrix4x4::OrthographicProjection(float viewWidth, float viewHeight, float nearZ, float farZ)
+		{
+			Matrix4x4 ortho= {};
+			ortho.Matrix[0] = 2.0f / viewWidth;
+			ortho.Matrix[5] = 2.0f / viewHeight;
+			ortho.Matrix[10] = 1.0f / (farZ - nearZ);
+			ortho.Matrix[14] = -ortho.Matrix[10] * nearZ;
+			ortho.Matrix[15] = 1.0f;
+
+			return ortho;
+		}
+
+		void Matrix4x4::TransposeInPlace()
+		{
+			*this = Matrix4x4::Transpose(*this);
+		}
+
+		void Matrix4x4::InverseInPlace()
+		{
+			*this = Matrix4x4::Inverse(*this);
+		}
+
 		Matrix4x4 Matrix4x4::Multiply(const Matrix4x4& a, const Matrix4x4& b)
 		{
 			const DirectX::XMMATRIX matA = XMMATRIXFromMatrix4x4(a);
@@ -157,6 +213,11 @@ namespace LeviathanCore
 		Quaternion::Quaternion(float x, float y, float z, float w)
 			: Components{ x, y, z, w }
 		{
+		}
+
+		Quaternion Quaternion::MakeFromEuler(const Euler& euler)
+		{
+			return QuaternionFromXMVECTOR(DirectX::XMQuaternionRotationRollPitchYaw(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians()));
 		}
 	}
 }

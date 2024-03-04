@@ -58,9 +58,19 @@ namespace LeviathanCore
 		public:
 			// Constructors.
 			Matrix4x4() = default;
+			Matrix4x4(float e00, float e10, float e20, float e30,
+					  float e01, float e11, float e21, float e31,
+					  float e02, float e12, float e22, float e32,
+					  float e03, float e13, float e23, float e33);
 
 			// Returns an identity matrix.
 			static Matrix4x4 Identity();
+
+			// Returns the transposed input matrix.
+			static Matrix4x4 Transpose(const Matrix4x4& matrix4x4);
+
+			// Returns the inverse 4x4 matrix of the input matrix.
+			static Matrix4x4 Inverse(const Matrix4x4& matrix4x4);
 
 			// Returns a 4x4 translation matrix.
 			static Matrix4x4 Translation(const Vector3& translation);
@@ -76,6 +86,19 @@ namespace LeviathanCore
 
 			// Returns a 4x4 rotation matrix fom a quaternion.
 			static Matrix4x4 Rotation(const class Quaternion& quaternion);
+
+			// Returns a 4x4 view matrix.
+			static Matrix4x4 View(const Vector3& cameraTranslation, const Euler& cameraRotation);
+
+			// Returns a 4x4 perspective projection matrix.
+			static Matrix4x4 PerspectiveProjection(float fovRadians, float aspectRatio, float nearZ, float farZ);
+
+			// Returns a 4x4 orthographic projection matrix.
+			static Matrix4x4 OrthographicProjection(float viewWidth, float viewHeight, float nearZ, float farZ);
+
+			// In-place math operations.
+			void TransposeInPlace();
+			void InverseInPlace();
 
 			// Getters/setters.
 			inline float* GetMatrix() { return Matrix; }
@@ -132,6 +155,9 @@ namespace LeviathanCore
 
 			// Returns the identity quaternion.
 			static inline Quaternion Identity() { return Quaternion(0.0f, 0.0f, 0.0f, 1.0f); }
+
+			// Returns the euler angles represented as a quaternion.
+			static Quaternion MakeFromEuler(const Euler& euler);
 
 			// Getters/setters.
 			inline float GetX() const { return Components[XComponent]; }

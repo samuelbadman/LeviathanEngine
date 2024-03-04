@@ -154,15 +154,53 @@ namespace TestTitle
 			return false;
 		}
 
-		LeviathanCore::MathTypes::Matrix4x4 translationMat = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.5f, 0.0f, 0.0f));
-		LeviathanCore::MathTypes::Matrix4x4 rotationMat = LeviathanCore::MathTypes::Matrix4x4::Rotation(
-			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
-		LeviathanCore::MathTypes::Matrix4x4 scalingMat = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
+		LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(-1.0f, 0.0f, 0.0f));
 
-		LeviathanCore::MathTypes::Matrix4x4 transformationMat = scalingMat * rotationMat * translationMat;
+		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Rotation(
+			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(45.0f)));
+
+		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 0.25f, 1.0f));
+
+
+
+		LeviathanCore::MathTypes::Matrix4x4 worldMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
+		worldMatrix = worldMatrix * scalingMatrix;
+		worldMatrix = worldMatrix * rotationMatrix;
+		worldMatrix = worldMatrix * translationMatrix;
+
+		worldMatrix.TransposeInPlace();
+
+
+
+		LeviathanCore::MathTypes::Matrix4x4 viewMatrix = LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0, 0.0f, -1.0f),
+			LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
+											LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
+											LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
+		viewMatrix.TransposeInPlace();
+
+
+
+		int width = 0;
+		int height = 0;
+		LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(width, height);
+
+		// TODO: Express fov as horizontal angle. Replace implementation of perspective projection with custom code instead of using DirectX math.
+		LeviathanCore::MathTypes::Matrix4x4 projectionMatrix = LeviathanCore::MathTypes::Matrix4x4::PerspectiveProjection(LeviathanCore::MathLibrary::DegreesToRadians(90.0f),
+			static_cast<float>(width) / static_cast<float>(height), 0.1f, 1000.0f);
+
+		//float orthoWidth = 5e-3f;
+		//LeviathanCore::MathTypes::Matrix4x4 projectionMatrix = LeviathanCore::MathTypes::Matrix4x4::OrthographicProjection(static_cast<float>(width) * orthoWidth,
+		//	static_cast<float>(height) * orthoWidth, 0.1f, 1000.0f);
+
+		projectionMatrix.TransposeInPlace();
+
+
+
+		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = projectionMatrix * viewMatrix * worldMatrix;
+		worldViewProjectionMatrix.TransposeInPlace();
 
 		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
-		memcpy(quadObjectData.World, transformationMat.GetMatrix(), sizeof(float) * 16);
+		memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
 
 		LeviathanRenderer::SetObjectData(quadObjectData);
 

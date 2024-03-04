@@ -76,7 +76,7 @@ namespace LeviathanRenderer
 		static const std::string gVertexShaderSourceCode = R"(
 cbuffer ObjectBuffer : register(b0)
 {
-    float4x4 World;
+    float4x4 WorldViewProjection;
 };
 
 struct VertexInput
@@ -92,7 +92,7 @@ struct VertexOutput
 VertexOutput main(VertexInput input)
 {
     VertexOutput output;
-    output.Position = mul(World, float4(input.Position, 1.0f));
+    output.Position = mul(WorldViewProjection, float4(input.Position, 1.0f));
 				
     return output;
 }
