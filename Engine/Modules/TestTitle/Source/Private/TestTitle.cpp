@@ -154,32 +154,14 @@ namespace TestTitle
 			return false;
 		}
 
-		LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f));
-
-		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Rotation(
-			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
-
-		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
-
-
-
-		LeviathanCore::MathTypes::Matrix4x4 worldMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
-		worldMatrix = worldMatrix * scalingMatrix;
-		worldMatrix = worldMatrix * rotationMatrix;
-		worldMatrix = worldMatrix * translationMatrix;
-
-		worldMatrix.TransposeInPlace();
-
-
-
+		// Calculate view matrix.
 		LeviathanCore::MathTypes::Matrix4x4 viewMatrix = LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.0f),
 			LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
-											LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
-											LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
+				LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
+				LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
 		viewMatrix.TransposeInPlace();
 
-
-
+		// Calculate projection matrix.
 		int width = 0;
 		int height = 0;
 		LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(width, height);
@@ -193,11 +175,29 @@ namespace TestTitle
 
 		projectionMatrix.TransposeInPlace();
 
+		// Calculate view projection matrix.
+		LeviathanCore::MathTypes::Matrix4x4 viewProjectionMatrix = projectionMatrix * viewMatrix;
 
+		// Calculate world matrix.
+		LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f));
 
-		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = projectionMatrix * viewMatrix * worldMatrix;
+		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Rotation(
+			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
+
+		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
+
+		LeviathanCore::MathTypes::Matrix4x4 worldMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
+		worldMatrix = worldMatrix * scalingMatrix;
+		worldMatrix = worldMatrix * rotationMatrix;
+		worldMatrix = worldMatrix * translationMatrix;
+
+		worldMatrix.TransposeInPlace();
+
+		// Calculate world view projection matrix.
+		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = viewProjectionMatrix * worldMatrix;
 		worldViewProjectionMatrix.TransposeInPlace();
 
+		// Update object data.
 		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
 		memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
 
