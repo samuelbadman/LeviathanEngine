@@ -127,16 +127,18 @@ namespace LeviathanCore
 
 		Matrix4x4 Matrix4x4::Translation(const Vector3& translation)
 		{
-			const DirectX::XMVECTOR translationMatrix = XMVECTORFromVector3(translation);
-			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixTranslationFromVector(translationMatrix);
-			return Matrix4x4FromXMMATRIX(resultMatrix);
+			return Matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				translation.GetX(), translation.GetY(), translation.GetZ(), 1.0f);
 		}
 
 		Matrix4x4 Matrix4x4::Scaling(const Vector3& scale)
 		{
-			const DirectX::XMVECTOR scaleVector = XMVECTORFromVector3(scale);
-			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixScalingFromVector(scaleVector);
-			return Matrix4x4FromXMMATRIX(resultMatrix);
+			return Matrix4x4(scale.GetX(), 0.0f, 0.0f, 0.0f,
+				0.0f, scale.GetY(), 0.0f, 0.0f,
+				0.0f, 0.0f, scale.GetZ(), 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f);
 		}
 
 		Matrix4x4 Matrix4x4::Rotation(const Vector3& axis, const float angleRadians)
