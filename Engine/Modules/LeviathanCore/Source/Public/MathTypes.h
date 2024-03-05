@@ -91,7 +91,7 @@ namespace LeviathanCore
 			static Matrix4x4 View(const Vector3& cameraTranslation, const Euler& cameraRotation);
 
 			// Returns a 4x4 perspective projection matrix.
-			static Matrix4x4 PerspectiveProjection(float fovRadians, float aspectRatio, float nearZ, float farZ);
+			static Matrix4x4 PerspectiveProjection(float fovVerticalRadians, float aspectRatio, float nearZ, float farZ);
 
 			// Returns a 4x4 orthographic projection matrix.
 			static Matrix4x4 OrthographicProjection(float viewWidth, float viewHeight, float nearZ, float farZ);

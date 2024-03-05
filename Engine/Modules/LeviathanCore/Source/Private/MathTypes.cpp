@@ -162,12 +162,20 @@ namespace LeviathanCore
 		Matrix4x4 Matrix4x4::View(const Vector3& cameraTranslation, [[maybe_unused]] const Euler& cameraRotation)
 		{
 			const Matrix4x4 cameraTranslationRotationMatrix = (Matrix4x4::Translation(cameraTranslation) * Matrix4x4::Rotation(cameraRotation));
-			return Matrix4x4FromXMMATRIX(DirectX::XMMatrixInverse(nullptr, XMMATRIXFromMatrix4x4(cameraTranslationRotationMatrix)));
+			return Matrix4x4::Inverse(cameraTranslationRotationMatrix);
 		}
 
-		Matrix4x4 Matrix4x4::PerspectiveProjection(float fovRadians, float aspectRatio, float nearZ, float farZ)
+		Matrix4x4 Matrix4x4::PerspectiveProjection(float fovVerticalRadians, float aspectRatio, float nearZ, float farZ)
 		{
-			return Matrix4x4FromXMMATRIX(DirectX::XMMatrixPerspectiveFovLH(fovRadians, aspectRatio, nearZ, farZ));
+			float h = 1.0f / tan(fovVerticalRadians * 0.5f);
+			float w = h / aspectRatio;
+			float a = farZ / (farZ - nearZ);
+			float b = (-nearZ * farZ) / (farZ - nearZ);
+
+			return Matrix4x4(w, 0.0f, 0.0f, 0.0f,
+				0.0f, h, 0.0f, 0.0f,
+				0.0f, 0.0f, a, 1.0f,
+				0.0f, 0.0f, b, 0.0f);
 		}
 
 		Matrix4x4 Matrix4x4::OrthographicProjection(float viewWidth, float viewHeight, float nearZ, float farZ)
