@@ -9,7 +9,7 @@ namespace TestTitle
 {
 	static constexpr unsigned int gIndexCount = 6;
 	static int gVertexBufferId = LeviathanRenderer::InvalidId;
-	static int gIndexBufferid = LeviathanRenderer::InvalidId;
+	static int gIndexBufferId = LeviathanRenderer::InvalidId;
 
 	static void OnPreMainLoop()
 	{
@@ -63,8 +63,101 @@ namespace TestTitle
 
 	static void OnRender()
 	{
+		// Calculate view matrix.
+		LeviathanCore::MathTypes::Matrix4x4 viewMatrix = LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.0f),
+			LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
+				LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
+				LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
+		viewMatrix.TransposeInPlace();
+
+		// Calculate projection matrix.
+		int width = 0;
+		int height = 0;
+		LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(width, height);
+
+		LeviathanCore::MathTypes::Matrix4x4 projectionMatrix = LeviathanCore::MathTypes::Matrix4x4::PerspectiveProjection(LeviathanCore::MathLibrary::DegreesToRadians(90.0f),
+			static_cast<float>(width) / static_cast<float>(height), 0.1f, 1000.0f);
+
+		//float orthoWidth = 5e-3f;
+		//LeviathanCore::MathTypes::Matrix4x4 projectionMatrix = LeviathanCore::MathTypes::Matrix4x4::OrthographicProjection(static_cast<float>(width) * orthoWidth,
+		//	static_cast<float>(height) * orthoWidth, 0.1f, 1000.0f);
+
+		projectionMatrix.TransposeInPlace();
+
+		// Calculate view projection matrix.
+		LeviathanCore::MathTypes::Matrix4x4 viewProjectionMatrix = projectionMatrix * viewMatrix;
+
+		// Declare world view projection matrix.
+		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = {};
+
+		// Begin frame.
 		LeviathanRenderer::BeginFrame();
-		LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferid);
+
+		// Quad 1.
+		// Update material data.
+		LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
+		LeviathanRenderer::SetMaterialData(quadMaterialData);
+
+		// Calculate world matrix.
+		LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f));
+
+		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Rotation(
+			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
+
+		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
+
+		LeviathanCore::MathTypes::Matrix4x4 worldMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
+		worldMatrix = worldMatrix * scalingMatrix;
+		worldMatrix = worldMatrix * rotationMatrix;
+		worldMatrix = worldMatrix * translationMatrix;
+
+		worldMatrix.TransposeInPlace();
+
+		// Calculate world view projection matrix.
+		worldViewProjectionMatrix = viewProjectionMatrix * worldMatrix;
+		worldViewProjectionMatrix.TransposeInPlace();
+
+		// Update object data.
+		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
+		memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
+		LeviathanRenderer::SetObjectData(quadObjectData);
+
+		// Draw.
+		LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferId);
+
+		// Quad 2.
+		// Update material data.
+		LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData2 = { {0.0f, 0.0f, 1.0f, 1.0f} };
+		LeviathanRenderer::SetMaterialData(quadMaterialData2);
+
+		// Calculate world matrix.
+		LeviathanCore::MathTypes::Matrix4x4 translationMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(2.0f, 0.0f, 0.0f));
+
+		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Rotation(
+			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
+
+		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
+
+		LeviathanCore::MathTypes::Matrix4x4 worldMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Identity();
+		worldMatrix2 = worldMatrix2 * scalingMatrix2;
+		worldMatrix2 = worldMatrix2 * rotationMatrix2;
+		worldMatrix2 = worldMatrix2 * translationMatrix2;
+
+		worldMatrix2.TransposeInPlace();
+
+		// Calculate world view projection matrix.
+		worldViewProjectionMatrix = viewProjectionMatrix * worldMatrix2;
+		worldViewProjectionMatrix.TransposeInPlace();
+
+		// Update object data.
+		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData2 = {};
+		memcpy(quadObjectData2.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
+		LeviathanRenderer::SetObjectData(quadObjectData2);
+
+		// Draw.
+		LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferId);
+
+		// End frame.
 		LeviathanRenderer::EndFrame();
 	}
 
@@ -142,66 +235,10 @@ namespace TestTitle
 			return false;
 		}
 
-		if (!LeviathanRenderer::CreateIndexBuffer(quadIndices.data(), static_cast<unsigned int>(quadIndices.size()), gIndexBufferid))
+		if (!LeviathanRenderer::CreateIndexBuffer(quadIndices.data(), static_cast<unsigned int>(quadIndices.size()), gIndexBufferId))
 		{
 			return false;
 		}
-
-		LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
-
-		if (!LeviathanRenderer::SetMaterialData(quadMaterialData))
-		{
-			return false;
-		}
-
-		// Calculate view matrix.
-		LeviathanCore::MathTypes::Matrix4x4 viewMatrix = LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.0f),
-			LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
-				LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
-				LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
-		viewMatrix.TransposeInPlace();
-
-		// Calculate projection matrix.
-		int width = 0;
-		int height = 0;
-		LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(width, height);
-
-		LeviathanCore::MathTypes::Matrix4x4 projectionMatrix = LeviathanCore::MathTypes::Matrix4x4::PerspectiveProjection(LeviathanCore::MathLibrary::DegreesToRadians(90.0f),
-			static_cast<float>(width) / static_cast<float>(height), 0.1f, 1000.0f);
-
-		//float orthoWidth = 5e-3f;
-		//LeviathanCore::MathTypes::Matrix4x4 projectionMatrix = LeviathanCore::MathTypes::Matrix4x4::OrthographicProjection(static_cast<float>(width) * orthoWidth,
-		//	static_cast<float>(height) * orthoWidth, 0.1f, 1000.0f);
-
-		projectionMatrix.TransposeInPlace();
-
-		// Calculate view projection matrix.
-		LeviathanCore::MathTypes::Matrix4x4 viewProjectionMatrix = projectionMatrix * viewMatrix;
-
-		// Calculate world matrix.
-		LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f));
-
-		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Rotation(
-			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
-
-		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
-
-		LeviathanCore::MathTypes::Matrix4x4 worldMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
-		worldMatrix = worldMatrix * scalingMatrix;
-		worldMatrix = worldMatrix * rotationMatrix;
-		worldMatrix = worldMatrix * translationMatrix;
-
-		worldMatrix.TransposeInPlace();
-
-		// Calculate world view projection matrix.
-		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = viewProjectionMatrix * worldMatrix;
-		worldViewProjectionMatrix.TransposeInPlace();
-
-		// Update object data.
-		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
-		memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
-
-		LeviathanRenderer::SetObjectData(quadObjectData);
 
 		return true;
 	}
