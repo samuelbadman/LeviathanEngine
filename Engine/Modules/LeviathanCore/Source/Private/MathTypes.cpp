@@ -210,9 +210,14 @@ namespace LeviathanCore
 			return Matrix4x4FromXMMATRIX(resultMatrix);
 		}
 
-		Matrix4x4 Matrix4x4::operator*(const Matrix4x4& rhs)
+		Matrix4x4 Matrix4x4::operator*(const Matrix4x4& rhs) const
 		{
 			return Matrix4x4::Multiply(*this, rhs);
+		}
+
+		void Matrix4x4::operator*=(const Matrix4x4& rhs)
+		{
+			*this = Matrix4x4::Multiply(*this, rhs);
 		}
 
 		Euler::Euler(float pitchRadians, float yawRadians, float rollRadians)

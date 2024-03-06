@@ -5,9 +5,9 @@
 
 namespace LeviathanRenderer
 {
-	static void OnRuntimeWindowResized(int newWidth, int newHeight)
+	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
-		bool success = Renderer::ResizeWindowResources(newWidth, newHeight);
+		bool success = Renderer::ResizeWindowResources(renderAreaWidth, renderAreaHeight);
 
 		if (!success)
 		{

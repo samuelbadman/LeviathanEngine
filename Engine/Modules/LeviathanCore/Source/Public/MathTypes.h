@@ -105,7 +105,8 @@ namespace LeviathanCore
 			inline const float* GetMatrix() const { return Matrix; }
 
 			// Operators.
-			Matrix4x4 operator*(const Matrix4x4& rhs);
+			Matrix4x4 operator*(const Matrix4x4& rhs) const;
+			void operator*=(const Matrix4x4& rhs);
 
 		private:
 			// Returns the result matrix of matrix a multiplied with matrix b.

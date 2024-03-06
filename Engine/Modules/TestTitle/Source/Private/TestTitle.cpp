@@ -4,12 +4,21 @@
 #include "LeviathanRenderer.h"
 #include "MathTypes.h"
 #include "MathLibrary.h"
+#include "Camera.h"
 
 namespace TestTitle
 {
 	static constexpr unsigned int gIndexCount = 6;
 	static int gVertexBufferId = LeviathanRenderer::InvalidId;
 	static int gIndexBufferId = LeviathanRenderer::InvalidId;
+
+	static LeviathanRenderer::Camera gSceneCamera = {};
+
+	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
+	{
+		gSceneCamera.UpdateProjectionMatrix(renderAreaWidth, renderAreaHeight);
+		gSceneCamera.UpdateViewProjectionMatrix();
+	}
 
 	static void OnPreMainLoop()
 	{
@@ -63,33 +72,6 @@ namespace TestTitle
 
 	static void OnRender()
 	{
-		// Calculate view matrix.
-		LeviathanCore::MathTypes::Matrix4x4 viewMatrix = LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.0f),
-			LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
-				LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
-				LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
-		viewMatrix.TransposeInPlace();
-
-		// Calculate projection matrix.
-		int width = 0;
-		int height = 0;
-		LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(width, height);
-
-		LeviathanCore::MathTypes::Matrix4x4 projectionMatrix = LeviathanCore::MathTypes::Matrix4x4::PerspectiveProjection(LeviathanCore::MathLibrary::DegreesToRadians(90.0f),
-			static_cast<float>(width) / static_cast<float>(height), 0.1f, 1000.0f);
-
-		//float orthoWidth = 5e-3f;
-		//LeviathanCore::MathTypes::Matrix4x4 projectionMatrix = LeviathanCore::MathTypes::Matrix4x4::OrthographicProjection(static_cast<float>(width) * orthoWidth,
-		//	static_cast<float>(height) * orthoWidth, 0.1f, 1000.0f);
-
-		projectionMatrix.TransposeInPlace();
-
-		// Calculate view projection matrix.
-		LeviathanCore::MathTypes::Matrix4x4 viewProjectionMatrix = projectionMatrix * viewMatrix;
-
-		// Declare world view projection matrix.
-		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = {};
-
 		// Begin frame.
 		LeviathanRenderer::BeginFrame();
 
@@ -114,7 +96,8 @@ namespace TestTitle
 		worldMatrix.TransposeInPlace();
 
 		// Calculate world view projection matrix.
-		worldViewProjectionMatrix = viewProjectionMatrix * worldMatrix;
+		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = {};
+		worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * worldMatrix;
 		worldViewProjectionMatrix.TransposeInPlace();
 
 		// Update object data.
@@ -146,12 +129,13 @@ namespace TestTitle
 		worldMatrix2.TransposeInPlace();
 
 		// Calculate world view projection matrix.
-		worldViewProjectionMatrix = viewProjectionMatrix * worldMatrix2;
-		worldViewProjectionMatrix.TransposeInPlace();
+		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix2 = {};
+		worldViewProjectionMatrix2 = gSceneCamera.GetViewProjectionMatrix() * worldMatrix2;
+		worldViewProjectionMatrix2.TransposeInPlace();
 
 		// Update object data.
 		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData2 = {};
-		memcpy(quadObjectData2.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
+		memcpy(quadObjectData2.WorldViewProjection, worldViewProjectionMatrix2.GetMatrix(), sizeof(float) * 16);
 		LeviathanRenderer::SetObjectData(quadObjectData2);
 
 		// Draw.
@@ -176,6 +160,7 @@ namespace TestTitle
 		LeviathanCore::Core::GetTickCallback().Deregister(&OnTick);
 		LeviathanCore::Core::GetPostTickCallback().Deregister(&OnPostTick);
 		LeviathanCore::Core::GetRenderCallback().Deregister(&OnRender);
+		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Deregister(&OnRuntimeWindowResized);
 
 		LeviathanInputCore::PlatformInput::GetInputCallback().Deregister(&OnInput);
 		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Deregister(&OnGameControllerInput);
@@ -205,6 +190,7 @@ namespace TestTitle
 		LeviathanCore::Core::GetTickCallback().Register(&OnTick);
 		LeviathanCore::Core::GetPostTickCallback().Register(&OnPostTick);
 		LeviathanCore::Core::GetRenderCallback().Register(&OnRender);
+		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(&OnRuntimeWindowResized);
 
 		LeviathanInputCore::PlatformInput::GetInputCallback().Register(&OnInput);
 		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Register(&OnGameControllerInput);
@@ -212,6 +198,7 @@ namespace TestTitle
 		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Register(&OnGameControllerDisconnected);
 
 		// Create scene.
+		// Load quad geometry.
 		std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
 		{
 			LeviathanRenderer::VertexTypes::Vertex1Pos{ -0.5f, -0.5f, 0.0f }, // Bottom left.
@@ -239,6 +226,22 @@ namespace TestTitle
 		{
 			return false;
 		}
+
+		// Define scene camera.
+		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.0f));
+
+		gSceneCamera.UpdateViewMatrix();
+
+		int windowWidth = 0;
+		int windowHeight = 0;
+		if (!LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(windowWidth, windowHeight))
+		{
+			return false;
+		}
+
+		gSceneCamera.UpdateProjectionMatrix(windowWidth, windowHeight);
+
+		gSceneCamera.UpdateViewProjectionMatrix();
 
 		return true;
 	}
