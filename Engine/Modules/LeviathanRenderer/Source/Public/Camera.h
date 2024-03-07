@@ -36,6 +36,8 @@ namespace LeviathanRenderer
 		inline void SetFarZ(float farZ) { FarZ = farZ; }
 		inline void SetFovY(float fovYDegrees) { FovYRadians = LeviathanCore::MathLibrary::DegreesToRadians(fovYDegrees); }
 		inline void SetOrthoWidth(float orthoWidth) { OrthoWidth = orthoWidth; }
+		inline const LeviathanCore::MathTypes::Vector3& GetPosition() const { return Position; }
+		inline const LeviathanCore::MathTypes::Euler& GetOrientation() const { return Orientation; }
 
 		void UpdateViewMatrix();
 		void UpdateProjectionMatrix(int renderAreaWidth, int renderAreaHeight);

@@ -17,7 +17,10 @@ namespace LeviathanCore
 		public:
 			// Constructors.
 			Vector3() = default;
-			Vector3(float x, float y, float z);
+			constexpr Vector3(float x, float y, float z)
+				: Components{ x, y, z }
+			{
+			}
 
 			// Static vector3 math operations.
 			// Computes the dot product between a and b. Both a and b must be of unit length 1 (normalized).
@@ -42,6 +45,11 @@ namespace LeviathanCore
 
 			// Returns the length (magnitude) of the vector.
 			float Length() const;
+
+			// Operators.
+			Vector3 operator*(float rhs) const;
+			Vector3 operator+(const Vector3& rhs) const;
+			Vector3 operator-(const Vector3& rhs) const;
 		};
 
 		class Matrix4x4

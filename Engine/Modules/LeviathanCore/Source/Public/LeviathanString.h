@@ -7,5 +7,3 @@ namespace LeviathanCore
 		std::string Printf(const char* format, ...);
 	}
 }
-
-#define LEVIATHAN_PRINTF(format, ...) LeviathanCore::String::Printf(format, __VA_ARGS__)

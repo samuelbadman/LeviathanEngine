@@ -55,11 +55,6 @@ namespace LeviathanCore
 			return Quaternion(float4.x, float4.y, float4.z, float4.w);
 		}
 
-		Vector3::Vector3(float x, float y, float z)
-			: Components{ x, y, z }
-		{
-		}
-
 		float Vector3::DotProduct(const Vector3& a, const Vector3& b)
 		{
 			const DirectX::XMVECTOR vectorA = XMVECTORFromVector3(a);
@@ -103,6 +98,36 @@ namespace LeviathanCore
 			DirectX::XMStoreFloat(&result, resultVector);
 
 			return result;
+		}
+
+		Vector3 Vector3::operator*(float rhs) const
+		{
+			const DirectX::XMVECTOR xmvector = XMVECTORFromVector3(*this);
+			const DirectX::XMVECTOR xmvectorScalar = DirectX::XMVectorSet(rhs, rhs, rhs, rhs);
+
+			const DirectX::XMVECTOR xmvectorResult = DirectX::XMVectorMultiply(xmvector, xmvectorScalar);
+
+			return Vector3FromXMVECTOR(xmvectorResult);
+		}
+
+		Vector3 Vector3::operator+(const Vector3& rhs) const
+		{
+			const DirectX::XMVECTOR xmvector = XMVECTORFromVector3(*this);
+			const DirectX::XMVECTOR xmvectorAdd = XMVECTORFromVector3(rhs);
+
+			const DirectX::XMVECTOR result = DirectX::XMVectorAdd(xmvector, xmvectorAdd);
+
+			return Vector3FromXMVECTOR(result);
+		}
+
+		Vector3 Vector3::operator-(const Vector3& rhs) const
+		{
+			const DirectX::XMVECTOR xmvector = XMVECTORFromVector3(*this);
+			const DirectX::XMVECTOR xmvectorSubtract = XMVECTORFromVector3(rhs);
+
+			const DirectX::XMVECTOR result = DirectX::XMVectorSubtract(xmvector, xmvectorSubtract);
+
+			return Vector3FromXMVECTOR(result);
 		}
 
 		Matrix4x4::Matrix4x4(float e00, float e10, float e20, float e30, float e01, float e11, float e21, float e31, float e02, float e12, float e22, float e32, float e03, float e13, float e23, float e33)

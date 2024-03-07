@@ -16,7 +16,8 @@ namespace LeviathanCore
 		static LeviathanCore::Platform::Window::PlatformWindow* RuntimeWindow = {};
 
 		static unsigned int Fps = 0;
-		static float Ms = 0.f;
+		static float Ms = 0.0f;
+		static float DeltaSeconds = 0.0f;
 
 		static Callback<PreMainLoopCallbackType> PreMainLoopCallback = {};
 		static Callback<PostMainLoopCallbackType> PostMainLoopCallback = {};
@@ -146,9 +147,9 @@ namespace LeviathanCore
 				LeviathanCore::Platform::TickPlatform();
 
 				// Calculate frame time and frames per second.
-				const float deltaSeconds = LeviathanCore::Platform::GetDeltaTimeInSeconds();
+				DeltaSeconds = LeviathanCore::Platform::GetDeltaTimeInSeconds();
 
-				const float AvgFps = (1.f / deltaSeconds);
+				const float AvgFps = (1.f / DeltaSeconds);
 				Ms = 1.f / AvgFps;
 				Fps = static_cast<unsigned int>(AvgFps);
 				//LEVIATHAN_LOG("FPS: %d, MS: %f", Fps, Ms);
@@ -157,7 +158,7 @@ namespace LeviathanCore
 				if (!LeviathanCore::Platform::Window::IsPlatformWindowMinimized(RuntimeWindow))
 				{
 					static float accumulator = 0.0;
-					accumulator += deltaSeconds;
+					accumulator += DeltaSeconds;
 
 					PreTickCallback.Call();
 
@@ -167,7 +168,7 @@ namespace LeviathanCore
 						accumulator -= SliceSeconds;
 					}
 
-					TickCallback.Call(deltaSeconds);
+					TickCallback.Call(DeltaSeconds);
 
 					PostTickCallback.Call();
 
@@ -244,6 +245,11 @@ namespace LeviathanCore
 		bool GetRuntimeWindowRenderAreaDimensions(int& outWidth, int& outHeight)
 		{
 			return LeviathanCore::Platform::Window::GetPlatformWindowRenderAreaDimensions(RuntimeWindow, outWidth, outHeight);
+		}
+
+		float GetDeltaSeconds()
+		{
+			return DeltaSeconds;
 		}
 	}
 }

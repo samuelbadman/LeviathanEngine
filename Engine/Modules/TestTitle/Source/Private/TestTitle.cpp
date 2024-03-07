@@ -42,7 +42,9 @@ namespace TestTitle
 
 	static void OnTick([[maybe_unused]] float deltaSeconds)
 	{
-
+		// Poll input keys.
+		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::D);
+		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
 	}
 
 	static void OnPostTick()
@@ -52,7 +54,27 @@ namespace TestTitle
 
 	static void OnInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data)
 	{
+		using namespace LeviathanCore::MathTypes;
 
+		static constexpr float cameraTranslationSpeed = 1.0f;
+
+		static constexpr Vector3 right(1.0f, 0.0f, 0.0f);
+		static constexpr Vector3 forward(0.0f, 0.0f, 1.0f);
+		static constexpr Vector3 up(0.0f, 1.0f, 0.0f);
+
+		const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
+
+		if ((key.GetKey() == LeviathanCore::InputKey::Keys::D) && (data == 1.0f))
+		{
+			gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (right * deltaSeconds * cameraTranslationSpeed));
+		}
+		else if ((key.GetKey() == LeviathanCore::InputKey::Keys::A) && (data == 1.0f))
+		{
+			gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (right * deltaSeconds * cameraTranslationSpeed));
+		}
+
+		gSceneCamera.UpdateViewMatrix();
+		gSceneCamera.UpdateViewProjectionMatrix();
 	}
 
 	static void OnGameControllerInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data, [[maybe_unused]] unsigned int gameControllerId)
