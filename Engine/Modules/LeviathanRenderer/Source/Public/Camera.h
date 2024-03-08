@@ -26,7 +26,7 @@ namespace LeviathanRenderer
 
 		float FovYRadians = LeviathanCore::MathLibrary::DegreesToRadians(90.0f);
 
-		float OrthoWidth = 5e-3f;
+		float OrthoWidth = 0.005f;
 
 	public:
 		inline void SetPosition(const LeviathanCore::MathTypes::Vector3& position) { Position = position; }

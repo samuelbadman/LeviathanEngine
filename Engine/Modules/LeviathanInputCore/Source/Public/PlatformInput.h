@@ -15,6 +15,7 @@ namespace LeviathanInputCore
 		bool Shutdown();
 		void DispatchCallbackForKey(const LeviathanCore::InputKey::Keys key);
 		void DispatchCallbackForGameControllerKey(const LeviathanCore::InputKey::Keys key, const unsigned int gameControllerId);
+		bool IsKeyDown(const LeviathanCore::InputKey::Keys key);
 		LeviathanCore::Callback<InputCallbackType>& GetInputCallback();
 		LeviathanCore::Callback<GameControllerInputCallbackType>& GetGameControllerInputCallback();
 		LeviathanCore::Callback<GameControllerConnectedCallbackType>& GetGameControllerConnectedCallback();

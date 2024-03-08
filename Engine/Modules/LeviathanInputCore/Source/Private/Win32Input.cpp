@@ -198,10 +198,25 @@ namespace LeviathanInputCore
 
 		BOOL IsKeyDownAsyncKeyState(const LeviathanCore::InputKey::Keys key)
 		{
-			std::underlying_type<LeviathanCore::InputKey::Keys>::type getAsyncKeyStateKey = ((key == LeviathanCore::InputKey::Keys::MiddleMouseButton) ?
-				4
-				:
-				static_cast<std::underlying_type<LeviathanCore::InputKey::Keys>::type>(key));
+			std::underlying_type<LeviathanCore::InputKey::Keys>::type getAsyncKeyStateKey = 0;
+
+			// Get correct win32 key code as keys enum uses a different value to prevent key value conflicts.
+			if (key == LeviathanCore::InputKey::Keys::MiddleMouseButton)
+			{
+				getAsyncKeyStateKey = 4;
+			}
+			else if (key == LeviathanCore::InputKey::Keys::LeftMouseButton)
+			{
+				getAsyncKeyStateKey = MK_LBUTTON;
+			}
+			else if (key == LeviathanCore::InputKey::Keys::RightMouseButton)
+			{
+				getAsyncKeyStateKey = MK_RBUTTON;
+			}
+			else
+			{
+				getAsyncKeyStateKey = static_cast<std::underlying_type<LeviathanCore::InputKey::Keys>::type>(key);
+			}
 
 			if (0x80000000 & GetAsyncKeyState(getAsyncKeyStateKey)) // Most significant bit is high (set).
 			{
@@ -297,6 +312,17 @@ namespace LeviathanInputCore
 		void DispatchCallbackForGameControllerKey(const LeviathanCore::InputKey::Keys key, const unsigned int gameControllerId)
 		{
 			XInputGamepad::DispatchMessagesForGamepadKey(key, gameControllerId);
+		}
+
+		bool IsKeyDown(const LeviathanCore::InputKey::Keys key)
+		{
+			if (LeviathanCore::InputKey::IsGamepadKey(key))
+			{
+				LEVIATHAN_LOG("Key is gamepad key.");
+				return false;
+			}
+
+			return static_cast<bool>(PlatformInput::IsKeyDownAsyncKeyState(key));
 		}
 
 		LeviathanCore::Callback<InputCallbackType>& GetInputCallback()

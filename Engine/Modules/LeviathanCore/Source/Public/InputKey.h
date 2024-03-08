@@ -91,9 +91,9 @@ namespace LeviathanCore
 			Alt = VK_MENU,
 
 			// Mouse keys.
-			LeftMouseButton = MK_LBUTTON,
-			RightMouseButton = MK_RBUTTON,
-			MiddleMouseButton = MK_MBUTTON,
+			LeftMouseButton = /*MK_LBUTTON*/396,
+			RightMouseButton = /*MK_RBUTTON*/397,
+			MiddleMouseButton = /*MK_MBUTTON*/398,
 			MouseWheelUpAxis = 399,
 			MouseWheelDownAxis = 400,
 			MouseXAxis = 401,

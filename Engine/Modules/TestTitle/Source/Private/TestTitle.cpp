@@ -45,6 +45,11 @@ namespace TestTitle
 		// Poll input keys.
 		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::D);
 		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
+
+		if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
+		{
+
+		}
 	}
 
 	static void OnPostTick()
