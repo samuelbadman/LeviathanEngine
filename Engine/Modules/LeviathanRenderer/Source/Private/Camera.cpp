@@ -2,6 +2,18 @@
 
 namespace LeviathanRenderer
 {
+    void Camera::AddYawRotation(const float yawDeltaRadians)
+    {
+        Orientation.SetYawRadians(Orientation.GetYawRadians() + yawDeltaRadians);
+    }
+
+    void Camera::AddPitchRotation(const float pitchDeltaRadians)
+    {
+        float newPitch = Orientation.GetPitchRadians() + pitchDeltaRadians;
+
+        Orientation.SetPitchRadians(newPitch);
+    }
+
     void Camera::UpdateViewMatrix()
     {
         ViewMatrix = LeviathanCore::MathTypes::Matrix4x4::View(Position, Orientation);

@@ -39,6 +39,9 @@ namespace LeviathanRenderer
 		inline const LeviathanCore::MathTypes::Vector3& GetPosition() const { return Position; }
 		inline const LeviathanCore::MathTypes::Euler& GetOrientation() const { return Orientation; }
 
+		void AddYawRotation(const float yawDeltaRadians);
+		void AddPitchRotation(const float pitchDeltaRadians);
+
 		void UpdateViewMatrix();
 		void UpdateProjectionMatrix(int renderAreaWidth, int renderAreaHeight);
 		void UpdateViewProjectionMatrix();

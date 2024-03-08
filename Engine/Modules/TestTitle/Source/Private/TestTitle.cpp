@@ -48,7 +48,8 @@ namespace TestTitle
 
 		if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
 		{
-
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::MouseXAxis);
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::MouseYAxis);
 		}
 	}
 
@@ -62,6 +63,8 @@ namespace TestTitle
 		using namespace LeviathanCore::MathTypes;
 
 		static constexpr float cameraTranslationSpeed = 1.0f;
+		static constexpr float cameraYawRotationRate = 5.0f;
+		static constexpr float cameraPitchRotationRate = 5.0f;
 
 		static constexpr Vector3 right(1.0f, 0.0f, 0.0f);
 		static constexpr Vector3 forward(0.0f, 0.0f, 1.0f);
@@ -76,6 +79,20 @@ namespace TestTitle
 		else if ((key.GetKey() == LeviathanCore::InputKey::Keys::A) && (data == 1.0f))
 		{
 			gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (right * deltaSeconds * cameraTranslationSpeed));
+		}
+		else if (key.GetKey() == LeviathanCore::InputKey::Keys::MouseXAxis)
+		{
+			// TODO: Debug why the camera makes large jumps in rotation sometimes.
+
+			// Add yaw rotation to the camera.
+			const float yawDelta = data * deltaSeconds * cameraYawRotationRate;
+			gSceneCamera.AddYawRotation(yawDelta);
+		}
+		else if (key.GetKey() == LeviathanCore::InputKey::Keys::MouseYAxis)
+		{
+			// Add yaw rotation to the camera.
+			const float ptichDelta = data * deltaSeconds * cameraPitchRotationRate;
+			gSceneCamera.AddPitchRotation(ptichDelta);
 		}
 
 		gSceneCamera.UpdateViewMatrix();

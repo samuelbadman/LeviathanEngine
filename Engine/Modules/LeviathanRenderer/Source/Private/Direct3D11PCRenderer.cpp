@@ -478,6 +478,8 @@ float4 main(PixelInput input) : SV_TARGET
 			hr = gD3D11Device->CreateRasterizerState(&rasterizerStateDesc, &gRasterizerState);
 			if (FAILED(hr)) { return false; };
 
+			gD3D11DeviceContext->RSSetState(gRasterizerState.Get());
+
 			// Set up the viewport.
 			SetupViewport(width, height);
 
