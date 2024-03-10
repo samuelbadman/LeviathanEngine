@@ -1,3 +1,3 @@
 # Leviathan Engine
 ![Leviathan Engine logo.](ReadMeContent/LeviathanEngineLogo.png)  
-In development game engine written in C++.
+In development 3D game engine written in C++.
