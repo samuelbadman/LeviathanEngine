@@ -64,7 +64,7 @@ namespace TestTitle
 
 		static constexpr float cameraTranslationSpeed = 1.0f;
 		static constexpr float cameraYawAbsoluteRotationRate = 0.1f;
-		static constexpr float cameraPitchAbsoluteRotationRate = 0.1f;
+		static constexpr float cameraPitchAbsoluteRotationRate = 0.0001f;
 
 		static constexpr Vector3 right(1.0f, 0.0f, 0.0f);
 		static constexpr Vector3 forward(0.0f, 0.0f, 1.0f);
@@ -103,13 +103,12 @@ namespace TestTitle
 		case LeviathanCore::InputKey::Keys::MouseYAxis:
 		{
 			// Add pitch rotation to the camera.
-			
+			const float pitchDeltaDegrees = data * cameraPitchAbsoluteRotationRate;
+			gSceneCamera.AddPitchRotation(LeviathanCore::MathLibrary::RadiansToDegrees(pitchDeltaDegrees));
 
 			break;
 		}
 		}
-
-		LEVIATHAN_LOG("Camera yaw %f", LeviathanCore::MathLibrary::RadiansToDegrees(gSceneCamera.GetOrientation().GetYawRadians()));
 
 		gSceneCamera.UpdateViewMatrix();
 		gSceneCamera.UpdateViewProjectionMatrix();

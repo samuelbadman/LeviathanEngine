@@ -21,6 +21,13 @@ namespace LeviathanCore
 		}
 
 		// Wraps the angle in radians between 0 to 2Pi radians (0 to 360 degrees).
-		float WrapAngle(const float angleRadians);
+		float WrapAngleRadians(const float angleRadians);
+
+		// Returns -1 when value is negative, 1 when value is greater than 0 and 0 when value is 0.
+		template <typename T>
+		constexpr char Sign(T value)
+		{
+			return (T(0) < value) - (value < T(0));
+		}
 	}
 }

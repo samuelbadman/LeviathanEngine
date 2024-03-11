@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+#include "Logging.h"
+
 namespace LeviathanRenderer
 {
     void Camera::AddYawRotation(const float yawDeltaRadians)
@@ -9,9 +11,18 @@ namespace LeviathanRenderer
 
     void Camera::AddPitchRotation(const float pitchDeltaRadians)
     {
-        float newPitch = Orientation.GetPitchRadians() + pitchDeltaRadians;
+        float newPitchRadians = Orientation.GetPitchRadians() + pitchDeltaRadians;
 
-        Orientation.SetPitchRadians(newPitch);
+        if (newPitchRadians < MinPitchRadians)
+        {
+            newPitchRadians = MinPitchRadians;
+        }
+        else if (newPitchRadians > MaxPitchRadians)
+        {
+            newPitchRadians = MaxPitchRadians;
+        }
+
+        Orientation.SetPitchRadians(newPitchRadians);
     }
 
     void Camera::UpdateViewMatrix()

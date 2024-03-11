@@ -4,7 +4,7 @@ namespace LeviathanCore
 {
 	namespace MathLibrary
 	{
-		float WrapAngle(const float angleRadians)
+		float WrapAngleRadians(const float angleRadians)
 		{
 			return angleRadians - TwoPi * std::floor(angleRadians / TwoPi);
 		}

@@ -67,9 +67,9 @@ namespace LeviathanCore
 			// Constructors.
 			Matrix4x4() = default;
 			Matrix4x4(float e00, float e10, float e20, float e30,
-					  float e01, float e11, float e21, float e31,
-					  float e02, float e12, float e22, float e32,
-					  float e03, float e13, float e23, float e33);
+				float e01, float e11, float e21, float e31,
+				float e02, float e12, float e22, float e32,
+				float e03, float e13, float e23, float e33);
 
 			// Returns an identity matrix.
 			static Matrix4x4 Identity();
@@ -141,9 +141,9 @@ namespace LeviathanCore
 			inline float GetPitchRadians() const { return RotationRadians[PitchComponent]; }
 			inline float GetYawRadians() const { return RotationRadians[YawComponent]; }
 			inline float GetRollRadians() const { return RotationRadians[RollComponent]; }
-			void SetPitchRadians(const float pitchRadians);
-			void SetYawRadians(const float yawRadians);
-			void SetRollRadians(const float rollRadians);
+			inline void SetPitchRadians(const float pitchRadians) { RotationRadians[PitchComponent] = pitchRadians; }
+			inline void SetYawRadians(const float yawRadians) { RotationRadians[YawComponent] = yawRadians; }
+			inline void SetRollRadians(const float rollRadians) { RotationRadians[RollComponent] = rollRadians; }
 		};
 
 		class Quaternion

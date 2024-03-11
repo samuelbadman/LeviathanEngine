@@ -23,6 +23,8 @@ namespace LeviathanRenderer
 		ProjectionMode Projection = ProjectionMode::Perspective;
 		float NearZ = 0.1f;
 		float FarZ = 1000.0f;
+		float MinPitchRadians = -LeviathanCore::MathLibrary::HalfPi;
+		float MaxPitchRadians = LeviathanCore::MathLibrary::HalfPi;
 
 		float FovYRadians = LeviathanCore::MathLibrary::DegreesToRadians(90.0f);
 
