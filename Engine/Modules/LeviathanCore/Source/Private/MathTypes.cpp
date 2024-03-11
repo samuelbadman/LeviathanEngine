@@ -1,4 +1,5 @@
 #include "MathTypes.h"
+#include "MathLibrary.h"
 
 namespace LeviathanCore
 {
@@ -246,8 +247,23 @@ namespace LeviathanCore
 		}
 
 		Euler::Euler(float pitchRadians, float yawRadians, float rollRadians)
-			: Rotation{ pitchRadians, yawRadians, rollRadians }
+			: RotationRadians{ pitchRadians, yawRadians, rollRadians }
 		{
+		}
+
+		void Euler::SetPitchRadians(const float pitchRadians)
+		{
+			RotationRadians[PitchComponent] = MathLibrary::WrapAngle(pitchRadians);
+		}
+
+		void Euler::SetYawRadians(const float yawRadians)
+		{
+			RotationRadians[YawComponent] = MathLibrary::WrapAngle(yawRadians);
+		}
+
+		void Euler::SetRollRadians(const float rollRadians)
+		{
+			RotationRadians[RollComponent] = MathLibrary::WrapAngle(rollRadians);
 		}
 
 		Quaternion::Quaternion(float x, float y, float z, float w)

@@ -63,8 +63,8 @@ namespace TestTitle
 		using namespace LeviathanCore::MathTypes;
 
 		static constexpr float cameraTranslationSpeed = 1.0f;
-		static constexpr float cameraYawRotationRate = 5.0f;
-		static constexpr float cameraPitchRotationRate = 5.0f;
+		static constexpr float cameraYawAbsoluteRotationRate = 0.1f;
+		static constexpr float cameraPitchAbsoluteRotationRate = 0.1f;
 
 		static constexpr Vector3 right(1.0f, 0.0f, 0.0f);
 		static constexpr Vector3 forward(0.0f, 0.0f, 1.0f);
@@ -72,28 +72,44 @@ namespace TestTitle
 
 		const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
 
-		if ((key.GetKey() == LeviathanCore::InputKey::Keys::D) && (data == 1.0f))
+		switch (key.GetKey())
 		{
-			gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (right * deltaSeconds * cameraTranslationSpeed));
+		case LeviathanCore::InputKey::Keys::D:
+		{
+			if (data == 1.0f)
+			{
+				gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (right * deltaSeconds * cameraTranslationSpeed));
+			}
+
+			break;
 		}
-		else if ((key.GetKey() == LeviathanCore::InputKey::Keys::A) && (data == 1.0f))
+
+		case LeviathanCore::InputKey::Keys::A:
 		{
 			gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (right * deltaSeconds * cameraTranslationSpeed));
-		}
-		else if (key.GetKey() == LeviathanCore::InputKey::Keys::MouseXAxis)
-		{
-			// TODO: Debug why the camera makes large jumps in rotation sometimes.
 
-			// Add yaw rotation to the camera.
-			const float yawDelta = data * deltaSeconds * cameraYawRotationRate;
-			gSceneCamera.AddYawRotation(yawDelta);
+			break;
 		}
-		else if (key.GetKey() == LeviathanCore::InputKey::Keys::MouseYAxis)
+
+		case LeviathanCore::InputKey::Keys::MouseXAxis:
 		{
 			// Add yaw rotation to the camera.
-			const float ptichDelta = data * deltaSeconds * cameraPitchRotationRate;
-			gSceneCamera.AddPitchRotation(ptichDelta);
+			const float yawDeltaDegrees = data * cameraYawAbsoluteRotationRate;
+			gSceneCamera.AddYawRotation(LeviathanCore::MathLibrary::DegreesToRadians(yawDeltaDegrees));
+
+			break;
 		}
+
+		case LeviathanCore::InputKey::Keys::MouseYAxis:
+		{
+			// Add pitch rotation to the camera.
+			
+
+			break;
+		}
+		}
+
+		LEVIATHAN_LOG("Camera yaw %f", LeviathanCore::MathLibrary::RadiansToDegrees(gSceneCamera.GetOrientation().GetYawRadians()));
 
 		gSceneCamera.UpdateViewMatrix();
 		gSceneCamera.UpdateViewProjectionMatrix();

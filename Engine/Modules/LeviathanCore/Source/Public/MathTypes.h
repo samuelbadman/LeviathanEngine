@@ -89,7 +89,7 @@ namespace LeviathanCore
 			// Returns a 4x4 rotation matrix from axis and angle in radians.
 			static Matrix4x4 Rotation(const Vector3& axis, const float angleRadians);
 
-			// Returns a 4x4 rotation matrix from euler angles. Rotation is applied roll first, then pitch and then yaw.
+			// Returns a 4x4 rotation matrix from euler angles. RotationRadians is applied roll first, then pitch and then yaw.
 			static Matrix4x4 Rotation(const class Euler& euler);
 
 			// Returns a 4x4 rotation matrix fom a quaternion.
@@ -130,7 +130,7 @@ namespace LeviathanCore
 
 		private:
 			// Rotation angles in the order pitch, yaw and roll in radians.
-			float Rotation[3] = { 0.0f, 0.0f, 0.0f };
+			float RotationRadians[3] = { 0.0f, 0.0f, 0.0f };
 
 		public:
 			// Constructors.
@@ -138,12 +138,12 @@ namespace LeviathanCore
 			Euler(float pitchRadians, float yawRadians, float rollRadians);
 
 			// Getters/setters.
-			inline float GetPitchRadians() const { return Rotation[PitchComponent]; }
-			inline float GetYawRadians() const { return Rotation[YawComponent]; }
-			inline float GetRollRadians() const { return Rotation[RollComponent]; }
-			inline void SetPitchRadians(const float pitchRadians) { Rotation[PitchComponent] = pitchRadians; }
-			inline void SetYawRadians(const float yawRadians) { Rotation[YawComponent] = yawRadians; }
-			inline void SetRollRadians(const float rollRadians) { Rotation[RollComponent] = rollRadians; }
+			inline float GetPitchRadians() const { return RotationRadians[PitchComponent]; }
+			inline float GetYawRadians() const { return RotationRadians[YawComponent]; }
+			inline float GetRollRadians() const { return RotationRadians[RollComponent]; }
+			void SetPitchRadians(const float pitchRadians);
+			void SetYawRadians(const float yawRadians);
+			void SetRollRadians(const float rollRadians);
 		};
 
 		class Quaternion
