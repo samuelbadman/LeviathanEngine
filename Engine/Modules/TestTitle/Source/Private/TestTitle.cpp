@@ -80,24 +80,11 @@ namespace TestTitle
 		{
 			if ((data == 1.0f) && (!isRepeatKey))
 			{
-				//static bool showCursor = true;
-				//showCursor = !showCursor;
-				//LeviathanCore::Platform::ShowPlatformCursor(showCursor);
-
-				if (LeviathanCore::Platform::IsPlatformCursorVisible())
-				{
-					LEVIATHAN_LOG("Platform cursor is visible.");
-				}
-				else
-				{
-					LEVIATHAN_LOG("Platform cursor is hidden.");
-				}
-
-				LeviathanCore::Core::RuntimeWindowCaptureCursor();
+				// P key pressed.
 			}
 			else if (data == 0.0f)
 			{
-				LeviathanCore::Platform::ReleasePlatformCursor();
+				// P key released.
 			}
 
 			break;
