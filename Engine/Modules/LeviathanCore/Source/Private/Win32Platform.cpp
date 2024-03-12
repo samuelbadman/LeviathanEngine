@@ -274,5 +274,36 @@ namespace LeviathanCore
 		{
 			ShowCursor(show);
 		}
+
+		bool IsPlatformCursorVisible()
+		{
+			CURSORINFO cursorInfo = { sizeof(CURSORINFO) };
+
+			if (!GetCursorInfo(&cursorInfo))
+			{
+				// GetCursorInfo() failed.
+				return false;
+			}
+
+			if (cursorInfo.flags == 0)
+			{
+				// Cursor is hidden.
+				return false;
+			}
+			else if (cursorInfo.flags == 1)
+			{
+				// Cursor is visible.
+				return true;
+			}
+			else if (cursorInfo.flags == 2)
+			{
+				// TODO: Implement suppressed response.
+				// Cursor is suppressed.
+				return false;
+			}
+
+			// Error. This code shouldn't be reachable.
+			return false;
+		}
 	}
 }

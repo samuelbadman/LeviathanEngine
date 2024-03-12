@@ -34,5 +34,6 @@ namespace LeviathanCore
 		}
 
 		void ShowPlatformCursor(const bool show);
+		bool IsPlatformCursorVisible();
 	}
 }

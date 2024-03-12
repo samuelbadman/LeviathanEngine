@@ -83,6 +83,15 @@ namespace TestTitle
 				static bool showCursor = true;
 				showCursor = !showCursor;
 				LeviathanCore::Platform::ShowPlatformCursor(showCursor);
+
+				if (LeviathanCore::Platform::IsPlatformCursorVisible())
+				{
+					LEVIATHAN_LOG("Platform cursor is visible.");
+				}
+				else
+				{
+					LEVIATHAN_LOG("Platform cursor is hidden.");
+				}
 			}
 
 			break;
