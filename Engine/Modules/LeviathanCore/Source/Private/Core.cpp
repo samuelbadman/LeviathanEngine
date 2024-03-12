@@ -247,6 +247,11 @@ namespace LeviathanCore
 			return LeviathanCore::Platform::Window::GetPlatformWindowRenderAreaDimensions(RuntimeWindow, outWidth, outHeight);
 		}
 
+		bool RuntimeWindowCaptureCursor()
+		{
+			return LeviathanCore::Platform::Window::CaptureCursor(RuntimeWindow);
+		}
+
 		float GetDeltaSeconds()
 		{
 			return DeltaSeconds;

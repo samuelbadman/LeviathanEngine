@@ -52,9 +52,12 @@ namespace LeviathanCore
 			bool ShutdownPlatformWindow(PlatformWindow* const platformWindow);
 			void* GetPlatformWindowPlatformHandle(PlatformWindow* const platformWindow);
 			bool IsPlatformWindowMinimized(PlatformWindow* const platformWindow);
-			bool EnterPlatformWindowFullscreen(PlatformWindow* const platformWindow);
-			bool ExitPlatformWindowFullscreen(PlatformWindow* const platformWindow);
+			bool EnterFullscreen(PlatformWindow* const platformWindow);
+			bool ExitFullscreen(PlatformWindow* const platformWindow);
 			bool GetPlatformWindowRenderAreaDimensions(PlatformWindow* const platformWindow, int& outWidth, int& outHeight);
+
+			// Capture the platform cursor within the platform window's render area.
+			bool CaptureCursor(PlatformWindow* const platformWindow);
 
 			Callback<PlatformWindowDestroyedCallbackType>& GetPlatformWindowDestroyedCallback(PlatformWindow* const platformWindow);
 			Callback<PlatformWindowClosedCallbackType>& GetPlatformWindowClosedCallback(PlatformWindow* const platformWindow);

@@ -80,9 +80,9 @@ namespace TestTitle
 		{
 			if ((data == 1.0f) && (!isRepeatKey))
 			{
-				static bool showCursor = true;
-				showCursor = !showCursor;
-				LeviathanCore::Platform::ShowPlatformCursor(showCursor);
+				//static bool showCursor = true;
+				//showCursor = !showCursor;
+				//LeviathanCore::Platform::ShowPlatformCursor(showCursor);
 
 				if (LeviathanCore::Platform::IsPlatformCursorVisible())
 				{
@@ -92,6 +92,12 @@ namespace TestTitle
 				{
 					LEVIATHAN_LOG("Platform cursor is hidden.");
 				}
+
+				LeviathanCore::Core::RuntimeWindowCaptureCursor();
+			}
+			else if (data == 0.0f)
+			{
+				LeviathanCore::Platform::ReleasePlatformCursor();
 			}
 
 			break;

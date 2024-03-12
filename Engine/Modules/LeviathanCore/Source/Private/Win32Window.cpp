@@ -69,12 +69,12 @@ namespace LeviathanCore
 				return platformWindow->IsMinimized();
 			}
 
-			bool EnterPlatformWindowFullscreen(PlatformWindow* const platformWindow)
+			bool EnterFullscreen(PlatformWindow* const platformWindow)
 			{
 				return platformWindow->EnterFullscreen();
 			}
 
-			bool ExitPlatformWindowFullscreen(PlatformWindow* const platformWindow)
+			bool ExitFullscreen(PlatformWindow* const platformWindow)
 			{
 				return platformWindow->ExitFullscreen();
 			}
@@ -82,6 +82,30 @@ namespace LeviathanCore
 			bool GetPlatformWindowRenderAreaDimensions(PlatformWindow* const platformWindow, int& outWidth, int& outHeight)
 			{
 				return platformWindow->GetRenderAreaDimensions(outWidth, outHeight);
+			}
+
+			bool CaptureCursor(PlatformWindow* const platformWindow)
+			{
+				POINT upperLeftPoint;
+				upperLeftPoint.x = 0;
+				upperLeftPoint.y = 0;
+
+				POINT lowerRightPoint;
+				lowerRightPoint.x = static_cast<LONG>(platformWindow->GetClientAreaWidth());
+				lowerRightPoint.y = static_cast<LONG>(platformWindow->GetClientAreaHeight());
+
+				HWND windowHandle = platformWindow->GetHWnd();
+				MapWindowPoints(windowHandle, nullptr, &upperLeftPoint, 1);
+				MapWindowPoints(windowHandle, nullptr, &lowerRightPoint, 1);
+
+				RECT clipRect = {};
+				clipRect.left = upperLeftPoint.x;
+				clipRect.top = upperLeftPoint.y;
+
+				clipRect.right = lowerRightPoint.x;
+				clipRect.bottom = lowerRightPoint.y;
+
+				return ClipCursor(&clipRect) != 0;
 			}
 
 			Callback<PlatformWindowDestroyedCallbackType>& GetPlatformWindowDestroyedCallback(PlatformWindow* const platformWindow)

@@ -35,5 +35,8 @@ namespace LeviathanCore
 
 		void ShowPlatformCursor(const bool show);
 		bool IsPlatformCursorVisible();
+
+		// Releases the platform cursor from the platform window it is currently locked to.
+		bool ReleasePlatformCursor();
 	}
 }

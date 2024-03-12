@@ -305,5 +305,10 @@ namespace LeviathanCore
 			// Error. This code shouldn't be reachable.
 			return false;
 		}
+
+		bool ReleasePlatformCursor()
+		{
+			return ClipCursor(nullptr);
+		}
 	}
 }
