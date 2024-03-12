@@ -151,7 +151,8 @@ namespace LeviathanInputCore
 				return false;
 			}
 
-			const uint8_t bit = GetKeyBit(key);
+			const unsigned char bit = GetKeyBit(key);
+
 			if (IsValidBit(bit))
 			{
 				if (IsState1(bit))
@@ -165,6 +166,37 @@ namespace LeviathanInputCore
 			}
 
 			return false;
+		}
+
+		bool Win32KeyboardState::GetKeyState(const LeviathanCore::InputKey::Keys key)
+		{
+			const unsigned char bit = GetKeyBit(key);
+
+			if (IsValidBit(bit))
+			{
+				if (IsState1(bit))
+				{
+					return CHECK_BIT(State1, bit);
+				}
+				else
+				{
+					return CHECK_BIT(State2, bit);
+				}
+			}
+
+			return false;
+		}
+
+		void Win32KeyboardState::SetKeyState(const LeviathanCore::InputKey::Keys key, bool newState)
+		{
+			if (newState)
+			{
+				SetKeyBit(key);
+			}
+			else
+			{
+				ClearKeyBit(key);
+			}
 		}
 
 		constexpr bool Win32KeyboardState::IsState1(const uint8_t bit)

@@ -101,9 +101,15 @@ namespace LeviathanInputCore
 			// Updates the state of the bit representing key storing the up/down state of the key since the last call to UpdateKeyState.
 			void UpdateKeyState(const LeviathanCore::InputKey::Keys key);
 
-			// Returns true if the bit corresponding to key is set. Otherwise, returns false if 
+			// Returns true if the bit corresponding to key is set otherwise, returns false if 
 			// the bit corresponding to key is cleared or key is not a keyboard key.
 			bool IsKeyPressed(const LeviathanCore::InputKey::Keys key) const;
+
+			// Retreives the set state of the corresponding bit for the key. Returns true if the bit is set otherwise, returns false if the bit is not set or the key is invalid.
+			bool GetKeyState(const LeviathanCore::InputKey::Keys key);
+
+			// Manually sets the set state of the corresponding bit for the key. If newState is true, the bit will be set otherwise, the bit will be cleared.
+			void SetKeyState(const LeviathanCore::InputKey::Keys key, bool newState);
 
 		private:
 			// Returns true if bit bit is stored in State1 otherwise, returns false if the bit is stored in state2.

@@ -43,6 +43,8 @@ namespace TestTitle
 	static void OnTick([[maybe_unused]] float deltaSeconds)
 	{
 		// Poll input keys.
+		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::P);
+
 		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::D);
 		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
 
@@ -74,6 +76,16 @@ namespace TestTitle
 
 		switch (key.GetKey())
 		{
+		case LeviathanCore::InputKey::Keys::P:
+		{
+			if ((data == 1.0f) && (!isRepeatKey))
+			{
+				LEVIATHAN_LOG("P pressed.");
+			}
+
+			break;
+		}
+
 		case LeviathanCore::InputKey::Keys::D:
 		{
 			if (data == 1.0f)
@@ -86,7 +98,10 @@ namespace TestTitle
 
 		case LeviathanCore::InputKey::Keys::A:
 		{
-			gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (right * deltaSeconds * cameraTranslationSpeed));
+			if (data == 1.0f)
+			{
+				gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (right * deltaSeconds * cameraTranslationSpeed));
+			}
 
 			break;
 		}

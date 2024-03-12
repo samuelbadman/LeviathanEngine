@@ -294,7 +294,7 @@ namespace LeviathanInputCore
 				Win32KeyboardState currentKeyboardState = {};
 				currentKeyboardState.UpdateKeyState(key);
 				DispatchCallbackForKeyboardKey(key, previousKeyboardState, currentKeyboardState);
-				previousKeyboardState = currentKeyboardState;
+				previousKeyboardState.SetKeyState(key, currentKeyboardState.GetKeyState(key));
 			}
 			else if (LeviathanCore::InputKey::IsMouseKey(key))
 			{
@@ -318,6 +318,7 @@ namespace LeviathanInputCore
 		{
 			if (LeviathanCore::InputKey::IsGamepadKey(key))
 			{
+				// TODO: Implement key down check for gamepads.
 				LEVIATHAN_LOG("Key is gamepad key.");
 				return false;
 			}
