@@ -80,7 +80,9 @@ namespace TestTitle
 		{
 			if ((data == 1.0f) && (!isRepeatKey))
 			{
-				LEVIATHAN_LOG("P pressed.");
+				static bool showCursor = true;
+				showCursor = !showCursor;
+				LeviathanCore::Platform::ShowPlatformCursor(showCursor);
 			}
 
 			break;

@@ -31,7 +31,8 @@ namespace LeviathanCore
 
 			int GetDisplayCount();
 			DisplayDetails GetDisplayDetails(const int displayIndex);
-			void ShowPlatformCursor(const bool show);
 		}
+
+		void ShowPlatformCursor(const bool show);
 	}
 }

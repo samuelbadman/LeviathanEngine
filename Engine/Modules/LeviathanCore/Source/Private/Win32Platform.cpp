@@ -268,11 +268,11 @@ namespace LeviathanCore
 
 				return details;
 			}
+		}
 
-			void ShowPlatformCursor(const bool show)
-			{
-				ShowCursor(show);
-			}
+		void ShowPlatformCursor(const bool show)
+		{
+			ShowCursor(show);
 		}
 	}
 }
