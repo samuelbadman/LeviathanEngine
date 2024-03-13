@@ -1,9 +1,6 @@
 #include "MathTypes.h"
 #include "MathLibrary.h"
 
-#include "Logging.h"
-
-
 namespace LeviathanCore
 {
 	namespace MathTypes
