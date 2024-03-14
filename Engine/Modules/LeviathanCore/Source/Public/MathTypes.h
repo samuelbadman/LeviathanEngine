@@ -36,15 +36,17 @@ namespace LeviathanCore
 			inline float GetX() const { return Components[XComponent]; }
 			inline float GetY() const { return Components[YComponent]; }
 			inline float GetZ() const { return Components[ZComponent]; }
-			inline float SetX(const float x) { Components[XComponent] = x; }
-			inline float SetY(const float y) { Components[YComponent] = y; }
-			inline float SetZ(const float z) { Components[ZComponent] = z; }
+			inline void SetX(const float x) { Components[XComponent] = x; }
+			inline void SetY(const float y) { Components[YComponent] = y; }
+			inline void SetZ(const float z) { Components[ZComponent] = z; }
 
 			// Returns the vector pointing in the same direction with unit length 1.
 			Vector3 AsNormalized() const;
 
 			// Returns the length (magnitude) of the vector.
 			float Length() const;
+			// Returns the squared length (magnitude) of the vector.
+			float SquaredLength() const;
 
 			// Operators.
 			Vector3 operator*(float rhs) const;

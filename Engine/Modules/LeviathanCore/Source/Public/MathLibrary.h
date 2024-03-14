@@ -29,5 +29,12 @@ namespace LeviathanCore
 		{
 			return (T(0) < value) - (value < T(0));
 		}
+
+		// Returns the value squared.
+		template <typename T>
+		T Square(T value)
+		{
+			return value * value;
+		}
 	}
 }

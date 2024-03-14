@@ -26,7 +26,7 @@ namespace LeviathanRenderer
 		float MinPitchRadians = -LeviathanCore::MathLibrary::HalfPi;
 		float MaxPitchRadians = LeviathanCore::MathLibrary::HalfPi;
 
-		float FovYRadians = LeviathanCore::MathLibrary::DegreesToRadians(90.0f);
+		float FovYRadians = LeviathanCore::MathLibrary::DegreesToRadians(45.0f);
 
 		float OrthoWidth = 0.005f;
 

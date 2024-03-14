@@ -153,7 +153,7 @@ namespace TestTitle
 		// Begin frame.
 		LeviathanRenderer::BeginFrame();
 
-		// Quad 1.
+		// Quad 1 (dynamic).
 		// Update material data.
 		LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
 		LeviathanRenderer::SetMaterialData(quadMaterialData);
@@ -162,21 +162,18 @@ namespace TestTitle
 		LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f));
 
 		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Rotation(
-			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
+			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(45.0f)));
 
-		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
+		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(0.5f, 0.5f, 0.5f));
 
 		LeviathanCore::MathTypes::Matrix4x4 worldMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
-		worldMatrix = worldMatrix * scalingMatrix;
-		worldMatrix = worldMatrix * rotationMatrix;
-		worldMatrix = worldMatrix * translationMatrix;
-
-		worldMatrix.TransposeInPlace();
+		worldMatrix *= translationMatrix;
+		worldMatrix *= rotationMatrix;
+		worldMatrix *= scalingMatrix;
 
 		// Calculate world view projection matrix.
 		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = {};
 		worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * worldMatrix;
-		worldViewProjectionMatrix.TransposeInPlace();
 
 		// Update object data.
 		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
@@ -186,7 +183,7 @@ namespace TestTitle
 		// Draw.
 		LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferId);
 
-		// Quad 2.
+		// Quad 2 (dynamic).
 		// Update material data.
 		LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData2 = { {0.0f, 0.0f, 1.0f, 1.0f} };
 		LeviathanRenderer::SetMaterialData(quadMaterialData2);
@@ -200,16 +197,13 @@ namespace TestTitle
 		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
 
 		LeviathanCore::MathTypes::Matrix4x4 worldMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Identity();
-		worldMatrix2 = worldMatrix2 * scalingMatrix2;
-		worldMatrix2 = worldMatrix2 * rotationMatrix2;
-		worldMatrix2 = worldMatrix2 * translationMatrix2;
-
-		worldMatrix2.TransposeInPlace();
+		worldMatrix2 *= translationMatrix2;
+		worldMatrix2 *= rotationMatrix2;
+		worldMatrix2 *= scalingMatrix2;
 
 		// Calculate world view projection matrix.
 		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix2 = {};
 		worldViewProjectionMatrix2 = gSceneCamera.GetViewProjectionMatrix() * worldMatrix2;
-		worldViewProjectionMatrix2.TransposeInPlace();
 
 		// Update object data.
 		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData2 = {};
@@ -306,7 +300,7 @@ namespace TestTitle
 		}
 
 		// Define scene camera.
-		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.0f));
+		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -5.0f));
 
 		gSceneCamera.UpdateViewMatrix();
 

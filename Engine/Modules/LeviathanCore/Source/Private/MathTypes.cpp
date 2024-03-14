@@ -5,130 +5,65 @@ namespace LeviathanCore
 {
 	namespace MathTypes
 	{
-		static DirectX::XMVECTOR XMVECTORFromVector3(const Vector3& vector3)
-		{
-			return DirectX::XMVectorSet(vector3.GetX(), vector3.GetY(), vector3.GetZ(), 1.0f);
-		}
-
-		static Vector3 Vector3FromXMVECTOR(const DirectX::XMVECTOR& xmvector)
-		{
-			DirectX::XMFLOAT3 float3 = {};
-			DirectX::XMStoreFloat3(&float3, xmvector);
-			return Vector3(float3.x, float3.y, float3.z);
-		}
-
-		static Vector3 NormalizeVector3(const Vector3& vector3)
-		{
-			const DirectX::XMVECTOR vector = XMVECTORFromVector3(vector3);
-			const DirectX::XMVECTOR resultVector = DirectX::XMVector3Normalize(vector);
-			return Vector3FromXMVECTOR(resultVector);
-		}
-
-		static Matrix4x4 Matrix4x4FromXMMATRIX(const DirectX::XMMATRIX& xmmatrix)
-		{
-			DirectX::XMFLOAT4X4 float4x4 = {};
-			DirectX::XMStoreFloat4x4(&float4x4, xmmatrix);
-			Matrix4x4 result = {};
-			memcpy(result.GetMatrix(), float4x4.m, sizeof(float) * 16);
-			return result;
-		}
-
-		static DirectX::XMMATRIX XMMATRIXFromMatrix4x4(const Matrix4x4& matrix4x4)
-		{
-			const float* pMatrix = matrix4x4.GetMatrix();
-			return DirectX::XMMatrixSet(pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3],
-				pMatrix[4], pMatrix[5], pMatrix[6], pMatrix[7],
-				pMatrix[8], pMatrix[9], pMatrix[10], pMatrix[11],
-				pMatrix[12], pMatrix[13], pMatrix[14], pMatrix[15]);
-		}
-
-		static DirectX::XMVECTOR XMVECTORFromQuaternion(const Quaternion& quaternion)
-		{
-			const DirectX::XMVECTOR result = DirectX::XMVectorSet(quaternion.GetX(), quaternion.GetY(), quaternion.GetZ(), quaternion.GetW());
-			return result;
-		}
-
-		static Quaternion QuaternionFromXMVECTOR(const DirectX::XMVECTOR& xmvector)
-		{
-			DirectX::XMFLOAT4 float4 = {};
-			DirectX::XMStoreFloat4(&float4, xmvector);
-
-			return Quaternion(float4.x, float4.y, float4.z, float4.w);
-		}
-
 		float Vector3::DotProduct(const Vector3& a, const Vector3& b)
 		{
-			const DirectX::XMVECTOR vectorA = XMVECTORFromVector3(a);
-			const DirectX::XMVECTOR vectorB = XMVECTORFromVector3(b);
-
-			const DirectX::XMVECTOR resultVector = DirectX::XMVector3Dot(vectorA, vectorB);
-
-			float result = 0.0f;
-			DirectX::XMStoreFloat(&result, resultVector);
-
-			return result;
+			return (a.GetX() * b.GetX()) + (a.GetY() * b.GetY()) + (a.GetZ() * b.GetZ());
 		}
 
 		Vector3 Vector3::CrossProduct(const Vector3& a, const Vector3& b)
 		{
-			const DirectX::XMVECTOR vectorA = XMVECTORFromVector3(a);
-			const DirectX::XMVECTOR vectorB = XMVECTORFromVector3(b);
-
-			const DirectX::XMVECTOR resultVector = DirectX::XMVector3Cross(vectorA, vectorB);
-
-			return Vector3FromXMVECTOR(resultVector);
+			return Vector3((a.GetY() * b.GetZ()) - (b.GetY() * a.GetZ()), (b.GetX() * a.GetZ()) - (a.GetX() * b.GetZ()), (a.GetX() * b.GetY()) - (b.GetX() * a.GetY()));
 		}
 
 		void Vector3::Normalize()
 		{
-			*this = NormalizeVector3(*this);
+			const float length = Length();
+
+			if (length == 0.0f)
+			{
+				return;
+			}
+
+			SetX(GetX() / length);
+			SetY(GetY() / length);
+			SetZ(GetZ() / length);
 		}
 
 		Vector3 Vector3::AsNormalized() const
 		{
-			return NormalizeVector3(*this);
+			const float length = Length();
+
+			if (length == 0.0f)
+			{
+				return Vector3();
+			}
+
+			return Vector3(GetX() / length, GetY() / length, GetZ() / length);
 		}
 
 		float Vector3::Length() const
 		{
-			const DirectX::XMVECTOR vector = XMVECTORFromVector3(*this);
+			return sqrtf(MathLibrary::Square(GetX()) + MathLibrary::Square(GetY()) + MathLibrary::Square(GetZ()));
+		}
 
-			const DirectX::XMVECTOR resultVector = DirectX::XMVector3Length(vector);
-
-			float result = 0.0f;
-			DirectX::XMStoreFloat(&result, resultVector);
-
-			return result;
+		float Vector3::SquaredLength() const
+		{
+			return (MathLibrary::Square(GetX()) + MathLibrary::Square(GetY()) + MathLibrary::Square(GetZ()));
 		}
 
 		Vector3 Vector3::operator*(float rhs) const
 		{
-			const DirectX::XMVECTOR xmvector = XMVECTORFromVector3(*this);
-			const DirectX::XMVECTOR xmvectorScalar = DirectX::XMVectorSet(rhs, rhs, rhs, rhs);
-
-			const DirectX::XMVECTOR xmvectorResult = DirectX::XMVectorMultiply(xmvector, xmvectorScalar);
-
-			return Vector3FromXMVECTOR(xmvectorResult);
+			return Vector3(GetX() * rhs, GetY() * rhs, GetZ() * rhs);
 		}
 
 		Vector3 Vector3::operator+(const Vector3& rhs) const
 		{
-			const DirectX::XMVECTOR xmvector = XMVECTORFromVector3(*this);
-			const DirectX::XMVECTOR xmvectorAdd = XMVECTORFromVector3(rhs);
-
-			const DirectX::XMVECTOR result = DirectX::XMVectorAdd(xmvector, xmvectorAdd);
-
-			return Vector3FromXMVECTOR(result);
+			return Vector3(GetX() + rhs.GetX(), GetY() + rhs.GetY(), GetZ() + rhs.GetZ());
 		}
 
 		Vector3 Vector3::operator-(const Vector3& rhs) const
 		{
-			const DirectX::XMVECTOR xmvector = XMVECTORFromVector3(*this);
-			const DirectX::XMVECTOR xmvectorSubtract = XMVECTORFromVector3(rhs);
-
-			const DirectX::XMVECTOR result = DirectX::XMVectorSubtract(xmvector, xmvectorSubtract);
-
-			return Vector3FromXMVECTOR(result);
+			return Vector3(GetX() - rhs.GetX(), GetY() - rhs.GetY(), GetZ() - rhs.GetZ());
 		}
 
 		Matrix4x4::Matrix4x4(float e00, float e10, float e20, float e30, float e01, float e11, float e21, float e31, float e02, float e12, float e22, float e32, float e03, float e13, float e23, float e33)
@@ -143,51 +78,81 @@ namespace LeviathanCore
 
 		Matrix4x4 Matrix4x4::Transpose(const Matrix4x4& matrix4x4)
 		{
-			return Matrix4x4FromXMMATRIX(DirectX::XMMatrixTranspose(XMMATRIXFromMatrix4x4(matrix4x4)));
+			glm::mat4x4 glmMat = {};
+			memcpy(&glmMat[0], matrix4x4.GetMatrix(), sizeof(float) * 16);
+
+			glmMat = glm::transpose(glmMat);
+
+			Matrix4x4 result = {};
+			memcpy(result.GetMatrix(), &glmMat[0], sizeof(float) * 16);
+
+			return result;
 		}
 
 		Matrix4x4 Matrix4x4::Inverse(const Matrix4x4& matrix4x4)
 		{
-			return Matrix4x4FromXMMATRIX(DirectX::XMMatrixInverse(nullptr, XMMATRIXFromMatrix4x4(matrix4x4)));
+			glm::mat4x4 glmMat = {};
+			memcpy(&glmMat[0], matrix4x4.GetMatrix(), sizeof(float) * 16);
+
+			glmMat = glm::inverse(glmMat);
+
+			Matrix4x4 result = {};
+			memcpy(result.GetMatrix(), &glmMat[0], sizeof(float) * 16);
+
+			return result;
 		}
 
 		Matrix4x4 Matrix4x4::Translation(const Vector3& translation)
 		{
-			return Matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
-				0.0f, 1.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, 1.0f, 0.0f,
-				translation.GetX(), translation.GetY(), translation.GetZ(), 1.0f);
+			const glm::mat4x4 glmMat = glm::translate(glm::identity<glm::mat4x4>(), glm::vec3(translation.GetX(), translation.GetY(), translation.GetZ()));
+
+			Matrix4x4 result = {};
+			memcpy(result.GetMatrix(), &glmMat[0], sizeof(float) * 16);
+
+			return result;
 		}
 
 		Matrix4x4 Matrix4x4::Scaling(const Vector3& scale)
 		{
-			return Matrix4x4(scale.GetX(), 0.0f, 0.0f, 0.0f,
-				0.0f, scale.GetY(), 0.0f, 0.0f,
-				0.0f, 0.0f, scale.GetZ(), 0.0f,
-				0.0f, 0.0f, 0.0f, 1.0f);
+			const glm::mat4x4 glmMat = glm::scale(glm::identity<glm::mat4x4>(), glm::vec3(scale.GetX(), scale.GetY(), scale.GetZ()));
+
+			Matrix4x4 result = {};
+			memcpy(result.GetMatrix(), &glmMat[0], sizeof(float) * 16);
+
+			return result;
 		}
 
 		Matrix4x4 Matrix4x4::Rotation(const Vector3& axis, const float angleRadians)
 		{
-			const DirectX::XMVECTOR axisVector = XMVECTORFromVector3(axis);
-			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixRotationAxis(axisVector, angleRadians);
-			return Matrix4x4FromXMMATRIX(resultMatrix);
+			const glm::mat4x4 rotation = glm::rotate(glm::identity<glm::mat4x4>(), angleRadians, glm::vec3(axis.GetX(), axis.GetY(), axis.GetZ()));
+
+			Matrix4x4 result = {};
+			memcpy(result.GetMatrix(), &rotation[0], sizeof(float) * 16);
+
+			return result;
 		}
 
 		Matrix4x4 Matrix4x4::Rotation(const Euler& euler)
 		{
-			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixRotationRollPitchYaw(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians());
-			return Matrix4x4FromXMMATRIX(resultMatrix);
+			const glm::mat4x4 rotation = glm::mat4_cast(glm::quat(glm::vec3(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians())));
+
+			Matrix4x4 result = {};
+			memcpy(result.GetMatrix(), &rotation[0], sizeof(float) * 16);
+
+			return result;
 		}
 
 		Matrix4x4 Matrix4x4::Rotation(const Quaternion& quaternion)
 		{
-			const DirectX::XMVECTOR quaternionVector = XMVECTORFromQuaternion(quaternion);
-			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixRotationQuaternion(quaternionVector);
-			return Matrix4x4FromXMMATRIX(resultMatrix);
+			glm::mat4x4 rotation = glm::mat4_cast(glm::quat(quaternion.GetW(), quaternion.GetX(), quaternion.GetY(), quaternion.GetZ()));
+
+			Matrix4x4 result = {};
+			memcpy(result.GetMatrix(), &rotation[0], sizeof(float) * 16);
+
+			return result;
 		}
 
-		Matrix4x4 Matrix4x4::View(const Vector3& cameraTranslation, [[maybe_unused]] const Euler& cameraRotation)
+		Matrix4x4 Matrix4x4::View(const Vector3& cameraTranslation, const Euler& cameraRotation)
 		{
 			const Matrix4x4 cameraTranslationRotationMatrix = (Matrix4x4::Translation(cameraTranslation) * Matrix4x4::Rotation(cameraRotation));
 			return Matrix4x4::Inverse(cameraTranslationRotationMatrix);
@@ -230,10 +195,18 @@ namespace LeviathanCore
 
 		Matrix4x4 Matrix4x4::Multiply(const Matrix4x4& a, const Matrix4x4& b)
 		{
-			const DirectX::XMMATRIX matA = XMMATRIXFromMatrix4x4(a);
-			const DirectX::XMMATRIX matB = XMMATRIXFromMatrix4x4(b);
-			const DirectX::XMMATRIX resultMatrix = DirectX::XMMatrixMultiply(matA, matB);
-			return Matrix4x4FromXMMATRIX(resultMatrix);
+			glm::mat4x4 glmMatA = {};
+			memcpy(&glmMatA[0], a.GetMatrix(), sizeof(float) * 16);
+
+			glm::mat4x4 glmMatB = {};
+			memcpy(&glmMatB[0], b.GetMatrix(), sizeof(float) * 16);
+
+			const glm::mat4x4 glmResult = glmMatA * glmMatB;
+
+			Matrix4x4 result = {};
+			memcpy(result.GetMatrix(), &glmResult[0], sizeof(float) * 16);
+
+			return result;
 		}
 
 		Matrix4x4 Matrix4x4::operator*(const Matrix4x4& rhs) const
@@ -258,7 +231,8 @@ namespace LeviathanCore
 
 		Quaternion Quaternion::MakeFromEuler(const Euler& euler)
 		{
-			return QuaternionFromXMVECTOR(DirectX::XMQuaternionRotationRollPitchYaw(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians()));
+			const glm::quat glmQuat = glm::quat(glm::vec3(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians()));
+			return Quaternion(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
 		}
 	}
 }

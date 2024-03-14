@@ -28,7 +28,6 @@ namespace LeviathanRenderer
     void Camera::UpdateViewMatrix()
     {
         ViewMatrix = LeviathanCore::MathTypes::Matrix4x4::View(Position, Orientation);
-        ViewMatrix.TransposeInPlace();
     }
 
     void Camera::UpdateProjectionMatrix(int renderAreaWidth, int renderAreaHeight)
@@ -45,8 +44,6 @@ namespace LeviathanRenderer
                 NearZ, FarZ);
             break;
         }
-
-        ProjectionMatrix.TransposeInPlace();
     }
 
     void Camera::UpdateViewProjectionMatrix()

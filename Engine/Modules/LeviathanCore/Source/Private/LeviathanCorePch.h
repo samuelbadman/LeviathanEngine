@@ -25,5 +25,7 @@
 #undef max
 #endif // LEVIATHAN_BUILD_PLATFORM_WIN32
 
-// DirectX.
-#include <DirectXMath.h>
+// GLM.
+#include "GLM_1.0.1/glm.hpp"
+#include "GLM_1.0.1/gtc/matrix_transform.hpp"
+#include "GLM_1.0.1/gtc/quaternion.hpp"
