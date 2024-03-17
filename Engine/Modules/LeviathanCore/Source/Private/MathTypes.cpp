@@ -229,10 +229,21 @@ namespace LeviathanCore
 		{
 		}
 
+		Quaternion::Quaternion(const Euler& euler)
+		{
+			*this = MakeFromEuler(euler);
+		}
+
 		Quaternion Quaternion::MakeFromEuler(const Euler& euler)
 		{
 			const glm::quat glmQuat = glm::quat(glm::vec3(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians()));
 			return Quaternion(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
+		}
+
+		Vector3 Quaternion::operator*(const Vector3& rhs)
+		{
+			const glm::vec3 rotated = (glm::quat(Components[WComponent], Components[XComponent], Components[YComponent], Components[ZComponent]) * glm::vec3(rhs.GetX(), rhs.GetY(), rhs.GetZ()));
+			return Vector3(rotated.x, rotated.y, rotated.z);
 		}
 	}
 }

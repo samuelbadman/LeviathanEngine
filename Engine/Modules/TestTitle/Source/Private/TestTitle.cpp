@@ -45,11 +45,16 @@ namespace TestTitle
 		// Poll input keys.
 		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::P);
 
-		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::D);
-		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
-
 		if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
 		{
+			// Camera input keys.
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::W);
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::S);
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::D);
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::Q);
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::E);
+
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::MouseXAxis);
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::MouseYAxis);
 		}
@@ -62,15 +67,13 @@ namespace TestTitle
 
 	static void OnInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data)
 	{
-		using namespace LeviathanCore::MathTypes;
-
 		static constexpr float cameraTranslationSpeed = 1.0f;
 		static constexpr float cameraYawAbsoluteRotationRate = 0.1f;
 		static constexpr float cameraPitchAbsoluteRotationRate = 0.0001f;
 
-		static constexpr Vector3 right(1.0f, 0.0f, 0.0f);
-		static constexpr Vector3 forward(0.0f, 0.0f, 1.0f);
-		static constexpr Vector3 up(0.0f, 1.0f, 0.0f);
+		static constexpr LeviathanCore::MathTypes::Vector3 forward(0.0f, 0.0f, 1.0f);
+		static constexpr LeviathanCore::MathTypes::Vector3 right(1.0f, 0.0f, 0.0f);
+		static constexpr LeviathanCore::MathTypes::Vector3 up(0.0f, 1.0f, 0.0f);
 
 		const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
 
@@ -90,11 +93,31 @@ namespace TestTitle
 			break;
 		}
 
+		case LeviathanCore::InputKey::Keys::W:
+		{
+			if (data == 1.0f)
+			{
+				gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (gSceneCamera.GetForwardVector(forward) * deltaSeconds * cameraTranslationSpeed));
+			}
+
+			break;
+		}
+
+		case LeviathanCore::InputKey::Keys::S:
+		{
+			if (data == 1.0f)
+			{
+				gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (gSceneCamera.GetForwardVector(forward) * deltaSeconds * cameraTranslationSpeed));
+			}
+
+			break;
+		}
+
 		case LeviathanCore::InputKey::Keys::D:
 		{
 			if (data == 1.0f)
 			{
-				gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (right * deltaSeconds * cameraTranslationSpeed));
+				gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (gSceneCamera.GetRightVector(right) * deltaSeconds * cameraTranslationSpeed));
 			}
 
 			break;
@@ -104,7 +127,29 @@ namespace TestTitle
 		{
 			if (data == 1.0f)
 			{
-				gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (right * deltaSeconds * cameraTranslationSpeed));
+				gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (gSceneCamera.GetRightVector(right) * deltaSeconds * cameraTranslationSpeed));
+			}
+
+			break;
+		}
+
+		case LeviathanCore::InputKey::Keys::E:
+		{
+			if (data == 1.0f)
+			{
+				// Use base up vector instead of camera up vector to always ensure vertical movement happens in the base up vector axis.
+				gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (up * deltaSeconds * cameraTranslationSpeed));
+			}
+
+			break;
+		}
+
+		case LeviathanCore::InputKey::Keys::Q:
+		{
+			if (data == 1.0f)
+			{
+				// Use base up vector instead of camera up vector to always ensure vertical movement happens in the base up vector axis.
+				gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (up * deltaSeconds * cameraTranslationSpeed));
 			}
 
 			break;

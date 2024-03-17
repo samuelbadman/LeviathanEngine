@@ -163,6 +163,7 @@ namespace LeviathanCore
 			// Constructors.
 			Quaternion() = default;
 			Quaternion(float x, float y, float z, float w);
+			Quaternion(const Euler& euler);
 
 			// Returns the identity quaternion.
 			static inline Quaternion Identity() { return Quaternion(0.0f, 0.0f, 0.0f, 1.0f); }
@@ -179,6 +180,9 @@ namespace LeviathanCore
 			inline void SetY(const float y) { Components[YComponent] = y; }
 			inline void SetZ(const float z) { Components[ZComponent] = z; }
 			inline void SetW(const float w) { Components[WComponent] = w; }
+
+			// Operators.
+			Vector3 operator*(const Vector3& rhs);
 		};
 	}
 }

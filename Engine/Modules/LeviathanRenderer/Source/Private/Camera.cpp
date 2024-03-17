@@ -50,4 +50,19 @@ namespace LeviathanRenderer
     {
         ViewProjectionMatrix = ProjectionMatrix * ViewMatrix;
     }
+
+    LeviathanCore::MathTypes::Vector3 Camera::GetForwardVector(const LeviathanCore::MathTypes::Vector3& baseForward)
+    {
+        return LeviathanCore::MathTypes::Quaternion(Orientation) * baseForward;
+    }
+
+    LeviathanCore::MathTypes::Vector3 Camera::GetRightVector(const LeviathanCore::MathTypes::Vector3& baseRight)
+    {
+        return LeviathanCore::MathTypes::Quaternion(Orientation) * baseRight;
+    }
+
+    LeviathanCore::MathTypes::Vector3 Camera::GetUpVector(const LeviathanCore::MathTypes::Vector3& baseUp)
+    {
+        return LeviathanCore::MathTypes::Quaternion(Orientation) * baseUp;
+    }
 }

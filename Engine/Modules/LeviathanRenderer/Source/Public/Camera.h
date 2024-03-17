@@ -40,6 +40,7 @@ namespace LeviathanRenderer
 		inline void SetOrthoWidth(float orthoWidth) { OrthoWidth = orthoWidth; }
 		inline const LeviathanCore::MathTypes::Vector3& GetPosition() const { return Position; }
 		inline const LeviathanCore::MathTypes::Euler& GetOrientation() const { return Orientation; }
+		inline const LeviathanCore::MathTypes::Matrix4x4& GetViewProjectionMatrix() const { return ViewProjectionMatrix; }
 
 		void AddYawRotation(const float yawDeltaRadians);
 		void AddPitchRotation(const float pitchDeltaRadians);
@@ -48,6 +49,8 @@ namespace LeviathanRenderer
 		void UpdateProjectionMatrix(int renderAreaWidth, int renderAreaHeight);
 		void UpdateViewProjectionMatrix();
 
-		inline const LeviathanCore::MathTypes::Matrix4x4& GetViewProjectionMatrix() const { return ViewProjectionMatrix; }
+		LeviathanCore::MathTypes::Vector3 GetForwardVector(const LeviathanCore::MathTypes::Vector3& baseForward);
+		LeviathanCore::MathTypes::Vector3 GetRightVector(const LeviathanCore::MathTypes::Vector3& baseRight);
+		LeviathanCore::MathTypes::Vector3 GetUpVector(const LeviathanCore::MathTypes::Vector3& baseUp);
 	};
 }
