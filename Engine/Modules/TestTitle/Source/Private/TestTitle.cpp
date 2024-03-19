@@ -5,12 +5,13 @@
 #include "MathTypes.h"
 #include "MathLibrary.h"
 #include "Camera.h"
+#include "RendererResourceId.h"
 
 namespace TestTitle
 {
 	static constexpr unsigned int gIndexCount = 6;
-	static int gVertexBufferId = LeviathanRenderer::InvalidId;
-	static int gIndexBufferId = LeviathanRenderer::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidResourceId;
+	static LeviathanRenderer::RendererResourceId::IdType gIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidResourceId;
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
 

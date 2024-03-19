@@ -2,12 +2,9 @@
 
 // Standard library.
 #include <string>
-#include <vector>
 #include <cassert>
-#include <optional>
 #include <array>
-#include <algorithm>
-#include <chrono>
+#include <unordered_map>
 
 #ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
 // Windows.

@@ -62,8 +62,8 @@ namespace LeviathanRenderer
 		static bool gVSync = false;
 
 		// Scene resources.
-		static std::vector<Microsoft::WRL::ComPtr<ID3D11Buffer>> gVertexBuffers = {};
-		static std::vector<Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
+		static std::unordered_map<uint64_t, Microsoft::WRL::ComPtr<ID3D11Buffer>> gVertexBuffers = {};
+		static std::unordered_map<uint64_t, Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
 
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
@@ -566,9 +566,9 @@ float4 main(PixelInput input) : SV_TARGET
 			return success;
 		}
 
-		bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, int& outId)
+		bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceId::IdType& outId)
 		{
-			outId = LeviathanRenderer::InvalidId;
+			outId = RendererResourceId::InvalidResourceId;
 
 			D3D11_BUFFER_DESC vertexBufferDesc = {};
 			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -580,15 +580,15 @@ float4 main(PixelInput input) : SV_TARGET
 			D3D11_SUBRESOURCE_DATA vertexBufferData = {};
 			vertexBufferData.pSysMem = vertexData;
 
-			Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer = gVertexBuffers.emplace_back();
-			outId = static_cast<int>(gVertexBuffers.size() - 1);
+			outId = RendererResourceId::GetAvailableId();
+			gVertexBuffers.emplace(outId, nullptr);
 
-			return SUCCEEDED(gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &buffer));
+			return SUCCEEDED(gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &gVertexBuffers[outId]));
 		}
 
-		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, int& outId)
+		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceId::IdType& outId)
 		{
-			outId = LeviathanRenderer::InvalidId;
+			outId = RendererResourceId::InvalidResourceId;
 
 			D3D11_BUFFER_DESC indexBufferDesc = {};
 			indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -600,10 +600,10 @@ float4 main(PixelInput input) : SV_TARGET
 			D3D11_SUBRESOURCE_DATA indexBufferData = {};
 			indexBufferData.pSysMem = indexData;
 
-			Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer = gIndexBuffers.emplace_back();
-			outId = static_cast<int>(gIndexBuffers.size() - 1);
+			outId = RendererResourceId::GetAvailableId();
+			gIndexBuffers.emplace(outId, nullptr);
 
-			return SUCCEEDED(gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &buffer));
+			return SUCCEEDED(gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &gIndexBuffers[outId]));
 		}
 
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
@@ -627,7 +627,7 @@ float4 main(PixelInput input) : SV_TARGET
 			gSwapChain->Present(((gVSync) ? 1 : 0), 0);
 		}
 
-		void DrawIndexed(const unsigned int indexCount, const int vertexBufferId, const int indexBufferId)
+		void DrawIndexed(const unsigned int indexCount, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId)
 		{
 			UINT stride = sizeof(VertexTypes::Vertex1Pos);
 			UINT offset = 0;
