@@ -43,6 +43,7 @@ namespace LeviathanCore
 		void* GetRuntimeWindowPlatformHandle();
 		bool GetRuntimeWindowRenderAreaDimensions(int& outWidth, int& outHeight);
 		bool RuntimeWindowCaptureCursor();
+		bool SetCursorPosInRuntimeWindow(int x, int y);
 		float GetDeltaSeconds();
 	}
 }

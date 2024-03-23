@@ -34,7 +34,7 @@ namespace LeviathanCore
 				Callback<PlatformWindowMouseInputCallbackType> MouseInputCallback = {};
 
 				// Windows handle to the window instance.
-				HWND Handle = nullptr;
+				HWND Hwnd = nullptr;
 
 				// Flags if the window is currently in a size move operation.
 				bool InSizeMove = false;
@@ -54,7 +54,7 @@ namespace LeviathanCore
 					int positionY, int width, int height, HWND hWndParent, bool messageWindow);
 				bool UnregisterWindowClassName();
 				LRESULT WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-				HWND GetHWnd() const { return Handle; }
+				HWND GetHWnd() const { return Hwnd; }
 				bool SetTitle(std::string_view newTitle);
 				void Reset();
 				bool IsMinimized() const;
@@ -63,6 +63,7 @@ namespace LeviathanCore
 				bool GetRenderAreaDimensions(int& outWidth, int& outHeight);
 				inline int GetClientAreaWidth() const { return ClientAreaWidth; }
 				inline int GetClientAreaHeight() const { return ClientAreaHeight; }
+				bool SetCursorPosInWindow(int x, int y);
 
 				Callback<PlatformWindowDestroyedCallbackType>& GetDestroyedCallback() { return DestroyedCallback; }
 				Callback<PlatformWindowClosedCallbackType>& GetClosedCallback() { return ClosedCallback; }

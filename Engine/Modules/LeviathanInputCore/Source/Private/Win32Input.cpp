@@ -14,7 +14,7 @@ namespace LeviathanInputCore
 		static LeviathanCore::Callback<GameControllerConnectedCallbackType> GameControllerConnectedCallback = {};
 		static LeviathanCore::Callback<GameControllerDisconnectedCallbackType> GameControllerDisconnectedCallback = {};
 
-		// Handle to the mouse hook used to retrieve mouse hardware information independently of a window.
+		// Hwnd to the mouse hook used to retrieve mouse hardware information independently of a window.
 		static HHOOK MouseHook = nullptr;
 
 		// Mouse state.

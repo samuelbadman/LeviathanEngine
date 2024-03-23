@@ -77,7 +77,7 @@ namespace TestTitle
 	static void OnTick([[maybe_unused]] float deltaSeconds)
 	{
 		// Poll input keys.
-		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::P);
+		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::RightMouseButton);
 
 		if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
 		{
@@ -88,6 +88,12 @@ namespace TestTitle
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::Q);
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::E);
+
+			// Lock mouse cursor to center of runtime window.
+			int x = 0;
+			int y = 0;
+			LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(x, y);
+			LeviathanCore::Core::SetCursorPosInRuntimeWindow(x / 2, y / 2);
 		}
 	}
 
@@ -104,19 +110,22 @@ namespace TestTitle
 		static constexpr LeviathanCore::MathTypes::Vector3 right(1.0f, 0.0f, 0.0f);
 		static constexpr LeviathanCore::MathTypes::Vector3 up(0.0f, 1.0f, 0.0f);
 
+		static auto wasKeyPressed = [](float inData, bool inIsRepeatKey) { return ((inData == 1.0f) && (!inIsRepeatKey)); };
+		static auto wasKeyReleased = [](float inData) { return (inData == 0.0f); };
+
 		const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
 
 		switch (key.GetKey())
 		{
-		case LeviathanCore::InputKey::Keys::P:
+		case LeviathanCore::InputKey::Keys::RightMouseButton:
 		{
-			if ((data == 1.0f) && (!isRepeatKey))
+			if (wasKeyPressed(data, isRepeatKey))
 			{
-				// P key pressed.
+				LeviathanCore::Platform::ShowPlatformCursor(false);
 			}
-			else if (data == 0.0f)
+			else if (wasKeyReleased(data))
 			{
-				// P key released.
+				LeviathanCore::Platform::ShowPlatformCursor(true);
 			}
 
 			break;

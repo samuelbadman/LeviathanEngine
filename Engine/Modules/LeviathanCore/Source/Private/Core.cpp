@@ -259,6 +259,11 @@ namespace LeviathanCore
 			return LeviathanCore::Platform::Window::CaptureCursor(RuntimeWindow);
 		}
 
+		bool SetCursorPosInRuntimeWindow(int x, int y)
+		{
+			return LeviathanCore::Platform::Window::SetCursorPositionRelativeToPlatformWindow(RuntimeWindow, x, y);
+		}
+
 		float GetDeltaSeconds()
 		{
 			return DeltaSeconds;

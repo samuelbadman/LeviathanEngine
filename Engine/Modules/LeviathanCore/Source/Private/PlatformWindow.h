@@ -55,6 +55,7 @@ namespace LeviathanCore
 			bool EnterFullscreen(PlatformWindow* const platformWindow);
 			bool ExitFullscreen(PlatformWindow* const platformWindow);
 			bool GetPlatformWindowRenderAreaDimensions(PlatformWindow* const platformWindow, int& outWidth, int& outHeight);
+			bool SetCursorPositionRelativeToPlatformWindow(PlatformWindow* const platformWindow, int x, int y);
 
 			// Capture the platform cursor within the platform window's render area.
 			bool CaptureCursor(PlatformWindow* const platformWindow);

@@ -84,6 +84,11 @@ namespace LeviathanCore
 				return platformWindow->GetRenderAreaDimensions(outWidth, outHeight);
 			}
 
+			bool SetCursorPositionRelativeToPlatformWindow(PlatformWindow* const platformWindow, int x, int y)
+			{
+				return platformWindow->SetCursorPosInWindow(x, y);
+			}
+
 			bool CaptureCursor(PlatformWindow* const platformWindow)
 			{
 				POINT upperLeftPoint;
@@ -245,7 +250,7 @@ namespace LeviathanCore
 				}
 
 				// Create window
-				Handle = CreateWindowExA(
+				Hwnd = CreateWindowExA(
 					0,
 					uniqueName.data(),
 					windowTitle.data(),
@@ -260,14 +265,14 @@ namespace LeviathanCore
 					this
 				);
 
-				if (Handle == nullptr)
+				if (Hwnd == nullptr)
 				{
 					return false;
 				}
 
 				if (!messageWindow)
 				{
-					ShowWindow(Handle, SW_SHOW);
+					ShowWindow(Hwnd, SW_SHOW);
 				}
 
 				GetClientAreaDimensions(ClientAreaWidth, ClientAreaHeight);
@@ -282,7 +287,7 @@ namespace LeviathanCore
 
 			LRESULT PlatformWindow::WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
-				// Handle message.
+				// Hwnd message.
 				switch (msg)
 				{
 				case WM_MOUSEWHEEL:
@@ -375,7 +380,7 @@ namespace LeviathanCore
 				case WM_SYSKEYDOWN:
 				case WM_KEYDOWN:
 				{
-					// Handle alt+f4 exit shortcut.
+					// Hwnd alt+f4 exit shortcut.
 					bool AltBit = false;
 					AltBit = (lParam & (1 << 29)) != 0;
 					if (AltBit && (static_cast<int16_t>(wParam) == VK_F4))
@@ -513,14 +518,14 @@ namespace LeviathanCore
 
 			bool PlatformWindow::SetTitle(std::string_view newTitle)
 			{
-				return SetWindowText(Handle, newTitle.data());
+				return SetWindowText(Hwnd, newTitle.data());
 			}
 
 			bool PlatformWindow::GetClientAreaDimensions(int& outWidth, int& outHeight)
 			{
 				RECT clientRect = {};
 
-				if (!GetClientRect(Handle, &clientRect))
+				if (!GetClientRect(Hwnd, &clientRect))
 				{
 					// Failed to get client rect.
 					outWidth = 0;
@@ -535,14 +540,14 @@ namespace LeviathanCore
 
 			void PlatformWindow::Reset()
 			{
-				Handle = nullptr;
+				Hwnd = nullptr;
 				InSizeMove = false;
 				ClassName = {};
 			}
 
 			bool PlatformWindow::IsMinimized() const
 			{
-				return IsIconic(Handle);
+				return IsIconic(Hwnd);
 			}
 
 			bool PlatformWindow::EnterFullscreen()
@@ -553,7 +558,7 @@ namespace LeviathanCore
 				}
 
 				// Retrieve info of the nearest monitor to the window.
-				HMONITOR hMonitor = MonitorFromWindow(Handle, MONITOR_DEFAULTTONEAREST);
+				HMONITOR hMonitor = MonitorFromWindow(Hwnd, MONITOR_DEFAULTTONEAREST);
 				MONITORINFO monitorInfo = {};
 				monitorInfo.cbSize = sizeof(MONITORINFO);
 
@@ -567,25 +572,25 @@ namespace LeviathanCore
 				int height = static_cast<int>(monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top);
 
 				// Store the current window rect and style to restore to after exiting fullscreen.
-				if (!GetWindowRect(Handle, &RectPreLastFullscreen))
+				if (!GetWindowRect(Hwnd, &RectPreLastFullscreen))
 				{
 					return false;
 				}
 
 				// Update position and size of the window.
-				if (!SetWindowPos(Handle, HWND_TOP, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, width, height, SWP_FRAMECHANGED | SWP_NOACTIVATE))
+				if (!SetWindowPos(Hwnd, HWND_TOP, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, width, height, SWP_FRAMECHANGED | SWP_NOACTIVATE))
 				{
 					return false;
 				}
 
 				// Update window style.
-				if (!SetWindowLong(Handle, GWL_STYLE, 0))
+				if (!SetWindowLong(Hwnd, GWL_STYLE, 0))
 				{
 					return false;
 				}
 
 				// Show the window maximized.
-				ShowWindow(Handle, SW_MAXIMIZE);
+				ShowWindow(Hwnd, SW_MAXIMIZE);
 				Fullscreen = true;
 
 				return true;
@@ -599,7 +604,7 @@ namespace LeviathanCore
 				}
 
 				// Update position and size of the window.
-				if (!SetWindowPos(Handle,
+				if (!SetWindowPos(Hwnd,
 					HWND_TOP,
 					RectPreLastFullscreen.left,
 					RectPreLastFullscreen.top,
@@ -611,13 +616,13 @@ namespace LeviathanCore
 				}
 
 				// Update window style.
-				if (!SetWindowLong(Handle, GWL_STYLE, WinStyle))
+				if (!SetWindowLong(Hwnd, GWL_STYLE, WinStyle))
 				{
 					return false;
 				}
 
 				// Show the window.
-				ShowWindow(Handle, SW_SHOW);
+				ShowWindow(Hwnd, SW_SHOW);
 
 				return true;
 			}
@@ -625,6 +630,17 @@ namespace LeviathanCore
 			bool PlatformWindow::GetRenderAreaDimensions(int& outWidth, int& outHeight)
 			{
 				return GetClientAreaDimensions(outWidth, outHeight);
+			}
+
+			bool PlatformWindow::SetCursorPosInWindow(int x, int y)
+			{
+				POINT point = { .x = static_cast<LONG>(x), .y = static_cast<LONG>(y) };
+				if (!ClientToScreen(Hwnd, &point))
+				{
+					return false;
+				}
+
+				return SetCursorPos(point.x, point.y);
 			}
 
 			void PlatformWindow::WndProcDestroyed()
