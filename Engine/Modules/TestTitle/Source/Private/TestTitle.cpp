@@ -21,6 +21,39 @@ namespace TestTitle
 		gSceneCamera.UpdateViewProjectionMatrix();
 	}
 
+	static void OnRuntimeWindowMouseInput(LeviathanCore::InputKey key, float data)
+	{
+		if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
+		{
+			static constexpr float cameraYawAbsoluteRotationRate = 0.075f;
+			static constexpr float cameraPitchAbsoluteRotationRate = 0.00005f;
+
+			switch (key.GetKey())
+			{
+			case LeviathanCore::InputKey::Keys::MouseXAxis:
+			{
+				// Add yaw rotation to the camera.
+				const float yawDeltaDegrees = data * cameraYawAbsoluteRotationRate;
+				gSceneCamera.AddYawRotation(LeviathanCore::MathLibrary::DegreesToRadians(yawDeltaDegrees));
+
+				break;
+			}
+
+			case LeviathanCore::InputKey::Keys::MouseYAxis:
+			{
+				// Add pitch rotation to the camera.
+				const float pitchDeltaDegrees = data * cameraPitchAbsoluteRotationRate;
+				gSceneCamera.AddPitchRotation(LeviathanCore::MathLibrary::RadiansToDegrees(pitchDeltaDegrees));
+
+				break;
+			}
+			}
+
+			gSceneCamera.UpdateViewMatrix();
+			gSceneCamera.UpdateViewProjectionMatrix();
+		}
+	}
+
 	static void OnPreMainLoop()
 	{
 
@@ -55,9 +88,6 @@ namespace TestTitle
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::Q);
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::E);
-
-			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::MouseXAxis);
-			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::MouseYAxis);
 		}
 	}
 
@@ -68,9 +98,7 @@ namespace TestTitle
 
 	static void OnInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data)
 	{
-		static constexpr float cameraTranslationSpeed = 1.0f;
-		static constexpr float cameraYawAbsoluteRotationRate = 0.1f;
-		static constexpr float cameraPitchAbsoluteRotationRate = 0.0001f;
+		static constexpr float cameraTranslationSpeed = 2.0f;
 
 		static constexpr LeviathanCore::MathTypes::Vector3 forward(0.0f, 0.0f, 1.0f);
 		static constexpr LeviathanCore::MathTypes::Vector3 right(1.0f, 0.0f, 0.0f);
@@ -152,24 +180,6 @@ namespace TestTitle
 				// Use base up vector instead of camera up vector to always ensure vertical movement happens in the base up vector axis.
 				gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (up * deltaSeconds * cameraTranslationSpeed));
 			}
-
-			break;
-		}
-
-		case LeviathanCore::InputKey::Keys::MouseXAxis:
-		{
-			// Add yaw rotation to the camera.
-			const float yawDeltaDegrees = data * cameraYawAbsoluteRotationRate;
-			gSceneCamera.AddYawRotation(LeviathanCore::MathLibrary::DegreesToRadians(yawDeltaDegrees));
-
-			break;
-		}
-
-		case LeviathanCore::InputKey::Keys::MouseYAxis:
-		{
-			// Add pitch rotation to the camera.
-			const float pitchDeltaDegrees = data * cameraPitchAbsoluteRotationRate;
-			gSceneCamera.AddPitchRotation(LeviathanCore::MathLibrary::RadiansToDegrees(pitchDeltaDegrees));
 
 			break;
 		}
@@ -279,6 +289,7 @@ namespace TestTitle
 		LeviathanCore::Core::GetPostTickCallback().Deregister(&OnPostTick);
 		LeviathanCore::Core::GetRenderCallback().Deregister(&OnRender);
 		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Deregister(&OnRuntimeWindowResized);
+		LeviathanCore::Core::GetRuntimeWindowMouseInputCallback().Deregister(&OnRuntimeWindowMouseInput);
 
 		LeviathanInputCore::PlatformInput::GetInputCallback().Deregister(&OnInput);
 		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Deregister(&OnGameControllerInput);
@@ -309,6 +320,7 @@ namespace TestTitle
 		LeviathanCore::Core::GetPostTickCallback().Register(&OnPostTick);
 		LeviathanCore::Core::GetRenderCallback().Register(&OnRender);
 		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(&OnRuntimeWindowResized);
+		LeviathanCore::Core::GetRuntimeWindowMouseInputCallback().Register(&OnRuntimeWindowMouseInput);
 
 		LeviathanInputCore::PlatformInput::GetInputCallback().Register(&OnInput);
 		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Register(&OnGameControllerInput);

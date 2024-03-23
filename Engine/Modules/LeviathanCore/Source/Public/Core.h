@@ -4,6 +4,8 @@
 
 namespace LeviathanCore
 {
+	class InputKey;
+
 	namespace Core
 	{
 		using PreMainLoopCallbackType = void(*)();
@@ -17,6 +19,7 @@ namespace LeviathanCore
 		using RuntimeWindowMinimizedCallbackType = void(*)();
 		using RuntimeWindowMaximizedCallbackType = void(*)();
 		using RuntimeWindowRestoredCallbackType = void(*)();
+		using RuntimeWindowMouseInputCallbackType = void(*)(InputKey /* key */, float /* data */);
 		using RenderCallbackType = void(*)();
 
 		Callback<PreMainLoopCallbackType>& GetPreMainLoopCallback();
@@ -30,6 +33,7 @@ namespace LeviathanCore
 		Callback<RuntimeWindowMinimizedCallbackType>& GetRuntimeWindowMinimizedCallback();
 		Callback<RuntimeWindowMaximizedCallbackType>& GetRuntimeWindowMaximizedCallback();
 		Callback<RuntimeWindowRestoredCallbackType>& GetRuntimeWindowRestoredCallback();
+		Callback<RuntimeWindowMouseInputCallbackType>& GetRuntimeWindowMouseInputCallback();
 		Callback<RenderCallbackType>& GetRenderCallback();
 
 		bool PreModuleInitialization();

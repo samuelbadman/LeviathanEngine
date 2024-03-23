@@ -2,6 +2,7 @@
 #include "Platform.h"
 #include "PlatformWindow.h"
 #include "Logging.h"
+#include "InputKey.h"
 
 namespace LeviathanCore
 {
@@ -30,6 +31,7 @@ namespace LeviathanCore
 		static Callback<RuntimeWindowMinimizedCallbackType> RuntimeWindowMinimizedCallback = {};
 		static Callback<RuntimeWindowMaximizedCallbackType> RuntimeWindowMaximizedCallback = {};
 		static Callback<RuntimeWindowRestoredCallbackType> RuntimeWindowRestoredCallback = {};
+		static Callback<RuntimeWindowMouseInputCallbackType> RuntimeWindowMouseInputCallback = {};
 		static Callback<RenderCallbackType> RenderCallback = {};
 
 		static bool CreateAndInitializeRuntimeWindow()
@@ -63,12 +65,12 @@ namespace LeviathanCore
 		{
 			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(&Exit);
 			LeviathanCore::Platform::Window::GetPlatformWindowResizedCallback(RuntimeWindow).Register([](int newWidth, int newHeight)
-				{
-					RuntimeWindowResizedCallback.Call(newWidth, newHeight);
-				});
+				{ RuntimeWindowResizedCallback.Call(newWidth, newHeight); });
 			LeviathanCore::Platform::Window::GetPlatformWindowMinimizedCallback(RuntimeWindow).Register([]() { RuntimeWindowMinimizedCallback.Call(); });
 			LeviathanCore::Platform::Window::GetPlatformWindowMaximizedCallback(RuntimeWindow).Register([]() { RuntimeWindowMaximizedCallback.Call(); });
 			LeviathanCore::Platform::Window::GetPlatformWindowRestoredCallback(RuntimeWindow).Register([]() { RuntimeWindowRestoredCallback.Call(); });
+			LeviathanCore::Platform::Window::GetPlatformWindowMouseInputCallback(RuntimeWindow).Register([](LeviathanCore::InputKey key, float data)
+				{ RuntimeWindowMouseInputCallback.Call(key, data); });
 		}
 
 		static bool Cleanup()
@@ -131,6 +133,11 @@ namespace LeviathanCore
 		Callback<RuntimeWindowRestoredCallbackType>& GetRuntimeWindowRestoredCallback()
 		{
 			return RuntimeWindowRestoredCallback;
+		}
+
+		Callback<RuntimeWindowMouseInputCallbackType>& GetRuntimeWindowMouseInputCallback()
+		{
+			return RuntimeWindowMouseInputCallback;
 		}
 
 		Callback<RenderCallbackType>& GetRenderCallback()

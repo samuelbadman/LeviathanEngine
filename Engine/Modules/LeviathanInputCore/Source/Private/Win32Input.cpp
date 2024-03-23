@@ -56,7 +56,7 @@ namespace LeviathanInputCore
 		}
 
 		// Returns the signed delta between the current and previous mouse position on the given axis.
-		static long long GetMouseAxisPositionDelta(const long long currentAxisPosition, const long long previousAxisPosition)
+		[[maybe_unused]] static long long GetMouseAxisPositionDelta(const long long currentAxisPosition, const long long previousAxisPosition)
 		{
 			return currentAxisPosition - previousAxisPosition;
 		}
@@ -139,15 +139,17 @@ namespace LeviathanInputCore
 
 			case LeviathanCore::InputKey::Keys::MouseXAxis:
 			{
-				InputCallback.Call(LeviathanCore::InputKey(key), false, 
-					static_cast<float>(GetMouseAxisPositionDelta(currMouseState.GetMouseXPosition(), prevMouseState.GetMouseXPosition())));
+				// This works unless the cursor position is manually updated. Listen for mouse axis input from a window instead.
+				//InputCallback.Call(LeviathanCore::InputKey(key), false, 
+				//	static_cast<float>(GetMouseAxisPositionDelta(currMouseState.GetMouseXPosition(), prevMouseState.GetMouseXPosition())));
 				break;
 			}
 
 			case LeviathanCore::InputKey::Keys::MouseYAxis:
 			{
-				InputCallback.Call(LeviathanCore::InputKey(key), false,
-					static_cast<float>(GetMouseAxisPositionDelta(currMouseState.GetMouseYPosition(), prevMouseState.GetMouseYPosition())));
+				// This works unless the cursor position is manually updated. Listen for mouse axis input from a window instead.
+				//InputCallback.Call(LeviathanCore::InputKey(key), false,
+				//	static_cast<float>(GetMouseAxisPositionDelta(currMouseState.GetMouseYPosition(), prevMouseState.GetMouseYPosition())));
 				break;
 			}
 
