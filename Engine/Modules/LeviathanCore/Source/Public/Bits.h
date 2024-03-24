@@ -47,5 +47,5 @@ constexpr void operator &=(EnumType& currentValue, const EnumType inValue)						
 																																									\
 constexpr void operator ^=(EnumType& currentValue, const EnumType inValue)																							\
 {																																									\
-	currentValue = currentValue ^ inValue;																									\
+	currentValue = currentValue ^ inValue;																															\
 }																																									

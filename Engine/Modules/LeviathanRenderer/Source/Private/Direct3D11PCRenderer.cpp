@@ -465,7 +465,7 @@ float4 main(PixelInput input) : SV_TARGET
 			// Create rasterizer state.
 			D3D11_RASTERIZER_DESC rasterizerStateDesc = {};
 			rasterizerStateDesc.AntialiasedLineEnable = FALSE;
-			rasterizerStateDesc.CullMode = D3D11_CULL_NONE;
+			rasterizerStateDesc.CullMode = D3D11_CULL_BACK;
 			rasterizerStateDesc.DepthBias = 0;
 			rasterizerStateDesc.DepthBiasClamp = 0.f;
 			rasterizerStateDesc.DepthClipEnable = TRUE;
@@ -492,6 +492,7 @@ float4 main(PixelInput input) : SV_TARGET
 			success = InitializeShaders(forceRecompile);
 			if (!success) { return false; }
 
+			// Create pipelines.
 			// Create input layout.
 			std::array<D3D11_INPUT_ELEMENT_DESC, 1> inputLayoutDesc =
 			{
@@ -566,9 +567,9 @@ float4 main(PixelInput input) : SV_TARGET
 			return success;
 		}
 
-		bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceId::IdType& outId)
+		bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceID::IDType& outId)
 		{
-			outId = RendererResourceId::InvalidId;
+			outId = RendererResourceID::InvalidID;
 
 			D3D11_BUFFER_DESC vertexBufferDesc = {};
 			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -580,15 +581,15 @@ float4 main(PixelInput input) : SV_TARGET
 			D3D11_SUBRESOURCE_DATA vertexBufferData = {};
 			vertexBufferData.pSysMem = vertexData;
 
-			outId = RendererResourceId::GetAvailableId();
+			outId = RendererResourceID::GetAvailableID();
 			gVertexBuffers.emplace(outId, nullptr);
 
 			return SUCCEEDED(gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &gVertexBuffers[outId]));
 		}
 
-		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceId::IdType& outId)
+		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId)
 		{
-			outId = RendererResourceId::InvalidId;
+			outId = RendererResourceID::InvalidID;
 
 			D3D11_BUFFER_DESC indexBufferDesc = {};
 			indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -600,7 +601,7 @@ float4 main(PixelInput input) : SV_TARGET
 			D3D11_SUBRESOURCE_DATA indexBufferData = {};
 			indexBufferData.pSysMem = indexData;
 
-			outId = RendererResourceId::GetAvailableId();
+			outId = RendererResourceID::GetAvailableID();
 			gIndexBuffers.emplace(outId, nullptr);
 
 			return SUCCEEDED(gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &gIndexBuffers[outId]));
@@ -627,7 +628,7 @@ float4 main(PixelInput input) : SV_TARGET
 			gSwapChain->Present(((gVSync) ? 1 : 0), 0);
 		}
 
-		void DrawIndexed(const unsigned int indexCount, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId)
+		void DrawIndexed(const unsigned int indexCount, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId)
 		{
 			UINT stride = sizeof(VertexTypes::Vertex1Pos);
 			UINT offset = 0;

@@ -41,12 +41,12 @@ namespace LeviathanRenderer
 		return Renderer::ShutdownRendererApi();
 	}
 
-	bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceId::IdType& outId)
+	bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceID::IDType& outId)
 	{
 		return Renderer::CreateVertexBuffer(vertexData, vertexCount, outId);
 	}
 
-	bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceId::IdType& outId)
+	bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId)
 	{
 		return Renderer::CreateIndexBuffer(indexData, indexCount, outId);
 	}
@@ -66,7 +66,7 @@ namespace LeviathanRenderer
 		Renderer::Present();
 	}
 
-	void Draw(const unsigned int indexCount, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId)
+	void Draw(const unsigned int indexCount, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId)
 	{
 		Renderer::DrawIndexed(indexCount, vertexBufferId, indexBufferId);
 	}

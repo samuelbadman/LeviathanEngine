@@ -10,8 +10,8 @@ namespace LeviathanInputCore
 		class Win32KeyboardState
 		{
 		private:
-			unsigned long long State1 = 0; // Stores down/up state for 64 keys. Bit 0-64 is used.
-			unsigned short State2 = 0; // Stores down/up state for 14 keys. Bit 0-13 is used.
+			unsigned long long State1 = 0; // 64 bits. Stores down/up state for 64 keys. Bit 0-64 is used.
+			unsigned short State2 = 0; // 16 bits. Stores down/up state for 14 keys. Bit 0-13 is used.
 
 		public:
 			enum class KeyboardKeyBits : unsigned char
