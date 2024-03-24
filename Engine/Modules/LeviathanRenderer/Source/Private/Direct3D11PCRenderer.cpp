@@ -568,7 +568,7 @@ float4 main(PixelInput input) : SV_TARGET
 
 		bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceId::IdType& outId)
 		{
-			outId = RendererResourceId::InvalidResourceId;
+			outId = RendererResourceId::InvalidId;
 
 			D3D11_BUFFER_DESC vertexBufferDesc = {};
 			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -588,7 +588,7 @@ float4 main(PixelInput input) : SV_TARGET
 
 		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceId::IdType& outId)
 		{
-			outId = RendererResourceId::InvalidResourceId;
+			outId = RendererResourceId::InvalidId;
 
 			D3D11_BUFFER_DESC indexBufferDesc = {};
 			indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;

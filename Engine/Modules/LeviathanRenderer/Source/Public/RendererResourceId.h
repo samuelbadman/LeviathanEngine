@@ -6,7 +6,7 @@ namespace LeviathanRenderer
 	{
 		using IdType = uint64_t;
 
-		static constexpr IdType InvalidResourceId = 0;
+		static constexpr IdType InvalidId = 0;
 
 		IdType GetAvailableId();
 	}

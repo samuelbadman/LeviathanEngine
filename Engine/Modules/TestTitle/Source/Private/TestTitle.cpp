@@ -10,8 +10,8 @@
 namespace TestTitle
 {
 	static constexpr unsigned int gIndexCount = 6;
-	static LeviathanRenderer::RendererResourceId::IdType gVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidResourceId;
-	static LeviathanRenderer::RendererResourceId::IdType gIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidResourceId;
+	static LeviathanRenderer::RendererResourceId::IdType gVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
 
