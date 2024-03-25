@@ -5,10 +5,16 @@
 #include "MathTypes.h"
 #include "MathLibrary.h"
 #include "Camera.h"
-#include "RendererResourceId.h"
+#include "RendererResourceID.h"
+#include "DataStructures.h"
 
 namespace TestTitle
 {
+	struct Component
+	{
+		int Number = 0;
+	};
+
 	static constexpr unsigned int gIndexCount = 6;
 	static LeviathanRenderer::RendererResourceID::IDType gVertexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gIndexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
@@ -381,6 +387,60 @@ namespace TestTitle
 		gSceneCamera.UpdateProjectionMatrix(windowWidth, windowHeight);
 
 		gSceneCamera.UpdateViewProjectionMatrix();
+
+		// Prototype code.
+		[[maybe_unused]] size_t maxEntities = 512;
+
+		// Create entities.
+		const auto newEntity = []() {static size_t entity = 0; return entity++; };
+
+		[[maybe_unused]] size_t entity0 = newEntity();
+		[[maybe_unused]] size_t entity1 = newEntity();
+		[[maybe_unused]] size_t entity2 = newEntity();
+
+		// Create component type store.
+		LeviathanCore::DataStructures::SparseArray<Component> components(maxEntities, 2);
+
+		// Add components to entity.
+		components.Add(entity0, { 5 });
+		components.Add(entity2, { 10 });
+
+		// Use entites and components.
+		if (components.IsValidID(entity0))
+		{
+			LEVIATHAN_LOG("entity 0 has the component.");
+		}
+		else
+		{
+			LEVIATHAN_LOG("entity 0 does not have the component.");
+		}
+
+		if (components.IsValidID(entity1))
+		{
+			LEVIATHAN_LOG("entity 1 has the component.");
+		}
+		else
+		{
+			LEVIATHAN_LOG("entity 1 does not have the component.");
+		}
+
+		if (components.IsValidID(entity2))
+		{
+			LEVIATHAN_LOG("entity 2 has the component.");
+		}
+		else
+		{
+			LEVIATHAN_LOG("entity 2 does not have the component.");
+		}
+
+		const Component* componentsStart = nullptr;
+		size_t componentsCount = 0;
+		components.GetValues(componentsStart, componentsCount);
+
+		for (size_t i = 0; i < componentsCount; ++i)
+		{
+			LEVIATHAN_LOG("Component index: %d, data: %d", i, componentsStart[i].Number);
+		}
 
 		return true;
 	}

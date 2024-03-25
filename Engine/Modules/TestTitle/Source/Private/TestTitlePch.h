@@ -7,6 +7,7 @@
 #include <string>
 #include <type_traits>
 #include <array>
+#include <cassert>
 
 #ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
 // Win32.
