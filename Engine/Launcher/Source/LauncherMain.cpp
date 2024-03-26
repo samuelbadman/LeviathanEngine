@@ -8,6 +8,9 @@ static bool InitializeTitleModule()
 
 LEVIATHAN_ENTRY_PROTOTYPE
 {
+	// TODO: Wrap this inside a while loop that loops if RunEngine returns that the engine was exited with a signal to restart. 
+	// Consider making core a class that can be constructed and destroyed to ensure resource initialization is correct.
+
 	// Call engine core pre module initialization event.
 	LeviathanCore::Core::PreModuleInitialization();
 
