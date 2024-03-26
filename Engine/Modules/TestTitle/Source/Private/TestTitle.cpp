@@ -401,9 +401,11 @@ namespace TestTitle
 		// Create component type store.
 		LeviathanCore::DataStructures::SparseArray<Component> components(maxEntities, 2);
 
-		// Add components to entity.
+		// Add components to entities.
 		components.Add(entity0, { 5 });
 		components.Add(entity2, { 10 });
+
+		components.Remove(entity0);
 
 		// Use entites and components.
 		if (components.IsValidID(entity0))
@@ -433,14 +435,17 @@ namespace TestTitle
 			LEVIATHAN_LOG("entity 2 does not have the component.");
 		}
 
-		const Component* componentsStart = nullptr;
+		const LeviathanCore::DataStructures::SparseArray<Component>::DenseValue* componentsStart = nullptr;
 		size_t componentsCount = 0;
 		components.GetValues(componentsStart, componentsCount);
 
 		for (size_t i = 0; i < componentsCount; ++i)
 		{
-			LEVIATHAN_LOG("Component index: %d, data: %d", i, componentsStart[i].Number);
+			LEVIATHAN_LOG("Component index: %d, data: %d", i, componentsStart[i].Value.Number);
 		}
+
+		const LeviathanCore::DataStructures::SparseArray<Component>::DenseValue& value = components.GetValue(entity2);
+		LEVIATHAN_LOG("Retrieved value: data: %d", value.Value.Number);
 
 		return true;
 	}
