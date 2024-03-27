@@ -34,12 +34,31 @@ namespace LeviathanCore
 
 			void Add(const size_t id, T&& value)
 			{
+				// Add a value to the end of the dense array that is referenced by the id.
+
 				LEVIATHAN_ASSERT(id < Sparse.size());
+
+				// If the id already points to a value, do nothing.
+				if (IsValidID(id))
+				{
+					// A single id can only point to a single value.
+					return;
+				}
 
 				// Use std::vector strategy to dynamically allocate more memory as values are added.
 
-				// Move the value onto the end of the dense array, set the sparse index for the id to point to the current end of the dense array (the added value), and increment end index of dense array.
-				Dense.emplace_back(DenseValue{ std::move(value), id });
+				if (DenseSize == Dense.size())
+				{
+					// Move the value onto the end of the dense array, 
+					Dense.emplace_back(DenseValue{ std::move(value), id });
+				}
+				else
+				{
+					// Assign the current unused value at the end of the dense array to the new value.
+					Dense[DenseSize] = { std::move(value), id };
+				}
+
+				// Set the sparse index for the id to point to the current end of the dense array (the added value), and increment end index of dense array.
 				Sparse[id] = DenseSize++;
 			}
 
@@ -47,10 +66,27 @@ namespace LeviathanCore
 			{
 				LEVIATHAN_ASSERT(id < Sparse.size());
 
+				// If the id already points to a value, do nothing.
+				if (IsValidID(id))
+				{
+					// A single id can only point to a single value.
+					return;
+				}
+
 				// Use std::vector strategy to dynamically allocate more memory as values are added.
 
-				// Copy the value onto the end of the dense array, set the sparse index for the id to point to the current end of the dense array (the added value), and increment end index of dense array.
-				Dense.emplace_back(DenseValue{ value, id });
+				if (DenseSize == Dense.size())
+				{
+					// Copy the value onto the end of the dense array.
+					Dense.emplace_back(DenseValue{ value, id });
+				}
+				else
+				{
+					// Assign the current unused value at the end of the dense array to the new value.
+					Dense[DenseSize] = { value, id };
+				}
+
+				// Set the sparse index for the id to point to the current end of the dense array (the added value), and increment end index of dense array.
 				Sparse[id] = DenseSize++;
 			}
 

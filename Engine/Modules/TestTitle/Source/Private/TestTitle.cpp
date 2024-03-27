@@ -407,6 +407,7 @@ namespace TestTitle
 
 		components.Remove(entity0);
 
+
 		// Use entites and components.
 		if (components.IsValidID(entity0))
 		{
