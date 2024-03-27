@@ -11,6 +11,7 @@ namespace LeviathanCore
 		bool CreateDebugConsole();
 		bool DestroyDebugConsole();
 		bool Initialize();
+		bool Shutdown();
 		bool TickPlatform();
 		float GetDeltaTimeInMilliseconds();
 		float GetDeltaTimeInSeconds();

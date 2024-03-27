@@ -202,6 +202,23 @@ namespace LeviathanCore
 			return true;
 		}
 
+		bool Shutdown()
+		{
+			if (!DestroyWindow(MessageWindow->GetHWnd()))
+			{
+				return false;
+			}
+
+			if (!MessageWindow->UnregisterWindowClassName())
+			{
+				return false;
+			}
+
+			MessageWindow.reset();
+
+			return true;
+		}
+
 		bool TickPlatform()
 		{
 			if (!UpdateDeltaTime())

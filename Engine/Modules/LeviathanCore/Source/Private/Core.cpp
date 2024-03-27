@@ -14,6 +14,7 @@ namespace LeviathanCore
 		static constexpr float FixedTimestep = 0.1f;
 
 		static bool EngineRunning = false;
+		static bool EngineRestart = false;
 		static LeviathanCore::Platform::Window::PlatformWindow* RuntimeWindow = {};
 
 		static unsigned int Fps = 0;
@@ -61,21 +62,56 @@ namespace LeviathanCore
 			return true;
 		}
 
+		static void OnPlatformWindowClosed()
+		{
+			Exit();
+		}
+
+		static void OnPlatformWindowResized(int newWidth, int newHeight)
+		{
+			RuntimeWindowResizedCallback.Call(newWidth, newHeight);
+		}
+
+		static void OnPlatformWindowMinimized()
+		{
+			RuntimeWindowMinimizedCallback.Call();
+		}
+
+		static void OnPlatformWindowMaximized()
+		{
+			RuntimeWindowMaximizedCallback.Call();
+		}
+
+		static void OnPlatformWindowRestored()
+		{
+			RuntimeWindowRestoredCallback.Call();
+		}
+
+		static void OnPlatformWindowMouseInput(LeviathanCore::InputKey key, float data)
+		{
+			RuntimeWindowMouseInputCallback.Call(key, data);
+		}
+
 		static void RegisterToRuntimeWindowCallbacks()
 		{
-			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(&Exit);
-			LeviathanCore::Platform::Window::GetPlatformWindowResizedCallback(RuntimeWindow).Register([](int newWidth, int newHeight)
-				{ RuntimeWindowResizedCallback.Call(newWidth, newHeight); });
-			LeviathanCore::Platform::Window::GetPlatformWindowMinimizedCallback(RuntimeWindow).Register([]() { RuntimeWindowMinimizedCallback.Call(); });
-			LeviathanCore::Platform::Window::GetPlatformWindowMaximizedCallback(RuntimeWindow).Register([]() { RuntimeWindowMaximizedCallback.Call(); });
-			LeviathanCore::Platform::Window::GetPlatformWindowRestoredCallback(RuntimeWindow).Register([]() { RuntimeWindowRestoredCallback.Call(); });
-			LeviathanCore::Platform::Window::GetPlatformWindowMouseInputCallback(RuntimeWindow).Register([](LeviathanCore::InputKey key, float data)
-				{ RuntimeWindowMouseInputCallback.Call(key, data); });
+			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Register(&OnPlatformWindowClosed);
+			LeviathanCore::Platform::Window::GetPlatformWindowResizedCallback(RuntimeWindow).Register(&OnPlatformWindowResized);
+			LeviathanCore::Platform::Window::GetPlatformWindowMinimizedCallback(RuntimeWindow).Register(&OnPlatformWindowMinimized);
+			LeviathanCore::Platform::Window::GetPlatformWindowMaximizedCallback(RuntimeWindow).Register(&OnPlatformWindowMaximized);
+			LeviathanCore::Platform::Window::GetPlatformWindowRestoredCallback(RuntimeWindow).Register(&OnPlatformWindowRestored);
+			LeviathanCore::Platform::Window::GetPlatformWindowMouseInputCallback(RuntimeWindow).Register(&OnPlatformWindowMouseInput);
 		}
 
 		static bool Cleanup()
 		{
 			CleanupCallback.Call();
+
+			LeviathanCore::Platform::Window::GetPlatformWindowClosedCallback(RuntimeWindow).Deregister(&OnPlatformWindowClosed);
+			LeviathanCore::Platform::Window::GetPlatformWindowResizedCallback(RuntimeWindow).Deregister(&OnPlatformWindowResized);
+			LeviathanCore::Platform::Window::GetPlatformWindowMinimizedCallback(RuntimeWindow).Deregister(&OnPlatformWindowMinimized);
+			LeviathanCore::Platform::Window::GetPlatformWindowMaximizedCallback(RuntimeWindow).Deregister(&OnPlatformWindowMaximized);
+			LeviathanCore::Platform::Window::GetPlatformWindowRestoredCallback(RuntimeWindow).Deregister(&OnPlatformWindowRestored);
+			LeviathanCore::Platform::Window::GetPlatformWindowMouseInputCallback(RuntimeWindow).Deregister(&OnPlatformWindowMouseInput);
 
 			return true;
 		}
@@ -206,7 +242,7 @@ namespace LeviathanCore
 			return true;
 		}
 
-		int RunEngine()
+		int RunEngine(bool& outRestart)
 		{
 			// Initialize platform layer.
 			if (!LeviathanCore::Platform::Initialize())
@@ -218,6 +254,7 @@ namespace LeviathanCore
 
 			// Enter engine main loop.
 			EngineRunning = true;
+			EngineRestart = false;
 			MainLoop();
 
 			// Cleanup.
@@ -232,16 +269,28 @@ namespace LeviathanCore
 				return false;
 			}
 
+			if (!LeviathanCore::Platform::Shutdown())
+			{
+				return false;
+			}
+
 #ifndef LEVIATHAN_BUILD_CONFIG_MASTER
 			LeviathanCore::Platform::DestroyDebugConsole();
 #endif // !LEVIATHAN_BUILD_CONFIG_MASTER
 
+			outRestart = EngineRestart;
 			return 0;
 		}
 
 		void Exit()
 		{
 			EngineRunning = false;
+		}
+
+		void Restart()
+		{
+			EngineRunning = false;
+			EngineRestart = true;
 		}
 
 		void* GetRuntimeWindowPlatformHandle()
