@@ -7,8 +7,6 @@
 
 namespace LeviathanRenderer
 {
-	static constexpr int InvalidId = -1;
-
 	[[nodiscard]] bool Initialize();
 	bool Shutdown();
 

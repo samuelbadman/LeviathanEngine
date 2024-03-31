@@ -38,9 +38,8 @@ namespace LeviathanCore
 
 		bool PreModuleInitialization();
 		bool PostModuleInitialization();
-		int RunEngine(bool& outRestart);
+		int RunEngine();
 		void Exit();
-		void Restart();
 		void* GetRuntimeWindowPlatformHandle();
 		bool GetRuntimeWindowRenderAreaDimensions(int& outWidth, int& outHeight);
 		bool RuntimeWindowCaptureCursor();

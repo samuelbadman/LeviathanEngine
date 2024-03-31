@@ -14,7 +14,6 @@ namespace LeviathanCore
 		static constexpr float FixedTimestep = 0.1f;
 
 		static bool EngineRunning = false;
-		static bool EngineRestart = false;
 		static LeviathanCore::Platform::Window::PlatformWindow* RuntimeWindow = {};
 
 		static unsigned int Fps = 0;
@@ -242,7 +241,7 @@ namespace LeviathanCore
 			return true;
 		}
 
-		int RunEngine(bool& outRestart)
+		int RunEngine()
 		{
 			// Initialize platform layer.
 			if (!LeviathanCore::Platform::Initialize())
@@ -254,7 +253,6 @@ namespace LeviathanCore
 
 			// Enter engine main loop.
 			EngineRunning = true;
-			EngineRestart = false;
 			MainLoop();
 
 			// Cleanup.
@@ -278,19 +276,12 @@ namespace LeviathanCore
 			LeviathanCore::Platform::DestroyDebugConsole();
 #endif // !LEVIATHAN_BUILD_CONFIG_MASTER
 
-			outRestart = EngineRestart;
 			return 0;
 		}
 
 		void Exit()
 		{
 			EngineRunning = false;
-		}
-
-		void Restart()
-		{
-			EngineRunning = false;
-			EngineRestart = true;
 		}
 
 		void* GetRuntimeWindowPlatformHandle()
