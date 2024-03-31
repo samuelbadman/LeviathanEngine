@@ -47,11 +47,35 @@ namespace LeviathanCore
 			return MessageWindow->Initialize("Win32MessageWindowClass", "", 0, 0, 0, 0, 0, nullptr, true);
 		}
 
+		static bool DestroyMessageWindow()
+		{
+			if (!DestroyWindow(MessageWindow->GetHWnd()))
+			{
+				return false;
+			}
+
+			if (!MessageWindow->UnregisterWindowClassName())
+			{
+				return false;
+			}
+
+			MessageWindow.reset();
+
+			return true;
+		}
+
 		// Registers functions to message window callbacks.
 		static void RegisterMessageWindowCallbacks()
 		{
-			MessageWindow->GetGameControllerConnectedCallback().Register(OnGameControllerConnectionEvent);
-			MessageWindow->GetGameControllerDisconnectedCallback().Register(OnGameControllerConnectionEvent);
+			MessageWindow->GetGameControllerConnectedCallback().Register(&OnGameControllerConnectionEvent);
+			MessageWindow->GetGameControllerDisconnectedCallback().Register(&OnGameControllerConnectionEvent);
+		}
+
+		// Deregisters function to message window callbacks.
+		static void DeregisterMessageWindowCallbacks()
+		{
+			MessageWindow->GetGameControllerConnectedCallback().Deregister(&OnGameControllerConnectionEvent);
+			MessageWindow->GetGameControllerDisconnectedCallback().Deregister(&OnGameControllerConnectionEvent);
 		}
 
 		// Registers devices that generate raw input messages. Takes the handle to the window to send raw input device messages
@@ -204,17 +228,12 @@ namespace LeviathanCore
 
 		bool Shutdown()
 		{
-			if (!DestroyWindow(MessageWindow->GetHWnd()))
+			DeregisterMessageWindowCallbacks();
+
+			if (!DestroyMessageWindow())
 			{
 				return false;
 			}
-
-			if (!MessageWindow->UnregisterWindowClassName())
-			{
-				return false;
-			}
-
-			MessageWindow.reset();
 
 			return true;
 		}

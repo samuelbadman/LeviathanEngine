@@ -54,7 +54,7 @@ namespace LeviathanRenderer
 
 		static std::vector<unsigned char> gPixelShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gPixelShader = {};
-		
+
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gObjectBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gMaterialBuffer = {};
 
@@ -531,6 +531,40 @@ float4 main(PixelInput input) : SV_TARGET
 
 		bool ShutdownRendererApi()
 		{
+			gDXGIFactory.Reset();
+			gDXGIAdapterDesc = {};
+			gDXGIAdapter.Reset();
+
+			gD3D11Device.Reset();
+			gD3D11DeviceContext.Reset();
+			gSwapChain.Reset();
+			gFeatureLevel = {};
+
+			gBackBufferRenderTargetView.Reset();
+
+			gDepthStencilView.Reset();
+
+			gDepthStencilBuffer.Reset();
+
+			gDepthStencilState.Reset();
+
+			gRasterizerState.Reset();
+			gViewport = {};
+
+			gInputLayout.Reset();
+
+			gVertexShaderBuffer.clear();
+			gVertexShader.Reset();
+
+			gPixelShaderBuffer.clear();
+			gPixelShader.Reset();
+
+			gObjectBuffer.Reset();
+			gMaterialBuffer.Reset();
+
+			gVertexBuffers.clear();
+			gIndexBuffers.clear();
+
 			return true;
 		}
 
@@ -605,6 +639,18 @@ float4 main(PixelInput input) : SV_TARGET
 			gIndexBuffers.emplace(outId, nullptr);
 
 			return SUCCEEDED(gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &gIndexBuffers[outId]));
+		}
+
+		void DestroyVertexBuffer(RendererResourceID::IDType& resourceID)
+		{
+			gVertexBuffers.erase(resourceID);
+			resourceID = RendererResourceID::InvalidID;
+		}
+
+		void DestroyIndexBuffer(RendererResourceID::IDType& resourceID)
+		{
+			gIndexBuffers.erase(resourceID);
+			resourceID = RendererResourceID::InvalidID;
 		}
 
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)

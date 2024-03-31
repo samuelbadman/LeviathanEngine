@@ -12,6 +12,8 @@ namespace LeviathanRenderer
 
 	[[nodiscard]] bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceID::IDType& outId);
 	[[nodiscard]] bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId);
+	void DestroyVertexBuffer(RendererResourceID::IDType& id);
+	void DestroyIndexBuffer(RendererResourceID::IDType& id);
 
 	void BeginFrame();
 	void EndFrame();

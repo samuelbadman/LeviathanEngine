@@ -51,6 +51,16 @@ namespace LeviathanRenderer
 		return Renderer::CreateIndexBuffer(indexData, indexCount, outId);
 	}
 
+	void DestroyVertexBuffer(RendererResourceID::IDType& id)
+	{
+		Renderer::DestroyVertexBuffer(id);
+	}
+
+	void DestroyIndexBuffer(RendererResourceID::IDType& id)
+	{
+		Renderer::DestroyIndexBuffer(id);
+	}
+
 	void BeginFrame()
 	{
 		static constexpr float clearColor[] = { 1.f, 0.f, 0.f, 1.f };

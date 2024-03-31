@@ -22,6 +22,8 @@ namespace LeviathanRenderer
 		[[nodiscard]] bool ResizeWindowResources(unsigned int width, unsigned int height);
 		[[nodiscard]] bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceID::IDType& outId);
 		[[nodiscard]] bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId);
+		void DestroyVertexBuffer(RendererResourceID::IDType& resourceID);
+		void DestroyIndexBuffer(RendererResourceID::IDType& resourceID);
 
 		// Render commands.
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil);
