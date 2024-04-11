@@ -62,8 +62,8 @@ namespace LeviathanRenderer
 		static bool gVSync = false;
 
 		// Scene resources.
-		static std::unordered_map<uint64_t, Microsoft::WRL::ComPtr<ID3D11Buffer>> gVertexBuffers = {};
-		static std::unordered_map<uint64_t, Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
+		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gVertexBuffers = {};
+		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
 
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG

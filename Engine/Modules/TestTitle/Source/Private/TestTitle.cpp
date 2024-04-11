@@ -388,7 +388,7 @@ namespace TestTitle
 
 		gSceneCamera.UpdateViewProjectionMatrix();
 
-		// Prototype code.
+		// Prototype code for Leviathan Entities ECS module.
 		[[maybe_unused]] size_t maxEntities = 512;
 
 		// Create entities.
