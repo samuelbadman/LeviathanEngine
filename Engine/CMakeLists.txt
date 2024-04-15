@@ -65,7 +65,7 @@ add_compile_definition_if_enabled(BUILD_RENDERER_API_DIRECT3D12_PC BUILD_RENDERE
 add_compile_definition_if_enabled(BUILD_RENDERER_API_VULKAN BUILD_RENDERER_API_VULKAN_DEFINITION)
 
 # Adds a library target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
-# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES CPP_STANDARD ENABLE_STRICT_WARNING_LEVEL.
+# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES CPP_STANDARD ENABLE_STRICT_WARNING_LEVEL LINK_DIRECTORIES.
 function(add_library_target)
 	add_library("${ARGV0}" STATIC "${ARGV2}" "${ARGV3}")
 	set_property(TARGET "${ARGV0}" PROPERTY CXX_STANDARD ${ARGV6})
@@ -77,11 +77,12 @@ function(add_library_target)
 	target_precompile_headers("${ARGV0}" PRIVATE "${ARGV1}")
 	target_link_libraries("${ARGV0}" "${ARGV4}")
 	target_include_directories("${ARGV0}" PRIVATE "${ARGV5}")
+	target_link_directories("${ARGV0}" PRIVATE "${ARGV8}")
 endfunction()
 
 # Adds an executable target with optional arguments to the project. Arguments are unnamed to be optional so that empty strings can be supported in a function parameter. 
-# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES CPP_STANDARD ENABLE_STRICT_WARNING_LEVEL.
-function(add_executable_target [IN_TARGET_NAME IN_PRECOMPILED_HEADERS IN_HEADERS IN_SOURCES IN_LINK_LIBRARIES IN_INCLUDE_DIRECTORIES])
+# Optional arguments must be entered in the order: TARGET_NAME PRECOMPILED_HEADERS HEADERS SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES CPP_STANDARD ENABLE_STRICT_WARNING_LEVEL LINK_DIRECTORIES.
+function(add_executable_target [IN_TARGET_NAME IN_PRECOMPILED_HEADERS IN_HEADERS IN_SOURCES IN_LINK_LIBRARIES IN_INCLUDE_DIRECTORIES LINK_DIRECTORIES])
 	if(BUILD_PLATFORM_WIN32 MATCHES ON)
 		add_executable("${ARGV0}" WIN32 "${ARGV2}" "${ARGV3}")
 	else()
@@ -97,11 +98,13 @@ function(add_executable_target [IN_TARGET_NAME IN_PRECOMPILED_HEADERS IN_HEADERS
 	target_precompile_headers("${ARGV0}" PRIVATE "${ARGV1}")
 	target_link_libraries("${ARGV0}" "${ARGV4}")
 	target_include_directories("${ARGV0}" PRIVATE "${ARGV5}")
+	target_link_directories("${ARGV0}" PRIVATE "${ARGV8}")
 endfunction()
 
 # Set module directories.
 set(MODULE_DIRECTORY "Modules")
 set(MODULE_SOURCE_DIRECTORY_NAME "Source")
+set(MODULE_LIBS_DIRECTORY_NAME "Libs")
 set(MODULE_PUBLIC_DIRECTORY_NAME "Public")
 set(MODULE_PRIVATE_DIRECTORY_NAME "Private")
 
@@ -333,6 +336,7 @@ add_library_target(
 # Asset importer.
 set(ASSET_IMPORTER_NAME "AssetImporter")
 set(ASSET_IMPORTER_SOURCE_DIRECTORY "${MODULE_DIRECTORY}/${ASSET_IMPORTER_NAME}/${MODULE_SOURCE_DIRECTORY_NAME}")
+set(ASSET_IMPORTER_LIBS_DIRECTORY "../${MODULE_DIRECTORY}/${ASSET_IMPORTER_NAME}/${MODULE_LIBS_DIRECTORY_NAME}")
 set(ASSET_IMPORTER_PRECOMPILED_HEADERS 
 	"${ASSET_IMPORTER_SOURCE_DIRECTORY}/${MODULE_PRIVATE_DIRECTORY_NAME}/AssetImporterPch.h"
 )
@@ -343,7 +347,7 @@ set(ASSET_IMPORTER_SOURCES
 	"${ASSET_IMPORTER_SOURCE_DIRECTORY}/${MODULE_PRIVATE_DIRECTORY_NAME}/AssetImporter.cpp"
 )
 set(ASSET_IMPORTER_LINK_LIBRARIES 
-	""
+	"${ASSET_IMPORTER_LIBS_DIRECTORY}/assimp-vc143-mt"
 )
 set(ASSET_IMPORTER_INCLUDE_DIRECTORIES 
 	"${PROJECT_SOURCE_DIR}/${ASSET_IMPORTER_SOURCE_DIRECTORY}/${MODULE_PUBLIC_DIRECTORY_NAME}"
@@ -429,6 +433,7 @@ set(EXE_LINK_LIBRARIES
 	"${LEVIATHAN_CORE_NAME}"
 	"${LEVIATHAN_INPUT_CORE_NAME}"
 	"${LEVIATHAN_RENDERER_NAME}"
+	"${ASSET_IMPORTER_NAME}"
 	"${TEST_TITLE_NAME}"
 )
 
@@ -436,6 +441,10 @@ set(EXE_LINK_LIBRARIES
 set(EXE_INCLUDE_DIRECTORIES
 	"${PROJECT_SOURCE_DIR}/${LEVIATHAN_CORE_SOURCE_DIRECTORY}/Public"
 	"${PROJECT_SOURCE_DIR}/${TEST_TITLE_SOURCE_DIRECTORY}/Public"
+)
+
+set(EXE_LINK_DIRECTORIES
+	""
 )
 
 add_executable_target(
@@ -447,10 +456,15 @@ add_executable_target(
 	"${EXE_INCLUDE_DIRECTORIES}"
 	"${CPP_STANDARD}"
 	"${ENABLE_STRICT_WARNINGS}"
+	"${EXE_LINK_DIRECTORIES}"
 )
 
 # Add build commands.
+# Copy assimp dll to build target directory.
+add_custom_command(TARGET "${EXE_NAME}" POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/Redist/Assimp" "$<TARGET_FILE_DIR:${EXE_NAME}>")
+
 if(BUILD_RENDERER_API_DIRECT3D12_PC MATCHES ON)
+# Copy directx dlls to build target directory.
 add_custom_command(TARGET "${EXE_NAME}" POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/Redist/DirectX" "$<TARGET_FILE_DIR:${EXE_NAME}>")
 endif()
 
