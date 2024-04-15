@@ -2,6 +2,7 @@
 #include "LeviathanCore.h"
 #include "LeviathanInputCore.h"
 #include "LeviathanRenderer.h"
+#include "AssetImporter.h"
 #include "MathTypes.h"
 #include "MathLibrary.h"
 #include "Camera.h"
@@ -291,8 +292,9 @@ namespace TestTitle
 	static void OnCleanup()
 	{
 		// Shutdown engine modules used by title.
-		LeviathanInputCore::Shutdown();
+		AssetImporter::Shutdown();
 		LeviathanRenderer::Shutdown();
+		LeviathanInputCore::Shutdown();
 
 		// Deregister callbacks.
 		LeviathanCore::Core::GetCleanupCallback().Deregister(&OnCleanup);
@@ -321,6 +323,11 @@ namespace TestTitle
 		}
 
 		if (!LeviathanRenderer::Initialize())
+		{
+			return false;
+		}
+
+		if (!AssetImporter::Initialize())
 		{
 			return false;
 		}

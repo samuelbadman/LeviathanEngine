@@ -2,5 +2,6 @@
 
 namespace AssetImporter
 {
-
+	bool Initialize();
+	bool Shutdown();
 }
