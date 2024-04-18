@@ -4,5 +4,5 @@ namespace AssetImporter
 {
 	bool Initialize();
 	bool Shutdown();
-	bool LoadModel(const std::string& filepath);
+	bool ImportModel(std::string_view file);
 }
