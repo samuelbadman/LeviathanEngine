@@ -64,7 +64,6 @@ static void ProcessNode(aiNode* node, const aiScene* scene)
 
 bool AssetImporter::ModelImporter::LoadModel(std::string_view filepath)
 {
-	// TODO: Move model related code into separate model importer file.
 	Assimp::Importer importer = {};
 	const aiScene* scene = importer.ReadFile(filepath.data(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 
