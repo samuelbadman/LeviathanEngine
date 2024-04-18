@@ -4,13 +4,6 @@ namespace LeviathanCore
 {
 	namespace Serialize
 	{
-		static constexpr const char* WorkingFilesDirectory = "Runtime/";
-
-		static std::string BuildFilePath(std::string_view file)
-		{
-			return std::string(WorkingFilesDirectory) + file.data();
-		}
-
 		std::array<uint8_t, 4> UInt32ToBytes(const uint32_t uint, const Endianness endianness)
 		{
 			std::array<uint8_t, 4> byteBuffer = {};
@@ -80,9 +73,7 @@ namespace LeviathanCore
 
 		bool WriteBytesToFile(std::string_view file, const std::vector<uint8_t>& buffer)
 		{
-			const std::string filePath = BuildFilePath(file);
-
-			std::ofstream ofStream(filePath, std::ios::out | std::ios::binary);
+			std::ofstream ofStream(file.data(), std::ios::out | std::ios::binary);
 
 			if (!ofStream)
 			{
@@ -96,17 +87,15 @@ namespace LeviathanCore
 
 		bool ReadBytesFromFile(std::string_view file, std::vector<uint8_t>& outBuffer)
 		{
-			const std::string filePath = BuildFilePath(file);
-
 			std::ifstream ifStream;
-			ifStream.open(filePath, std::ifstream::in | std::ifstream::binary);
+			ifStream.open(file, std::ifstream::in | std::ifstream::binary);
 
 			if (!ifStream.good())
 			{
 				return false;
 			}
 
-			outBuffer.resize(static_cast<size_t>(std::filesystem::file_size(filePath)), 0);
+			outBuffer.resize(static_cast<size_t>(std::filesystem::file_size(file)), 0);
 			ifStream.seekg(0, std::ios::beg);
 			ifStream.read(reinterpret_cast<char*>(outBuffer.data()), static_cast<std::streamsize>(outBuffer.size()));
 			ifStream.close();
@@ -116,24 +105,12 @@ namespace LeviathanCore
 
 		bool FileExists(std::string_view file)
 		{
-			const std::string filePath = BuildFilePath(file);
-
-			return std::filesystem::exists(filePath);
+			return std::filesystem::exists(file);
 		}
 
 		bool MakeDirectory(std::string_view directory)
 		{
-			if (!FileExists(WorkingFilesDirectory))
-			{
-				if (!std::filesystem::create_directory(WorkingFilesDirectory))
-				{
-					return false;
-				}
-			}
-
-			const std::string directoryPath = BuildFilePath(directory);
-
-			return std::filesystem::create_directory(directoryPath);
+			return std::filesystem::create_directory(directory);
 		}
 	}
 }

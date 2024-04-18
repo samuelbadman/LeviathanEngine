@@ -4,6 +4,29 @@ namespace LeviathanCore
 {
 	namespace MathTypes
 	{
+		class Vector2
+		{
+		private:
+			static constexpr size_t XComponent = 0;
+			static constexpr size_t YComponent = 1;
+
+		private:
+			float Components[2] = { 0.0f, 0.0f };
+
+		public:
+			Vector2() = default;
+			constexpr Vector2(float x, float y)
+				: Components{ x, y }
+			{
+			}
+
+			inline float GetX() const { return Components[XComponent]; }
+			inline float GetY() const { return Components[YComponent]; }
+
+			void SetX(const float x) { Components[XComponent] = x; }
+			void SetY(const float y) { Components[YComponent] = y; }
+		};
+
 		class Vector3
 		{
 		private:
