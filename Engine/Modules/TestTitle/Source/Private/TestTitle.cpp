@@ -350,7 +350,8 @@ namespace TestTitle
 		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Register(&OnGameControllerDisconnected);
 
 		// Create scene.
-		AssetImporter::ImportModel("Model.fbx");
+		AssetImporter::Mesh mesh = {};
+		AssetImporter::ImportModel("Model.fbx", mesh);
 
 		// Load quad geometry.
 		std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =

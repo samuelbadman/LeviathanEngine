@@ -11,7 +11,8 @@ bool AssetImporter::Shutdown()
 	return true;
 }
 
-bool AssetImporter::ImportModel(std::string_view file)
+bool AssetImporter::ImportModel(std::string_view file, AssetImporter::Mesh& outMesh)
 {
-	return ModelImporter::LoadModel(file);
+	outMesh = {};
+	return ModelImporter::LoadModel(file, outMesh.positions, outMesh.normals, outMesh.textureCoordinates, outMesh.indices);
 }
