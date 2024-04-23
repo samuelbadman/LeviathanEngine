@@ -16,7 +16,7 @@ namespace TestTitle
 		int Number = 0;
 	};
 
-	static constexpr unsigned int gIndexCount = 6;
+	static unsigned int gIndexCount = 0;
 	static LeviathanRenderer::RendererResourceID::IDType gVertexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gIndexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
 
@@ -353,31 +353,47 @@ namespace TestTitle
 		AssetImporter::Mesh mesh = {};
 		AssetImporter::ImportModel("Model.fbx", mesh);
 
+		std::vector<LeviathanRenderer::VertexTypes::Vertex1Pos> vertices = {};
+		vertices.reserve(mesh.positions.size());
+		for (size_t i = 0; i < mesh.positions.size(); ++i)
+		{
+			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ mesh.positions[i].GetX(), mesh.positions[i].GetY(), mesh.positions[i].GetZ() });
+		}
+
+		std::vector<uint32_t> indices = {};
+		indices.reserve(mesh.indices.size());
+		for (size_t i = 0; i < mesh.indices.size(); ++i)
+		{
+			indices.push_back(mesh.indices[i]);
+		}
+
+		gIndexCount = static_cast<unsigned int>(indices.size());
+
 		// Load quad geometry.
-		std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
-		{
-			LeviathanRenderer::VertexTypes::Vertex1Pos{ -0.5f, -0.5f, 0.0f }, // Bottom left.
-			LeviathanRenderer::VertexTypes::Vertex1Pos{ -0.5f, 0.5f, 0.0f }, // Top left.
-			LeviathanRenderer::VertexTypes::Vertex1Pos{ 0.5f, 0.5f, 0.0f }, // Top right.
-			LeviathanRenderer::VertexTypes::Vertex1Pos{ 0.5f, -0.5f, 0.0f } // Bottom right.
-		};
+		//std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
+		//{
+		//	LeviathanRenderer::VertexTypes::Vertex1Pos{ -0.5f, -0.5f, 0.0f }, // Bottom left.
+		//	LeviathanRenderer::VertexTypes::Vertex1Pos{ -0.5f, 0.5f, 0.0f }, // Top left.
+		//	LeviathanRenderer::VertexTypes::Vertex1Pos{ 0.5f, 0.5f, 0.0f }, // Top right.
+		//	LeviathanRenderer::VertexTypes::Vertex1Pos{ 0.5f, -0.5f, 0.0f } // Bottom right.
+		//};
 
-		std::array<unsigned int, 6> quadIndices =
-		{
-			0, // Bottom left.
-			1, // Top left.
-			2, // Top right.
-			0, // Bottom left.
-			2, // Top right.
-			3 // Bottom right.
-		};
+		//std::array<unsigned int, 6> quadIndices =
+		//{
+		//	0, // Bottom left.
+		//	1, // Top left.
+		//	2, // Top right.
+		//	0, // Bottom left.
+		//	2, // Top right.
+		//	3 // Bottom right.
+		//};
 
-		if (!LeviathanRenderer::CreateVertexBuffer(quadVertices.data(), static_cast<unsigned int>(quadVertices.size()), gVertexBufferId))
+		if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), gVertexBufferId))
 		{
 			return false;
 		}
 
-		if (!LeviathanRenderer::CreateIndexBuffer(quadIndices.data(), static_cast<unsigned int>(quadIndices.size()), gIndexBufferId))
+		if (!LeviathanRenderer::CreateIndexBuffer(indices.data(), static_cast<unsigned int>(indices.size()), gIndexBufferId))
 		{
 			return false;
 		}
