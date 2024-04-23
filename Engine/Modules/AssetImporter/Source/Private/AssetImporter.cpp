@@ -1,5 +1,6 @@
 #include "AssetImporter.h"
 #include "ModelImporter.h"
+#include "AssetTypes.h"
 
 bool AssetImporter::Initialize()
 {
@@ -11,8 +12,8 @@ bool AssetImporter::Shutdown()
 	return true;
 }
 
-bool AssetImporter::ImportModel(std::string_view file, AssetImporter::Mesh& outMesh)
+bool AssetImporter::ImportModel(std::string_view file, AssetImporter::AssetTypes::Model& outModel)
 {
-	outMesh = {};
-	return ModelImporter::LoadModel(file, outMesh.positions, outMesh.normals, outMesh.textureCoordinates, outMesh.indices);
+	outModel = {};
+	return ModelImporter::LoadModel(file, outModel);
 }

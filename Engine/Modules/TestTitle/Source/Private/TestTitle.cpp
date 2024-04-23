@@ -3,6 +3,7 @@
 #include "LeviathanInputCore.h"
 #include "LeviathanRenderer.h"
 #include "AssetImporter.h"
+#include "AssetTypes.h"
 #include "MathTypes.h"
 #include "MathLibrary.h"
 #include "Camera.h"
@@ -231,17 +232,11 @@ namespace TestTitle
 		LeviathanRenderer::SetMaterialData(quadMaterialData);
 
 		// Calculate world matrix.
-		LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f));
+		LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
+		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
+		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
 
-		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Rotation(
-			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(45.0f)));
-
-		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(0.5f, 0.5f, 0.5f));
-
-		LeviathanCore::MathTypes::Matrix4x4 worldMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
-		worldMatrix *= translationMatrix;
-		worldMatrix *= rotationMatrix;
-		worldMatrix *= scalingMatrix;
+		LeviathanCore::MathTypes::Matrix4x4 worldMatrix = translationMatrix * rotationMatrix * scalingMatrix;
 
 		// Calculate world view projection matrix.
 		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = {};
@@ -251,36 +246,6 @@ namespace TestTitle
 		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
 		memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
 		LeviathanRenderer::SetObjectData(quadObjectData);
-
-		// Draw.
-		LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferId);
-
-		// Quad 2 (dynamic).
-		// Update material data.
-		LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData2 = { {0.0f, 0.0f, 1.0f, 1.0f} };
-		LeviathanRenderer::SetMaterialData(quadMaterialData2);
-
-		// Calculate world matrix.
-		LeviathanCore::MathTypes::Matrix4x4 translationMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Translation(LeviathanCore::MathTypes::Vector3(2.0f, 0.0f, 0.0f));
-
-		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Rotation(
-			LeviathanCore::MathTypes::Euler(0.0f, 0.0f, LeviathanCore::MathLibrary::DegreesToRadians(0.0f)));
-
-		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Scaling(LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f));
-
-		LeviathanCore::MathTypes::Matrix4x4 worldMatrix2 = LeviathanCore::MathTypes::Matrix4x4::Identity();
-		worldMatrix2 *= translationMatrix2;
-		worldMatrix2 *= rotationMatrix2;
-		worldMatrix2 *= scalingMatrix2;
-
-		// Calculate world view projection matrix.
-		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix2 = {};
-		worldViewProjectionMatrix2 = gSceneCamera.GetViewProjectionMatrix() * worldMatrix2;
-
-		// Update object data.
-		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData2 = {};
-		memcpy(quadObjectData2.WorldViewProjection, worldViewProjectionMatrix2.GetMatrix(), sizeof(float) * 16);
-		LeviathanRenderer::SetObjectData(quadObjectData2);
 
 		// Draw.
 		LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferId);
@@ -350,22 +315,47 @@ namespace TestTitle
 		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Register(&OnGameControllerDisconnected);
 
 		// Create scene.
-		AssetImporter::Mesh mesh = {};
-		AssetImporter::ImportModel("Model.fbx", mesh);
+		// Load model.
+		AssetImporter::AssetTypes::Model model = {};
+		AssetImporter::ImportModel("Model.fbx", model);
+
+		static size_t meshId = 0;
 
 		std::vector<LeviathanRenderer::VertexTypes::Vertex1Pos> vertices = {};
-		vertices.reserve(mesh.positions.size());
-		for (size_t i = 0; i < mesh.positions.size(); ++i)
+		vertices.reserve(model.Meshes[meshId].Positions.size());
+		for (size_t i = 0; i < model.Meshes[meshId].Positions.size(); ++i)
 		{
-			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ mesh.positions[i].GetX(), mesh.positions[i].GetY(), mesh.positions[i].GetZ() });
+			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model.Meshes[meshId].Positions[i].GetX(),
+				model.Meshes[meshId].Positions[i].GetY(),
+				model.Meshes[meshId].Positions[i].GetZ()});
 		}
 
 		std::vector<uint32_t> indices = {};
-		indices.reserve(mesh.indices.size());
-		for (size_t i = 0; i < mesh.indices.size(); ++i)
+		indices.reserve(model.Meshes[meshId].Indices.size());
+		for (size_t i = 0; i < model.Meshes[meshId].Indices.size(); ++i)
 		{
-			indices.push_back(mesh.indices[i]);
+			indices.push_back(model.Meshes[meshId].Indices[i]);
 		}
+
+		// Temporary example. Append second mesh in model into a single vertex buffer.
+		meshId = 1;
+
+		// Indices for the appended mesh need to point at the start of the appended mesh's vertices. This is the end of the first mesh's vertices.
+		const size_t indexOffset = vertices.size(); 
+
+		for (size_t i = 0; i < model.Meshes[meshId].Positions.size(); ++i)
+		{
+			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model.Meshes[meshId].Positions[i].GetX(),
+				model.Meshes[meshId].Positions[i].GetY(),
+				model.Meshes[meshId].Positions[i].GetZ() });
+		}
+
+		for (size_t i = 0; i < model.Meshes[meshId].Indices.size(); ++i)
+		{
+			indices.push_back(model.Meshes[meshId].Indices[i] + static_cast<uint32_t>(indexOffset));
+		}
+
+		////////////////////////////////////////////////////////////////////////////////
 
 		gIndexCount = static_cast<unsigned int>(indices.size());
 
