@@ -359,6 +359,17 @@ namespace TestTitle
 			}
 		}
 
+		// Create geometry buffers.
+		if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), gVertexBufferId))
+		{
+			return false;
+		}
+
+		if (!LeviathanRenderer::CreateIndexBuffer(indices.data(), static_cast<unsigned int>(indices.size()), gIndexBufferId))
+		{
+			return false;
+		}
+
 		// Load quad geometry.
 		//std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
 		//{
@@ -378,16 +389,6 @@ namespace TestTitle
 		//	3 // Bottom right.
 		//};
 
-		if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), gVertexBufferId))
-		{
-			return false;
-		}
-
-		if (!LeviathanRenderer::CreateIndexBuffer(indices.data(), static_cast<unsigned int>(indices.size()), gIndexBufferId))
-		{
-			return false;
-		}
-
 		// Define scene camera.
 		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -5.0f));
 
@@ -404,6 +405,8 @@ namespace TestTitle
 
 		gSceneCamera.UpdateViewProjectionMatrix();
 
+		// ECS module prototype code region.
+#pragma region 
 		// Prototype code for Leviathan Entities ECS module.
 		[[maybe_unused]] size_t maxEntities = 512;
 
@@ -462,6 +465,7 @@ namespace TestTitle
 
 		const LeviathanCore::DataStructures::SparseArray<Component>::DenseValue& value = components.GetValue(entity2);
 		LEVIATHAN_LOG("Retrieved value: data: %d", value.Value.Number);
+#pragma endregion
 
 		return true;
 	}
