@@ -315,49 +315,49 @@ namespace TestTitle
 		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Register(&OnGameControllerDisconnected);
 
 		// Create scene.
-		// Load model.
+		// Import model from disk.
 		std::vector<AssetImporter::AssetTypes::Mesh> model = {};
 		AssetImporter::ImportModel("Model.fbx", model);
 
-		static size_t meshId = 0;
-
+		// Combine model meshes into a single render mesh. This is to draw all of the meshes that compose the model in a single vertex buffer.
+		// Render mesh definition.
 		std::vector<LeviathanRenderer::VertexTypes::Vertex1Pos> vertices = {};
-		vertices.reserve(model[meshId].Positions.size());
-		for (size_t i = 0; i < model[meshId].Positions.size(); ++i)
+		std::vector<unsigned int> indices = {};
+
+		// Count total number of vertices and indices in the model and allocate space to store the render mesh.
+		size_t vertexCount = 0;
+		size_t indexCount = 0;
+		for (size_t i = 0; i < model.size(); ++i)
 		{
-			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model[meshId].Positions[i].GetX(),
-				model[meshId].Positions[i].GetY(),
-				model[meshId].Positions[i].GetZ()});
+			vertexCount += model[i].Positions.size();
+			indexCount += model[i].Indices.size();
 		}
 
-		std::vector<uint32_t> indices = {};
-		indices.reserve(model[meshId].Indices.size());
-		for (size_t i = 0; i < model[meshId].Indices.size(); ++i)
+		vertices.reserve(vertexCount);
+		indices.reserve(indexCount);
+		gIndexCount = static_cast<unsigned int>(indexCount);
+
+		// Build render mesh.
+		for (size_t i = 0; i < model.size(); ++i)
 		{
-			indices.push_back(model[meshId].Indices[i]);
+			// For each mesh in the model.
+
+			size_t indexOffset = vertices.size();
+
+			for (size_t j = 0; j < model[i].Positions.size(); ++j)
+			{
+				// For each vertex in the mesh.
+				vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model[i].Positions[j].GetX(), model[i].Positions[j].GetY(), model[i].Positions[j].GetZ() });
+			}
+
+			for (size_t j = 0; j < model[i].Indices.size(); ++j)
+			{
+				// For each index in the mesh.
+
+				// Offset indices into the vertex buffer as vertices from multiple meshes are being combin
+				indices.push_back(static_cast<unsigned int>(indexOffset) + model[i].Indices[j]);
+			}
 		}
-
-		// Temporary example. Append second mesh in model into a single vertex buffer.
-		meshId = 1;
-
-		// Indices for the appended mesh need to point at the start of the appended mesh's vertices. This is the end of the first mesh's vertices.
-		const size_t indexOffset = vertices.size(); 
-
-		for (size_t i = 0; i < model[meshId].Positions.size(); ++i)
-		{
-			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model[meshId].Positions[i].GetX(),
-				model[meshId].Positions[i].GetY(),
-				model[meshId].Positions[i].GetZ() });
-		}
-
-		for (size_t i = 0; i < model[meshId].Indices.size(); ++i)
-		{
-			indices.push_back(model[meshId].Indices[i] + static_cast<uint32_t>(indexOffset));
-		}
-
-		////////////////////////////////////////////////////////////////////////////////
-
-		gIndexCount = static_cast<unsigned int>(indices.size());
 
 		// Load quad geometry.
 		//std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
