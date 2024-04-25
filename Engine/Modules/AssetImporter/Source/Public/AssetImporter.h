@@ -4,10 +4,10 @@ namespace AssetImporter
 {
 	namespace AssetTypes
 	{
-		struct Model;
+		struct Mesh;
 	}
 
 	bool Initialize();
 	bool Shutdown();
-	bool ImportModel(std::string_view file, AssetImporter::AssetTypes::Model& outModel);
+	bool ImportModel(std::string_view file, std::vector<AssetImporter::AssetTypes::Mesh>& outModel);
 }

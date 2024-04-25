@@ -316,25 +316,25 @@ namespace TestTitle
 
 		// Create scene.
 		// Load model.
-		AssetImporter::AssetTypes::Model model = {};
+		std::vector<AssetImporter::AssetTypes::Mesh> model = {};
 		AssetImporter::ImportModel("Model.fbx", model);
 
 		static size_t meshId = 0;
 
 		std::vector<LeviathanRenderer::VertexTypes::Vertex1Pos> vertices = {};
-		vertices.reserve(model.Meshes[meshId].Positions.size());
-		for (size_t i = 0; i < model.Meshes[meshId].Positions.size(); ++i)
+		vertices.reserve(model[meshId].Positions.size());
+		for (size_t i = 0; i < model[meshId].Positions.size(); ++i)
 		{
-			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model.Meshes[meshId].Positions[i].GetX(),
-				model.Meshes[meshId].Positions[i].GetY(),
-				model.Meshes[meshId].Positions[i].GetZ()});
+			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model[meshId].Positions[i].GetX(),
+				model[meshId].Positions[i].GetY(),
+				model[meshId].Positions[i].GetZ()});
 		}
 
 		std::vector<uint32_t> indices = {};
-		indices.reserve(model.Meshes[meshId].Indices.size());
-		for (size_t i = 0; i < model.Meshes[meshId].Indices.size(); ++i)
+		indices.reserve(model[meshId].Indices.size());
+		for (size_t i = 0; i < model[meshId].Indices.size(); ++i)
 		{
-			indices.push_back(model.Meshes[meshId].Indices[i]);
+			indices.push_back(model[meshId].Indices[i]);
 		}
 
 		// Temporary example. Append second mesh in model into a single vertex buffer.
@@ -343,16 +343,16 @@ namespace TestTitle
 		// Indices for the appended mesh need to point at the start of the appended mesh's vertices. This is the end of the first mesh's vertices.
 		const size_t indexOffset = vertices.size(); 
 
-		for (size_t i = 0; i < model.Meshes[meshId].Positions.size(); ++i)
+		for (size_t i = 0; i < model[meshId].Positions.size(); ++i)
 		{
-			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model.Meshes[meshId].Positions[i].GetX(),
-				model.Meshes[meshId].Positions[i].GetY(),
-				model.Meshes[meshId].Positions[i].GetZ() });
+			vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model[meshId].Positions[i].GetX(),
+				model[meshId].Positions[i].GetY(),
+				model[meshId].Positions[i].GetZ() });
 		}
 
-		for (size_t i = 0; i < model.Meshes[meshId].Indices.size(); ++i)
+		for (size_t i = 0; i < model[meshId].Indices.size(); ++i)
 		{
-			indices.push_back(model.Meshes[meshId].Indices[i] + static_cast<uint32_t>(indexOffset));
+			indices.push_back(model[meshId].Indices[i] + static_cast<uint32_t>(indexOffset));
 		}
 
 		////////////////////////////////////////////////////////////////////////////////

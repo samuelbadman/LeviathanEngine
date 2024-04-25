@@ -12,8 +12,8 @@ bool AssetImporter::Shutdown()
 	return true;
 }
 
-bool AssetImporter::ImportModel(std::string_view file, AssetImporter::AssetTypes::Model& outModel)
+bool AssetImporter::ImportModel(std::string_view file, std::vector<AssetImporter::AssetTypes::Mesh>& outMeshes)
 {
-	outModel = {};
-	return ModelImporter::LoadModel(file, outModel);
+	outMeshes.clear();
+	return ModelImporter::LoadModel(file, outMeshes);
 }

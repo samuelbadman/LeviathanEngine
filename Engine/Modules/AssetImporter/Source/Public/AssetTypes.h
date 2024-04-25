@@ -13,10 +13,5 @@ namespace AssetImporter
 			std::vector<LeviathanCore::MathTypes::Vector2> TextureCoordinates = {};
 			std::vector<uint32_t> Indices = {};
 		};
-
-		struct Model
-		{
-			std::vector<AssetImporter::AssetTypes::Mesh> Meshes = {};
-		};
 	}
 }

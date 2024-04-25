@@ -53,26 +53,26 @@ static AssetImporter::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unused]
 }
 
 // Processes each mesh in the node being processed. Each meshe's attribute data is appended to the end of the out vectors.
-static void ProcessNode(aiNode* node, const aiScene* scene, AssetImporter::AssetTypes::Model& outModel)
+static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<AssetImporter::AssetTypes::Mesh>& outMeshes)
 {
 	// Process each mesh in the node.
 	for (size_t i = 0; i < node->mNumMeshes; ++i)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		outModel.Meshes.emplace_back(ProcessMesh(mesh, scene));
+		outMeshes.emplace_back(ProcessMesh(mesh, scene));
 	}
 
 	// Process all child nodes.
 	for (size_t i = 0; i < node->mNumChildren; ++i)
 	{
-		ProcessNode(node->mChildren[i], scene, outModel);
+		ProcessNode(node->mChildren[i], scene, outMeshes);
 	}
 }
 
-bool AssetImporter::ModelImporter::LoadModel(std::string_view filepath, AssetImporter::AssetTypes::Model& outModel)
+bool AssetImporter::ModelImporter::LoadModel(std::string_view file, std::vector<AssetImporter::AssetTypes::Mesh>& outMeshes)
 {
 	Assimp::Importer importer = {};
-	const aiScene* scene = importer.ReadFile(filepath.data(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+	const aiScene* scene = importer.ReadFile(file.data(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 
 	if ((!scene) || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || (!scene->mRootNode))
 	{
@@ -80,7 +80,9 @@ bool AssetImporter::ModelImporter::LoadModel(std::string_view filepath, AssetImp
 		return false;
 	}
 
-	ProcessNode(scene->mRootNode, scene, outModel);
+	ProcessNode(scene->mRootNode, scene, outMeshes);
+
+	LEVIATHAN_LOG("Imported model: %s", file.data());
 
 	return true;
 }
