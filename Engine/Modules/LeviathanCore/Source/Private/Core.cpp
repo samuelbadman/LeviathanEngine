@@ -4,6 +4,10 @@
 #include "Logging.h"
 #include "InputKey.h"
 
+#ifdef LEVIATHAN_WITH_TOOLS
+#include "LeviathanTools.h"
+#endif // LEVIATHAN_WITH_TOOLS.
+
 namespace LeviathanCore
 {
 	namespace Core
@@ -33,6 +37,12 @@ namespace LeviathanCore
 		static Callback<RuntimeWindowRestoredCallbackType> RuntimeWindowRestoredCallback = {};
 		static Callback<RuntimeWindowMouseInputCallbackType> RuntimeWindowMouseInputCallback = {};
 		static Callback<RenderCallbackType> RenderCallback = {};
+		static Callback<PresentCallbackType> PresentCallback = {};
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		static Callback<ImGuiRendererNewFrameCallbackType> ImGuiRendererNewFrameCallback = {};
+		static Callback<ImGuiRenderCallbackType> ImGuiRenderCallback = {};
+#endif // LEVIATHAN_WITH_TOOLS.
 
 		static bool CreateAndInitializeRuntimeWindow()
 		{
@@ -112,6 +122,11 @@ namespace LeviathanCore
 			LeviathanCore::Platform::Window::GetPlatformWindowRestoredCallback(RuntimeWindow).Deregister(&OnPlatformWindowRestored);
 			LeviathanCore::Platform::Window::GetPlatformWindowMouseInputCallback(RuntimeWindow).Deregister(&OnPlatformWindowMouseInput);
 
+#ifdef LEVIATHAN_WITH_TOOLS
+			Platform::ImGuiPlatformShutdown();
+			LeviathanTools::Shutdown();
+#endif // LEVIATHAN_WITH_TOOLS.
+
 			return true;
 		}
 
@@ -180,6 +195,11 @@ namespace LeviathanCore
 			return RenderCallback;
 		}
 
+		Callback<PresentCallbackType>& GetPresentCallback()
+		{
+			return PresentCallback;
+		}
+
 		void MainLoop()
 		{
 			PreMainLoopCallback.Call();
@@ -215,11 +235,32 @@ namespace LeviathanCore
 					PostTickCallback.Call();
 
 					RenderCallback.Call();
+
+#ifdef LEVIATHAN_WITH_TOOLS
+					ImGuiRendererNewFrameCallback.Call();
+					Platform::ImGuiPlatformNewFrame();
+					ImGui::NewFrame();
+					ImGuiRenderCallback.Call();
+#endif // LEVIATHAN_WITH_TOOLS.
+
+					PresentCallback.Call();
 				}
 			}
 
 			PostMainLoopCallback.Call();
 		}
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		Callback<ImGuiRendererNewFrameCallbackType>& GetImGuiRendererNewFrameCallback()
+		{
+			return ImGuiRendererNewFrameCallback;
+		}
+
+		Callback<ImGuiRenderCallbackType>& GetImGuiRenderCallback()
+		{
+			return ImGuiRenderCallback;
+		}
+#endif // LEVIATHAN_WITH_TOOLS.
 
 		bool PreModuleInitialization()
 		{
@@ -232,6 +273,19 @@ namespace LeviathanCore
 			{
 				return false;
 			}
+
+#ifdef LEVIATHAN_WITH_TOOLS
+			// Initialize Leviathan tools module and platform backend implementation.
+			if (!LeviathanTools::Initialize())
+			{
+				return false;
+			}
+
+			if (!Platform::ImGuiPlatformInitialize(GetRuntimeWindowPlatformHandle()))
+			{
+				return false;
+			}
+#endif // LEVIATHAN_WITH_TOOLS.
 
 			return true;
 		}

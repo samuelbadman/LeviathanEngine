@@ -3,12 +3,17 @@
 #include "LeviathanInputCore.h"
 #include "LeviathanRenderer.h"
 #include "AssetImporter.h"
+
 #include "AssetTypes.h"
 #include "MathTypes.h"
 #include "MathLibrary.h"
 #include "Camera.h"
 #include "RendererResourceID.h"
 #include "DataStructures.h"
+
+#ifdef LEVIATHAN_WITH_TOOLS
+#include "DemoTool.h"
+#endif // LEVIATHAN_WITH_TOOLS.
 
 namespace TestTitle
 {
@@ -257,6 +262,18 @@ namespace TestTitle
 		LeviathanRenderer::EndFrame();
 	}
 
+#ifdef LEVIATHAN_WITH_TOOLS
+	static void OnRenderImGui()
+	{
+		LeviathanTools::DemoTool::Render();
+	}
+#endif // LEVIATHAN_WITH_TOOLS.
+
+	static void OnPresent()
+	{
+		LeviathanRenderer::Present();
+	}
+
 	static void OnCleanup()
 	{
 		// Shutdown engine modules used by title.
@@ -273,6 +290,7 @@ namespace TestTitle
 		LeviathanCore::Core::GetTickCallback().Deregister(&OnTick);
 		LeviathanCore::Core::GetPostTickCallback().Deregister(&OnPostTick);
 		LeviathanCore::Core::GetRenderCallback().Deregister(&OnRender);
+		LeviathanCore::Core::GetPresentCallback().Deregister(&OnPresent);
 		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Deregister(&OnRuntimeWindowResized);
 		LeviathanCore::Core::GetRuntimeWindowMouseInputCallback().Deregister(&OnRuntimeWindowMouseInput);
 
@@ -280,6 +298,10 @@ namespace TestTitle
 		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Deregister(&OnGameControllerInput);
 		LeviathanInputCore::PlatformInput::GetGameControllerConnectedCallback().Deregister(&OnGameControllerConnected);
 		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Deregister(&OnGameControllerDisconnected);
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		LeviathanRenderer::GetRenderImGuiCallback().Deregister(&OnRenderImGui);
+#endif // LEVIATHAN_WITH_TOOLS.
 	}
 
 	bool Initialize()
@@ -309,6 +331,7 @@ namespace TestTitle
 		LeviathanCore::Core::GetTickCallback().Register(&OnTick);
 		LeviathanCore::Core::GetPostTickCallback().Register(&OnPostTick);
 		LeviathanCore::Core::GetRenderCallback().Register(&OnRender);
+		LeviathanCore::Core::GetPresentCallback().Register(&OnPresent);
 		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(&OnRuntimeWindowResized);
 		LeviathanCore::Core::GetRuntimeWindowMouseInputCallback().Register(&OnRuntimeWindowMouseInput);
 
@@ -316,6 +339,10 @@ namespace TestTitle
 		LeviathanInputCore::PlatformInput::GetGameControllerInputCallback().Register(&OnGameControllerInput);
 		LeviathanInputCore::PlatformInput::GetGameControllerConnectedCallback().Register(&OnGameControllerConnected);
 		LeviathanInputCore::PlatformInput::GetGameControllerDisconnectedCallback().Register(&OnGameControllerDisconnected);
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		LeviathanRenderer::GetRenderImGuiCallback().Register(&OnRenderImGui);
+#endif // LEVIATHAN_WITH_TOOLS.
 
 		// Create scene.
 		// Import model from disk.

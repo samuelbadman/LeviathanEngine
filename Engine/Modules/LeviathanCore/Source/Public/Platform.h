@@ -39,5 +39,11 @@ namespace LeviathanCore
 
 		// Releases the platform cursor from the platform window it is currently locked to.
 		bool ReleasePlatformCursor();
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		bool ImGuiPlatformInitialize(void* platformWindowHandle);
+		void ImGuiPlatformShutdown();
+		void ImGuiPlatformNewFrame();
+#endif // LEVIATHAN_WITH_TOOLS.
 	}
 }

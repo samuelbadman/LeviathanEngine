@@ -21,6 +21,7 @@ namespace LeviathanCore
 		using RuntimeWindowRestoredCallbackType = void(*)();
 		using RuntimeWindowMouseInputCallbackType = void(*)(InputKey /* key */, float /* data */);
 		using RenderCallbackType = void(*)();
+		using PresentCallbackType = void(*)();
 
 		Callback<PreMainLoopCallbackType>& GetPreMainLoopCallback();
 		Callback<PostMainLoopCallbackType>& GetPostMainLoopCallback();
@@ -35,6 +36,15 @@ namespace LeviathanCore
 		Callback<RuntimeWindowRestoredCallbackType>& GetRuntimeWindowRestoredCallback();
 		Callback<RuntimeWindowMouseInputCallbackType>& GetRuntimeWindowMouseInputCallback();
 		Callback<RenderCallbackType>& GetRenderCallback();
+		Callback<PresentCallbackType>& GetPresentCallback();
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		using ImGuiRendererNewFrameCallbackType = void(*)();
+		using ImGuiRenderCallbackType = void(*)();
+
+		Callback<ImGuiRendererNewFrameCallbackType>& GetImGuiRendererNewFrameCallback();
+		Callback<ImGuiRenderCallbackType>& GetImGuiRenderCallback();
+#endif // LEVIATHAN_WITH_TOOLS. 
 
 		bool PreModuleInitialization();
 		bool PostModuleInitialization();

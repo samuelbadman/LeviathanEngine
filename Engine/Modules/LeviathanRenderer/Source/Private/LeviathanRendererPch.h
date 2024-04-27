@@ -28,7 +28,7 @@
 #include <wrl.h>
 #include <d3dcompiler.h>
 
-#elif LEVIATHAN_BUILD_RENDERER_API_DIRECT3D12_PC
+#elif defined LEVIATHAN_BUILD_RENDERER_API_DIRECT3D12_PC
 // Direct3D12 PC.
 #include <dxcapi.h>
 
@@ -38,3 +38,23 @@
 
 #endif // LEVIATHAN_BUILD_RENDERER_API_DIRECT3D11_PC.
 
+#ifdef LEVIATHAN_WITH_TOOLS
+
+// Direct3D 11 PC.
+#ifdef LEVIATHAN_BUILD_RENDERER_API_DIRECT3D11_PC
+
+#include "../../../LeviathanTools/Source/Private/Imgui/imgui_impl_dx11.h"
+
+// Direct3D 12 PC.
+#elif defined LEVIATHAN_BUILD_RENDERER_API_DIRECT3D12_PC
+
+#include "../../../LeviathanTools/Source/Private/Imgui/imgui_impl_dx12.h"
+
+// Vulkan.
+#elif defined LEVIATHAN_BUILD_RENDERER_API_VULKAN
+
+#include "../../../LeviathanTools/Source/Private/Imgui/imgui_impl_vulkan.h"
+
+#endif // LEVIATHAN_BUILD_RENDERER_API_DIRECT3D11_PC.
+
+#endif // LEVIATHAN_WITH_TOOLS.

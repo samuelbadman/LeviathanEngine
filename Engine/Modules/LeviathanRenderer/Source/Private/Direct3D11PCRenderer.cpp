@@ -488,7 +488,7 @@ float4 main(PixelInput input) : SV_TARGET
 #ifdef LEVIATHAN_BUILD_CONFIG_MASTER
 			forceRecompile = false;
 #endif
-
+			
 			success = InitializeShaders(forceRecompile);
 			if (!success) { return false; }
 
@@ -693,5 +693,28 @@ float4 main(PixelInput input) : SV_TARGET
 		{
 			return UpdateConstantBuffer(gMaterialBuffer.Get(), &data, sizeof(ConstantBufferTypes::MaterialConstantBuffer));
 		}
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		bool ImGuiRendererInitialize()
+		{
+			return ImGui_ImplDX11_Init(gD3D11Device.Get(), gD3D11DeviceContext.Get());
+		}
+
+		void ImGuiRendererShutdown()
+		{
+			ImGui_ImplDX11_Shutdown();
+		}
+
+		void ImGuiRendererNewFrame()
+		{
+			ImGui_ImplDX11_NewFrame();
+		}
+
+		void ImGuiRender()
+		{
+			ImGui::Render();
+			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		}
+#endif // LEVIATHAN_WITH_TOOLS.
 	}
 }

@@ -5,6 +5,10 @@
 
 namespace LeviathanRenderer
 {
+#ifdef LEVIATHAN_WITH_TOOLS
+	static LeviathanCore::Callback<RenderImGuiCallbackType> RenderImGuiCallback = {};
+#endif // LEVIATHAN_WITH_TOOLS.
+
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
 		bool success = Renderer::ResizeWindowResources(renderAreaWidth, renderAreaHeight);
@@ -15,13 +19,41 @@ namespace LeviathanRenderer
 		}
 	}
 
+#ifdef LEVIATHAN_WITH_TOOLS
+	static void OnImGuiRendererNewFrame()
+	{
+		Renderer::ImGuiRendererNewFrame();
+	}
+
+	static void OnImGuiRender()
+	{
+		RenderImGuiCallback.Call();
+		Renderer::ImGuiRender();
+	}
+
+	LeviathanCore::Callback<RenderImGuiCallbackType>& GetRenderImGuiCallback()
+	{
+		return RenderImGuiCallback;
+	}
+#endif // LEVIATHAN_WITH_TOOLS.
+
 	bool Initialize()
 	{
 		static constexpr unsigned int bufferCount = 3;
 		static constexpr bool vsync = false;
 
-		// Register to runtime window callbacks.
+#ifdef LEVIATHAN_WITH_TOOLS
+		// Clear render ImGui callback.
+		RenderImGuiCallback.Clear();
+#endif // LEVIATHAN_WITH_TOOLS.
+
+		// Register to callbacks.
 		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Register(&OnRuntimeWindowResized);
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		LeviathanCore::Core::GetImGuiRendererNewFrameCallback().Register(&OnImGuiRendererNewFrame);
+		LeviathanCore::Core::GetImGuiRenderCallback().Register(&OnImGuiRender);
+#endif // LEVIATHAN_WITH_TOOLS.
 
 		// Initialize renderer api.
 		void* platformHandle = LeviathanCore::Core::GetRuntimeWindowPlatformHandle();
@@ -33,12 +65,41 @@ namespace LeviathanRenderer
 			return false;
 		}
 
-		return Renderer::InitializeRendererApi(static_cast<unsigned int>(width), static_cast<unsigned int>(height), platformHandle, vsync, bufferCount);
+		if (!Renderer::InitializeRendererApi(static_cast<unsigned int>(width), static_cast<unsigned int>(height), platformHandle, vsync, bufferCount))
+		{
+			return false;
+		}
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		if (!Renderer::ImGuiRendererInitialize())
+		{
+			return false;
+		}
+#endif // LEVIATHAN_WITH_TOOLS.
+
+		return true;
 	}
 
 	bool Shutdown()
 	{
-		return Renderer::ShutdownRendererApi();
+		// Deregister from callbacks.
+		LeviathanCore::Core::GetRuntimeWindowResizedCallback().Deregister(&OnRuntimeWindowResized);
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		// Deregister from Leviathan tools callbacks.
+		LeviathanCore::Core::GetImGuiRendererNewFrameCallback().Deregister(&OnImGuiRendererNewFrame);
+		LeviathanCore::Core::GetImGuiRenderCallback().Deregister(&OnImGuiRender);
+
+		// Shutdown Leviathan tools renderer.
+		Renderer::ImGuiRendererShutdown();
+#endif // LEVIATHAN_WITH_TOOLS.
+
+		if (!Renderer::ShutdownRendererApi())
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceID::IDType& outId)
@@ -73,7 +134,6 @@ namespace LeviathanRenderer
 
 	void EndFrame()
 	{
-		Renderer::Present();
 	}
 
 	void Draw(const unsigned int indexCount, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId)
@@ -89,5 +149,10 @@ namespace LeviathanRenderer
 	bool SetMaterialData(const ConstantBufferTypes::MaterialConstantBuffer& materialData)
 	{
 		return Renderer::SetMaterialBufferData(materialData);
+	}
+
+	void Present()
+	{
+		Renderer::Present();
 	}
 }

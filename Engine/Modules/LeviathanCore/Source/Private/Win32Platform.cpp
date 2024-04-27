@@ -346,5 +346,22 @@ namespace LeviathanCore
 		{
 			return ClipCursor(nullptr);
 		}
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		bool ImGuiPlatformInitialize(void* platformWindowHandle)
+		{
+			return ImGui_ImplWin32_Init(platformWindowHandle);
+		}
+
+		void ImGuiPlatformShutdown()
+		{
+			ImGui_ImplWin32_Shutdown();
+		}
+
+		void ImGuiPlatformNewFrame()
+		{
+			ImGui_ImplWin32_NewFrame();
+		}
+#endif // LEVIATHAN_WITH_TOOLS.
 	}
 }

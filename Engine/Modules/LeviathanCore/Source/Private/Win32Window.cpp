@@ -1,6 +1,10 @@
 #include "PlatformWindow.h"
 #include "Win32Window.h"
 
+#ifdef LEVIATHAN_WITH_TOOLS
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif // LEVIATHAN_WITH_TOOLS.
+
 namespace LeviathanCore
 {
 	namespace Platform
@@ -178,6 +182,13 @@ namespace LeviathanCore
 			// Window procedure callback for every window.
 			static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
+#ifdef LEVIATHAN_WITH_TOOLS
+				if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+				{
+					return true;
+				}
+#endif // LEVIATHAN_WITH_TOOLS.
+
 				// Get window instance and call its wnd proc handler
 				PlatformWindow* window = reinterpret_cast<PlatformWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 

@@ -32,5 +32,12 @@ namespace LeviathanRenderer
 		void DrawIndexed(const unsigned int indexCount, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId);
 		[[nodiscard]] bool SetObjectBufferData(const ConstantBufferTypes::ObjectConstantBuffer& data);
 		[[nodiscard]] bool SetMaterialBufferData(const ConstantBufferTypes::MaterialConstantBuffer& data);
+
+#ifdef LEVIATHAN_WITH_TOOLS
+		bool ImGuiRendererInitialize();
+		void ImGuiRendererShutdown();
+		void ImGuiRendererNewFrame();
+		void ImGuiRender();
+#endif // LEVIATHAN_WITH_TOOLS.
 	}
 }
