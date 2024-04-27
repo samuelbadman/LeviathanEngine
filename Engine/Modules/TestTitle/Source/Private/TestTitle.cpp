@@ -226,29 +226,32 @@ namespace TestTitle
 		// Begin frame.
 		LeviathanRenderer::BeginFrame();
 
-		// Quad 1 (dynamic).
-		// Update material data.
-		LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
-		LeviathanRenderer::SetMaterialData(quadMaterialData);
+		// Object 1 (dynamic).
+		if (gIndexCount > 0)
+		{
+			// Update material data.
+			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
+			LeviathanRenderer::SetMaterialData(quadMaterialData);
 
-		// Calculate world matrix.
-		LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
-		LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
-		LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
+			// Calculate world matrix.
+			LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
+			LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
+			LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
 
-		LeviathanCore::MathTypes::Matrix4x4 worldMatrix = translationMatrix * rotationMatrix * scalingMatrix;
+			LeviathanCore::MathTypes::Matrix4x4 worldMatrix = translationMatrix * rotationMatrix * scalingMatrix;
 
-		// Calculate world view projection matrix.
-		LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = {};
-		worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * worldMatrix;
+			// Calculate world view projection matrix.
+			LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = {};
+			worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * worldMatrix;
 
-		// Update object data.
-		LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
-		memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
-		LeviathanRenderer::SetObjectData(quadObjectData);
+			// Update object data.
+			LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
+			memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
+			LeviathanRenderer::SetObjectData(quadObjectData);
 
-		// Draw.
-		LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferId);
+			// Draw.
+			LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferId);
+		}
 
 		// End frame.
 		LeviathanRenderer::EndFrame();
@@ -317,57 +320,58 @@ namespace TestTitle
 		// Create scene.
 		// Import model from disk.
 		std::vector<AssetImporter::AssetTypes::Mesh> model = {};
-		AssetImporter::ImportModel("Model.fbx", model);
-
-		// Combine model meshes into a single render mesh. This is to draw all of the meshes that compose the model in a single vertex buffer.
-		// Render mesh definition.
-		std::vector<LeviathanRenderer::VertexTypes::Vertex1Pos> vertices = {};
-		std::vector<unsigned int> indices = {};
-
-		// Count total number of vertices and indices in the model and allocate space to store the render mesh.
-		size_t vertexCount = 0;
-		size_t indexCount = 0;
-		for (size_t i = 0; i < model.size(); ++i)
+		if (AssetImporter::ImportModel("Model.fbx", model))
 		{
-			vertexCount += model[i].Positions.size();
-			indexCount += model[i].Indices.size();
-		}
+			// Combine model meshes into a single render mesh. This is to draw all of the meshes that compose the model in a single vertex buffer.
+			// Render mesh definition.
+			std::vector<LeviathanRenderer::VertexTypes::Vertex1Pos> vertices = {};
+			std::vector<unsigned int> indices = {};
 
-		vertices.reserve(vertexCount);
-		indices.reserve(indexCount);
-		gIndexCount = static_cast<unsigned int>(indexCount);
-
-		// Build render mesh.
-		for (size_t i = 0; i < model.size(); ++i)
-		{
-			// For each mesh in the model.
-
-			size_t indexOffset = vertices.size();
-
-			for (size_t j = 0; j < model[i].Positions.size(); ++j)
+			// Count total number of vertices and indices in the model and allocate space to store the render mesh.
+			size_t vertexCount = 0;
+			size_t indexCount = 0;
+			for (size_t i = 0; i < model.size(); ++i)
 			{
-				// For each vertex in the mesh.
-				vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model[i].Positions[j].GetX(), model[i].Positions[j].GetY(), model[i].Positions[j].GetZ() });
+				vertexCount += model[i].Positions.size();
+				indexCount += model[i].Indices.size();
 			}
 
-			for (size_t j = 0; j < model[i].Indices.size(); ++j)
+			vertices.reserve(vertexCount);
+			indices.reserve(indexCount);
+			gIndexCount = static_cast<unsigned int>(indexCount);
+
+			// Build render mesh.
+			for (size_t i = 0; i < model.size(); ++i)
 			{
-				// For each index in the mesh.
+				// For each mesh in the model.
 
-				// Offset indices into the vertex buffer as vertices from multiple meshes are being combin
-				indices.push_back(static_cast<unsigned int>(indexOffset) + model[i].Indices[j]);
+				size_t indexOffset = vertices.size();
+
+				for (size_t j = 0; j < model[i].Positions.size(); ++j)
+				{
+					// For each vertex in the mesh.
+					vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model[i].Positions[j].GetX(), model[i].Positions[j].GetY(), model[i].Positions[j].GetZ() });
+				}
+
+				for (size_t j = 0; j < model[i].Indices.size(); ++j)
+				{
+					// For each index in the mesh.
+
+					// Offset indices into the vertex buffer as vertices from multiple meshes are being combin
+					indices.push_back(static_cast<unsigned int>(indexOffset) + model[i].Indices[j]);
+				}
 			}
-		}
 
-		// Create geometry buffers.
-		if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), gVertexBufferId))
-		{
-			return false;
-		}
+			// Create geometry buffers.
+			if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), gVertexBufferId))
+			{
+				return false;
+			}
 
-		if (!LeviathanRenderer::CreateIndexBuffer(indices.data(), static_cast<unsigned int>(indices.size()), gIndexBufferId))
-		{
-			return false;
+			if (!LeviathanRenderer::CreateIndexBuffer(indices.data(), static_cast<unsigned int>(indices.size()), gIndexBufferId))
+			{
+				return false;
+			}
 		}
 
 		// Load quad geometry.

@@ -5,14 +5,15 @@
 
 namespace LeviathanRenderer
 {
-	enum class ProjectionMode : unsigned char
-	{
-		Orthographic,
-		Perspective
-	};
-
 	class Camera
 	{
+	public:
+		enum class ProjectionMode : unsigned char
+		{
+			Orthographic,
+			Perspective
+		};
+
 	private:
 		LeviathanCore::MathTypes::Vector3 Position = {};
 		LeviathanCore::MathTypes::Euler Orientation = {};
