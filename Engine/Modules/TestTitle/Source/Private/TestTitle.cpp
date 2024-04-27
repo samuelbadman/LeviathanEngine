@@ -406,7 +406,6 @@ namespace TestTitle
 		}
 
 		gSceneCamera.UpdateProjectionMatrix(windowWidth, windowHeight);
-
 		gSceneCamera.UpdateViewProjectionMatrix();
 
 		// ECS module prototype code region.
