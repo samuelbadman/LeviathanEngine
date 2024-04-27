@@ -53,7 +53,7 @@ namespace LeviathanCore
 
 			// In-place math operations.
 			// Converts the vector to keep the same direction with unit length 1.
-			void Normalize();
+			void NormalizeSafe();
 
 			// Getter/setters.
 			inline float GetX() const { return Components[XComponent]; }
@@ -64,7 +64,7 @@ namespace LeviathanCore
 			inline void SetZ(const float z) { Components[ZComponent] = z; }
 
 			// Returns the vector pointing in the same direction with unit length 1.
-			Vector3 AsNormalized() const;
+			Vector3 AsNormalizedSafe() const;
 
 			// Returns the length (magnitude) of the vector.
 			float Length() const;
@@ -134,8 +134,8 @@ namespace LeviathanCore
 			void InverseInPlace();
 
 			// Getters/setters.
-			inline float* GetMatrix() { return Matrix; }
-			inline const float* GetMatrix() const { return Matrix; }
+			inline float* Data() { return Matrix; }
+			inline const float* Data() const { return Matrix; }
 
 			// Operators.
 			Matrix4x4 operator*(const Matrix4x4& rhs) const;

@@ -246,7 +246,7 @@ namespace TestTitle
 
 			// Update object data.
 			LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
-			memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.GetMatrix(), sizeof(float) * 16);
+			memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
 			LeviathanRenderer::SetObjectData(quadObjectData);
 
 			// Draw.

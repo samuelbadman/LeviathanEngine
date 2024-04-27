@@ -15,7 +15,7 @@ namespace LeviathanCore
 			return Vector3((a.GetY() * b.GetZ()) - (b.GetY() * a.GetZ()), (b.GetX() * a.GetZ()) - (a.GetX() * b.GetZ()), (a.GetX() * b.GetY()) - (b.GetX() * a.GetY()));
 		}
 
-		void Vector3::Normalize()
+		void Vector3::NormalizeSafe()
 		{
 			const float length = Length();
 
@@ -29,7 +29,7 @@ namespace LeviathanCore
 			SetZ(GetZ() / length);
 		}
 
-		Vector3 Vector3::AsNormalized() const
+		Vector3 Vector3::AsNormalizedSafe() const
 		{
 			const float length = Length();
 
@@ -79,12 +79,12 @@ namespace LeviathanCore
 		Matrix4x4 Matrix4x4::Transpose(const Matrix4x4& matrix4x4)
 		{
 			glm::mat4x4 glmMat = {};
-			memcpy(&glmMat[0], matrix4x4.GetMatrix(), sizeof(float) * 16);
+			memcpy(&glmMat[0], matrix4x4.Data(), sizeof(float) * 16);
 
 			glmMat = glm::transpose(glmMat);
 
 			Matrix4x4 result = {};
-			memcpy(result.GetMatrix(), &glmMat[0], sizeof(float) * 16);
+			memcpy(result.Data(), &glmMat[0], sizeof(float) * 16);
 
 			return result;
 		}
@@ -92,12 +92,12 @@ namespace LeviathanCore
 		Matrix4x4 Matrix4x4::Inverse(const Matrix4x4& matrix4x4)
 		{
 			glm::mat4x4 glmMat = {};
-			memcpy(&glmMat[0], matrix4x4.GetMatrix(), sizeof(float) * 16);
+			memcpy(&glmMat[0], matrix4x4.Data(), sizeof(float) * 16);
 
 			glmMat = glm::inverse(glmMat);
 
 			Matrix4x4 result = {};
-			memcpy(result.GetMatrix(), &glmMat[0], sizeof(float) * 16);
+			memcpy(result.Data(), &glmMat[0], sizeof(float) * 16);
 
 			return result;
 		}
@@ -107,7 +107,7 @@ namespace LeviathanCore
 			const glm::mat4x4 glmMat = glm::translate(glm::identity<glm::mat4x4>(), glm::vec3(translation.GetX(), translation.GetY(), translation.GetZ()));
 
 			Matrix4x4 result = {};
-			memcpy(result.GetMatrix(), &glmMat[0], sizeof(float) * 16);
+			memcpy(result.Data(), &glmMat[0], sizeof(float) * 16);
 
 			return result;
 		}
@@ -117,7 +117,7 @@ namespace LeviathanCore
 			const glm::mat4x4 glmMat = glm::scale(glm::identity<glm::mat4x4>(), glm::vec3(scale.GetX(), scale.GetY(), scale.GetZ()));
 
 			Matrix4x4 result = {};
-			memcpy(result.GetMatrix(), &glmMat[0], sizeof(float) * 16);
+			memcpy(result.Data(), &glmMat[0], sizeof(float) * 16);
 
 			return result;
 		}
@@ -127,7 +127,7 @@ namespace LeviathanCore
 			const glm::mat4x4 rotation = glm::rotate(glm::identity<glm::mat4x4>(), angleRadians, glm::vec3(axis.GetX(), axis.GetY(), axis.GetZ()));
 
 			Matrix4x4 result = {};
-			memcpy(result.GetMatrix(), &rotation[0], sizeof(float) * 16);
+			memcpy(result.Data(), &rotation[0], sizeof(float) * 16);
 
 			return result;
 		}
@@ -137,7 +137,7 @@ namespace LeviathanCore
 			const glm::mat4x4 rotation = glm::mat4_cast(glm::quat(glm::vec3(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians())));
 
 			Matrix4x4 result = {};
-			memcpy(result.GetMatrix(), &rotation[0], sizeof(float) * 16);
+			memcpy(result.Data(), &rotation[0], sizeof(float) * 16);
 
 			return result;
 		}
@@ -147,7 +147,7 @@ namespace LeviathanCore
 			glm::mat4x4 rotation = glm::mat4_cast(glm::quat(quaternion.GetW(), quaternion.GetX(), quaternion.GetY(), quaternion.GetZ()));
 
 			Matrix4x4 result = {};
-			memcpy(result.GetMatrix(), &rotation[0], sizeof(float) * 16);
+			memcpy(result.Data(), &rotation[0], sizeof(float) * 16);
 
 			return result;
 		}
@@ -196,15 +196,15 @@ namespace LeviathanCore
 		Matrix4x4 Matrix4x4::Multiply(const Matrix4x4& a, const Matrix4x4& b)
 		{
 			glm::mat4x4 glmMatA = {};
-			memcpy(&glmMatA[0], a.GetMatrix(), sizeof(float) * 16);
+			memcpy(&glmMatA[0], a.Data(), sizeof(float) * 16);
 
 			glm::mat4x4 glmMatB = {};
-			memcpy(&glmMatB[0], b.GetMatrix(), sizeof(float) * 16);
+			memcpy(&glmMatB[0], b.Data(), sizeof(float) * 16);
 
 			const glm::mat4x4 glmResult = glmMatA * glmMatB;
 
 			Matrix4x4 result = {};
-			memcpy(result.GetMatrix(), &glmResult[0], sizeof(float) * 16);
+			memcpy(result.Data(), &glmResult[0], sizeof(float) * 16);
 
 			return result;
 		}
