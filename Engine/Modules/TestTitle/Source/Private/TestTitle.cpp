@@ -22,6 +22,25 @@ namespace TestTitle
 		int Number = 0;
 	};
 
+	struct Transform
+	{
+		LeviathanCore::MathTypes::Vector3 Translation = {};
+		LeviathanCore::MathTypes::Euler Rotation = {};
+		LeviathanCore::MathTypes::Vector3 Scale = LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f);
+
+		Transform() = default;
+		Transform(const LeviathanCore::MathTypes::Vector3& translation, const LeviathanCore::MathTypes::Euler& rotation, const LeviathanCore::MathTypes::Vector3& scale)
+			: Translation(translation), Rotation(rotation), Scale(scale)
+		{}
+
+		LeviathanCore::MathTypes::Matrix4x4 Matrix()
+		{
+			return LeviathanCore::MathTypes::Matrix4x4::Translation(Translation) *
+				LeviathanCore::MathTypes::Matrix4x4::Rotation(Rotation) *
+				LeviathanCore::MathTypes::Matrix4x4::Scaling(Scale);
+		}
+	};
+
 	static unsigned int gIndexCount = 0;
 	static LeviathanRenderer::RendererResourceID::IDType gVertexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gIndexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
@@ -239,15 +258,10 @@ namespace TestTitle
 			LeviathanRenderer::SetMaterialData(quadMaterialData);
 
 			// Calculate world matrix.
-			LeviathanCore::MathTypes::Matrix4x4 translationMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
-			LeviathanCore::MathTypes::Matrix4x4 rotationMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
-			LeviathanCore::MathTypes::Matrix4x4 scalingMatrix = LeviathanCore::MathTypes::Matrix4x4::Identity();
-
-			LeviathanCore::MathTypes::Matrix4x4 worldMatrix = translationMatrix * rotationMatrix * scalingMatrix;
+			Transform objectTransform = {};
 
 			// Calculate world view projection matrix.
-			LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = {};
-			worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * worldMatrix;
+			LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * objectTransform.Matrix();
 
 			// Update object data.
 			LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
