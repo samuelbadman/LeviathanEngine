@@ -10,6 +10,8 @@
 #include "Camera.h"
 #include "RendererResourceID.h"
 #include "DataStructures.h"
+#include "ConstantBufferTypes.h"
+#include "VertexTypes.h"
 
 #ifdef LEVIATHAN_WITH_TOOLS
 #include "DemoTool.h"
@@ -41,6 +43,7 @@ namespace TestTitle
 		}
 	};
 
+	static size_t gSingleVertexStrideBytes = 0;
 	static unsigned int gIndexCount = 0;
 	static LeviathanRenderer::RendererResourceID::IDType gVertexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gIndexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
@@ -269,7 +272,7 @@ namespace TestTitle
 			LeviathanRenderer::SetObjectData(quadObjectData);
 
 			// Draw.
-			LeviathanRenderer::Draw(gIndexCount, gVertexBufferId, gIndexBufferId);
+			LeviathanRenderer::Draw(gIndexCount, gSingleVertexStrideBytes, gVertexBufferId, gIndexBufferId);
 		}
 
 		// End frame.
@@ -363,20 +366,26 @@ namespace TestTitle
 		std::vector<AssetImporter::AssetTypes::Mesh> model = {};
 		if (AssetImporter::ImportModel("Model.fbx", model))
 		{
+			// Combine model meshes into a single mesh buffer.
 			AssetImporter::AssetTypes::Mesh combinedModel = AssetImporter::CombineMeshes(model.data(), model.size());
 
-			// Combine model meshes into a single render mesh. This is to draw all of the meshes that compose the model in a single vertex buffer.
+			// Build render mesh.
 			// Render mesh definition.
-			std::vector<LeviathanRenderer::VertexTypes::Vertex1Pos> vertices = {};
+			std::vector<LeviathanRenderer::VertexTypes::VertexPosNorm> vertices = {};
 			std::vector<unsigned int> indices = {};
 
+			gSingleVertexStrideBytes = sizeof(LeviathanRenderer::VertexTypes::VertexPosNorm);
 			gIndexCount = static_cast<unsigned int>(combinedModel.Indices.size());
 
 			// Build render mesh.
 			// For each vertex in the mesh.
 			for (size_t i = 0; i < combinedModel.Positions.size(); ++i)
 			{
-				vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ combinedModel.Positions[i].GetX(), combinedModel.Positions[i].GetY(), combinedModel.Positions[i].GetZ() });
+				vertices.emplace_back(LeviathanRenderer::VertexTypes::VertexPosNorm
+					{
+						.Position = {combinedModel.Positions[i].GetX(), combinedModel.Positions[i].GetY(), combinedModel.Positions[i].GetZ()},
+						.Normal = {combinedModel.Normals[i].GetX(), combinedModel.Normals[i].GetY(), combinedModel.Normals[i].GetZ()}
+					});
 			}
 
 			// For each index in the mesh.
@@ -387,7 +396,7 @@ namespace TestTitle
 			}
 
 			// Create geometry buffers.
-			if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), gVertexBufferId))
+			if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), sizeof(LeviathanRenderer::VertexTypes::VertexPosNorm), gVertexBufferId))
 			{
 				return false;
 			}

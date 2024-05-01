@@ -4,9 +4,15 @@ namespace LeviathanRenderer
 {
 	namespace VertexTypes
 	{
-		struct Vertex1Pos
+		struct VertexPos
 		{
 			float Position[3] = { 0.0f, 0.0f, 0.0f };
+		};
+
+		struct VertexPosNorm
+		{
+			float Position[3] = { 0.0f, 0.0f, 0.0f };
+			float Normal[3] = { 0.0f, 0.0f, 0.0f };
 		};
 	}
 }

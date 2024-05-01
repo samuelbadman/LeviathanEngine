@@ -82,17 +82,21 @@ cbuffer ObjectBuffer : register(b0)
 struct VertexInput
 {
     float3 Position : POSITION;
+    float3 Normal : NORMAL;
 };
 
 struct VertexOutput
 {
     float4 Position : SV_POSITION;
+    float3 Normal : NORMAL;
 };
 
 VertexOutput main(VertexInput input)
 {
     VertexOutput output;
+
     output.Position = mul(WorldViewProjection, float4(input.Position, 1.0f));
+    output.Normal = input.Normal;
 				
     return output;
 }
@@ -107,11 +111,19 @@ cbuffer MaterialBuffer : register(b0)
 struct PixelInput
 {
     float4 Position : SV_POSITION;
+    float3 Normal : NORMAL;
 };
 
 float4 main(PixelInput input) : SV_TARGET
 {
-    return Color;
+    float3 lightColor = float3(1.0f, 1.0f, 1.0f);
+
+    // Phong lighting model.
+    // Calculate ambient lighting term.
+    float ambientStrength = 0.1f;
+    float3 ambient = ambientStrength * lightColor;
+    
+    return float4(Color.rgb * ambient, 1.0f);
 }
 		)";
 
@@ -488,13 +500,13 @@ float4 main(PixelInput input) : SV_TARGET
 #ifdef LEVIATHAN_BUILD_CONFIG_MASTER
 			forceRecompile = false;
 #endif
-			
+
 			success = InitializeShaders(forceRecompile);
 			if (!success) { return false; }
 
 			// Create pipelines.
 			// Create input layout.
-			std::array<D3D11_INPUT_ELEMENT_DESC, 1> inputLayoutDesc =
+			std::array<D3D11_INPUT_ELEMENT_DESC, 2> inputLayoutDesc =
 			{
 				D3D11_INPUT_ELEMENT_DESC
 				{
@@ -505,7 +517,18 @@ float4 main(PixelInput input) : SV_TARGET
 					.AlignedByteOffset = 0,
 					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
 					.InstanceDataStepRate = 0
-				}
+				},
+
+				D3D11_INPUT_ELEMENT_DESC
+				{
+					.SemanticName = "NORMAL",
+					.SemanticIndex = 0,
+					.Format = DXGI_FORMAT_R32G32B32_FLOAT,
+					.InputSlot = 0,
+					.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT,
+					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+					.InstanceDataStepRate = 0
+				},
 			};
 
 			hr = gD3D11Device->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()),
@@ -601,13 +624,13 @@ float4 main(PixelInput input) : SV_TARGET
 			return success;
 		}
 
-		bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceID::IDType& outId)
+		bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceID::IDType& outId)
 		{
 			outId = RendererResourceID::InvalidID;
 
 			D3D11_BUFFER_DESC vertexBufferDesc = {};
 			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			vertexBufferDesc.ByteWidth = static_cast<UINT>(sizeof(VertexTypes::Vertex1Pos) * vertexCount);
+			vertexBufferDesc.ByteWidth = static_cast<UINT>(static_cast<unsigned int>(singleVertexStrideBytes) * vertexCount);
 			vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 			vertexBufferDesc.CPUAccessFlags = 0;
 			vertexBufferDesc.MiscFlags = 0;
@@ -674,9 +697,9 @@ float4 main(PixelInput input) : SV_TARGET
 			gSwapChain->Present(((gVSync) ? 1 : 0), 0);
 		}
 
-		void DrawIndexed(const unsigned int indexCount, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId)
+		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId)
 		{
-			UINT stride = sizeof(VertexTypes::Vertex1Pos);
+			UINT stride = static_cast<UINT>(singleVertexStrideBytes);
 			UINT offset = 0;
 			gD3D11DeviceContext->IASetVertexBuffers(0, 1, gVertexBuffers[static_cast<size_t>(vertexBufferId)].GetAddressOf(), &stride, &offset);
 			gD3D11DeviceContext->IASetIndexBuffer(gIndexBuffers[static_cast<size_t>(indexBufferId)].Get(), DXGI_FORMAT_R32_UINT, 0);

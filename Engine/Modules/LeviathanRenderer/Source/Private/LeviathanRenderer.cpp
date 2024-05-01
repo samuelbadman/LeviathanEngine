@@ -102,9 +102,9 @@ namespace LeviathanRenderer
 		return true;
 	}
 
-	bool CreateVertexBuffer(const VertexTypes::Vertex1Pos* vertexData, unsigned int vertexCount, RendererResourceID::IDType& outId)
+	bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceID::IDType& outId)
 	{
-		return Renderer::CreateVertexBuffer(vertexData, vertexCount, outId);
+		return Renderer::CreateVertexBuffer(vertexData, vertexCount, singleVertexStrideBytes, outId);
 	}
 
 	bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId)
@@ -136,9 +136,9 @@ namespace LeviathanRenderer
 	{
 	}
 
-	void Draw(const unsigned int indexCount, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId)
+	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId)
 	{
-		Renderer::DrawIndexed(indexCount, vertexBufferId, indexBufferId);
+		Renderer::DrawIndexed(indexCount, singleVertexStrideBytes, vertexBufferId, indexBufferId);
 	}
 
 	bool SetObjectData(const ConstantBufferTypes::ObjectConstantBuffer& objectData)
