@@ -124,7 +124,7 @@ namespace LeviathanRenderer
 
 	void BeginFrame()
 	{
-		static constexpr float clearColor[] = { 1.f, 0.f, 0.f, 1.f };
+		static constexpr float clearColor[] = { 0.f, 0.15f, 0.275f, 1.f };
 		static constexpr float clearDepth = 1.f;
 		static constexpr unsigned char clearStencil = 0;
 
