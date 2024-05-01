@@ -265,7 +265,7 @@ namespace TestTitle
 #ifdef LEVIATHAN_WITH_TOOLS
 	static void OnRenderImGui()
 	{
-		LeviathanTools::DemoTool::Render();
+		//LeviathanTools::DemoTool::Render();
 	}
 #endif // LEVIATHAN_WITH_TOOLS.
 
@@ -349,44 +349,27 @@ namespace TestTitle
 		std::vector<AssetImporter::AssetTypes::Mesh> model = {};
 		if (AssetImporter::ImportModel("Model.fbx", model))
 		{
+			AssetImporter::AssetTypes::Mesh combinedModel = AssetImporter::CombineMeshes(model.data(), model.size());
+
 			// Combine model meshes into a single render mesh. This is to draw all of the meshes that compose the model in a single vertex buffer.
 			// Render mesh definition.
 			std::vector<LeviathanRenderer::VertexTypes::Vertex1Pos> vertices = {};
 			std::vector<unsigned int> indices = {};
 
-			// Count total number of vertices and indices in the model and allocate space to store the render mesh.
-			size_t vertexCount = 0;
-			size_t indexCount = 0;
-			for (size_t i = 0; i < model.size(); ++i)
-			{
-				vertexCount += model[i].Positions.size();
-				indexCount += model[i].Indices.size();
-			}
-
-			vertices.reserve(vertexCount);
-			indices.reserve(indexCount);
-			gIndexCount = static_cast<unsigned int>(indexCount);
+			gIndexCount = static_cast<unsigned int>(combinedModel.Indices.size());
 
 			// Build render mesh.
-			for (size_t i = 0; i < model.size(); ++i)
+			// For each vertex in the mesh.
+			for (size_t i = 0; i < combinedModel.Positions.size(); ++i)
 			{
-				// For each mesh in the model.
+				vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ combinedModel.Positions[i].GetX(), combinedModel.Positions[i].GetY(), combinedModel.Positions[i].GetZ() });
+			}
 
-				size_t indexOffset = vertices.size();
-
-				for (size_t j = 0; j < model[i].Positions.size(); ++j)
-				{
-					// For each vertex in the mesh.
-					vertices.emplace_back(LeviathanRenderer::VertexTypes::Vertex1Pos{ model[i].Positions[j].GetX(), model[i].Positions[j].GetY(), model[i].Positions[j].GetZ() });
-				}
-
-				for (size_t j = 0; j < model[i].Indices.size(); ++j)
-				{
-					// For each index in the mesh.
-
-					// Offset indices into the vertex buffer as vertices from multiple meshes are being combin
-					indices.push_back(static_cast<unsigned int>(indexOffset) + model[i].Indices[j]);
-				}
+			// For each index in the mesh.
+			for (size_t i = 0; i < combinedModel.Indices.size(); ++i)
+			{
+				// Offset indices into the vertex buffer as vertices from multiple meshes are being combin
+				indices.push_back(combinedModel.Indices[i]);
 			}
 
 			// Create geometry buffers.

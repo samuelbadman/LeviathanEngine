@@ -86,3 +86,53 @@ bool AssetImporter::ModelImporter::LoadModel(std::string_view file, std::vector<
 
 	return true;
 }
+
+AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::CombineMeshes(const AssetImporter::AssetTypes::Mesh* const meshes, const size_t count)
+{
+	if ((!meshes) || (count == 0))
+	{
+		return AssetImporter::AssetTypes::Mesh();
+	}
+
+	AssetImporter::AssetTypes::Mesh result = {};
+
+	// Count total number of vertices and indices in the model and .
+	size_t vertexCount = 0;
+	size_t indexCount = 0;
+	for (size_t i = 0; i < count; ++i)
+	{
+		vertexCount += meshes[i].Positions.size();
+		indexCount += meshes[i].Indices.size();
+	}
+
+	// Allocate space to store the combined mesh.
+	result.Positions.reserve(vertexCount);
+	result.Normals.reserve(vertexCount);
+	result.TextureCoordinates.reserve(vertexCount);
+	result.Indices.reserve(indexCount);
+
+	// Build combined mesh.
+	for (size_t i = 0; i < count; ++i)
+	{
+		// For each mesh.
+		size_t indexOffset = result.Positions.size();
+
+		for (size_t j = 0; j < meshes[i].Positions.size(); ++j)
+		{
+			// For each vertex in the mesh.
+			result.Positions.push_back(meshes[i].Positions[j]);
+			result.Normals.push_back(meshes[i].Normals[j]);
+			result.TextureCoordinates.push_back(meshes[i].TextureCoordinates[j]);
+		}
+
+		for (size_t j = 0; j < meshes[i].Indices.size(); ++j)
+		{
+			// For each index in the mesh.
+
+			// Offset indices into the vertex buffer as vertices from multiple meshes are being combin
+			result.Indices.push_back(static_cast<unsigned int>(indexOffset) + meshes[i].Indices[j]);
+		}
+	}
+
+	return result;
+}

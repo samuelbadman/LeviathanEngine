@@ -17,3 +17,8 @@ bool AssetImporter::ImportModel(std::string_view file, std::vector<AssetImporter
 	outMeshes.clear();
 	return ModelImporter::LoadModel(file, outMeshes);
 }
+
+AssetImporter::AssetTypes::Mesh AssetImporter::CombineMeshes(const AssetImporter::AssetTypes::Mesh* const meshes, const size_t count)
+{
+	return ModelImporter::CombineMeshes(meshes, count);
+}
