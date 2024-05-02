@@ -150,6 +150,8 @@ namespace TestTitle
 
 		const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
 
+		// TODO: Add fullscreen toggle.
+
 		switch (key.GetKey())
 		{
 		case LeviathanCore::InputKey::Keys::RightMouseButton:
@@ -517,7 +519,7 @@ namespace TestTitle
 			LEVIATHAN_LOG("Component index: %d, data: %d", i, componentsStart[i].Value.Number);
 		}
 
-		const LeviathanCore::DataStructures::SparseArray<Component>::DenseValue& value = components.GetValue(entity2);
+		[[maybe_unused]] const LeviathanCore::DataStructures::SparseArray<Component>::DenseValue& value = components.GetValue(entity2);
 		LEVIATHAN_LOG("Retrieved value: data: %d", value.Value.Number);
 #pragma endregion
 
