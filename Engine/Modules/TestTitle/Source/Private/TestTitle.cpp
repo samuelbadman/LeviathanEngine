@@ -262,7 +262,7 @@ namespace TestTitle
 
 			// Calculate world matrix.
 			Transform objectTransform = {};
-			objectTransform.Rotation.SetYawRadians(LeviathanCore::MathLibrary::DegreesToRadians(60.0f));
+			objectTransform.Rotation.SetYawRadians(LeviathanCore::MathLibrary::DegreesToRadians(35.0f));
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransform.Matrix();
 
 			// Calculate world view projection matrix.

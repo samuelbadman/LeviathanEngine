@@ -88,7 +88,8 @@ struct VertexInput
 
 struct VertexOutput
 {
-    float4 Position : SV_POSITION;
+    float4 PositionClipSpace : SV_POSITION;
+    float3 PositionWorldSpace : POSITION;
     float3 NormalWorldSpace : NORMAL;
 };
 
@@ -96,8 +97,9 @@ VertexOutput main(VertexInput input)
 {
     VertexOutput output;
 
-    output.Position = mul(WorldViewProjection, float4(input.Position, 1.0f));
-    output.NormalWorldSpace = mul(World, float4(input.Normal, 0.0f));
+    output.PositionClipSpace = mul(WorldViewProjection, float4(input.Position, 1.0f));
+    output.PositionWorldSpace = mul(World, float4(input.Position, 1.0f)).xyz;
+    output.NormalWorldSpace = mul(World, float4(input.Normal, 0.0f)).xyz;
 				
     return output;
 }
@@ -111,20 +113,29 @@ cbuffer MaterialBuffer : register(b0)
 
 struct PixelInput
 {
-    float4 Position : SV_POSITION;
+    float4 PositionClipSpace : SV_POSITION;
+    float3 PositionWorldSpace : POSITION;
     float3 NormalWorldSpace : NORMAL;
 };
 
 float4 main(PixelInput input) : SV_TARGET
 {
     float3 lightColor = float3(1.0f, 1.0f, 1.0f);
+    float3 lightPosition = float3(0.0f, 2.0f, -2.0f);
 
     // Phong lighting model.
     // Calculate ambient lighting term.
     float ambientStrength = 0.1f;
     float3 ambient = ambientStrength * lightColor;
     
-    return float4(Color.rgb * ambient, 1.0f);
+    // Calculate diffuse lighting term.
+    float3 positionToLight = normalize(lightPosition - input.PositionWorldSpace);
+    float diffuseStrength = max(dot(input.NormalWorldSpace, positionToLight), 0.0f);
+    float3 diffuse = diffuseStrength * lightColor;
+    
+    // Calculate total lighting term and apply to object material color.
+    float3 lighting = ambient + diffuse;
+    return float4(Color.rgb * lighting, 1.0f);
 }
 		)";
 
