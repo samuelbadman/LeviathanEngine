@@ -141,6 +141,11 @@ namespace LeviathanRenderer
 		Renderer::DrawIndexed(indexCount, singleVertexStrideBytes, vertexBufferId, indexBufferId);
 	}
 
+	bool SetSceneData(const ConstantBufferTypes::SceneConstantBuffer& sceneData)
+	{
+		return Renderer::SetSceneBufferData(sceneData);
+	}
+
 	bool SetObjectData(const ConstantBufferTypes::ObjectConstantBuffer& objectData)
 	{
 		return Renderer::SetObjectBufferData(objectData);

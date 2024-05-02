@@ -55,6 +55,7 @@ namespace LeviathanRenderer
 		static std::vector<unsigned char> gPixelShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gPixelShader = {};
 
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> gSceneBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gObjectBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gMaterialBuffer = {};
 
@@ -74,10 +75,16 @@ namespace LeviathanRenderer
 
 		// Shader source code.
 		static const std::string gVertexShaderSourceCode = R"(
-cbuffer ObjectBuffer : register(b0)
+cbuffer SceneBuffer : register(b0)
 {
-    float4x4 WorldViewProjection;
-    float3x4 World;
+    float4x4 ViewMatrix;
+}
+
+cbuffer ObjectBuffer : register(b1)
+{
+    float4x4 WorldViewMatrix;
+    float4x4 WorldViewProjectionMatrix;
+    float4x4 NormalMatrix;
 };
 
 struct VertexInput
@@ -89,17 +96,27 @@ struct VertexInput
 struct VertexOutput
 {
     float4 PositionClipSpace : SV_POSITION;
-    float3 PositionWorldSpace : POSITION;
-    float3 NormalWorldSpace : NORMAL;
+    float3 PositionViewSpace : POSITION;
+    float3 NormalViewSpace : NORMAL;
+    float3 LightColor : LIGHT_COLOR;
+    float3 LightPositionViewSpace : LIGHT_POSITION_VIEW_SPACE;
 };
 
 VertexOutput main(VertexInput input)
 {
+    // TODO: Organise light data into scene buffer.
+    float3 lightColor = float3(1.0f, 1.0f, 1.0f);
+    float3 lightPositionWorldSpace = float3(0.0f, 2.0f, -2.0f);
+
     VertexOutput output;
 
-    output.PositionClipSpace = mul(WorldViewProjection, float4(input.Position, 1.0f));
-    output.PositionWorldSpace = mul(World, float4(input.Position, 1.0f)).xyz;
-    output.NormalWorldSpace = mul(World, float4(input.Normal, 0.0f)).xyz;
+    output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position, 1.0f));
+    output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
+    output.NormalViewSpace = mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz;
+    output.LightColor = lightColor;
+
+    // TODO: Move this calculation onto CPU.
+    output.LightPositionViewSpace = mul(ViewMatrix, float4(lightPositionWorldSpace, 1.0f)).xyz;
 				
     return output;
 }
@@ -114,24 +131,23 @@ cbuffer MaterialBuffer : register(b0)
 struct PixelInput
 {
     float4 PositionClipSpace : SV_POSITION;
-    float3 PositionWorldSpace : POSITION;
-    float3 NormalWorldSpace : NORMAL;
+    float3 PositionViewSpace : POSITION;
+    float3 NormalViewSpace : NORMAL;
+    float3 LightColor : LIGHT_COLOR;
+    float3 LightPositionViewSpace : LIGHT_POSITION_VIEW_SPACE;
 };
 
 float4 main(PixelInput input) : SV_TARGET
 {
-    float3 lightColor = float3(1.0f, 1.0f, 1.0f);
-    float3 lightPosition = float3(0.0f, 2.0f, -2.0f);
-
     // Phong lighting model.
     // Calculate ambient lighting term.
     float ambientStrength = 0.1f;
-    float3 ambient = ambientStrength * lightColor;
+    float3 ambient = ambientStrength * input.LightColor;
     
     // Calculate diffuse lighting term.
-    float3 positionToLight = normalize(lightPosition - input.PositionWorldSpace);
-    float diffuseStrength = max(dot(input.NormalWorldSpace, positionToLight), 0.0f);
-    float3 diffuse = diffuseStrength * lightColor;
+    float3 positionToLightViewSpace = normalize(input.LightPositionViewSpace - input.PositionViewSpace);
+    float diffuseStrength = max(dot(input.NormalViewSpace, positionToLightViewSpace), 0.0f);
+    float3 diffuse = diffuseStrength * input.LightColor;
     
     // Calculate total lighting term and apply to object material color.
     float3 lighting = ambient + diffuse;
@@ -386,6 +402,7 @@ float4 main(PixelInput input) : SV_TARGET
 			if (FAILED(hr)) { return false; }
 
 			memcpy(mappedResource.pData, pNewData, byteWidth);
+
 			gD3D11DeviceContext->Unmap(pBuffer, 0);
 
 			return true;
@@ -548,11 +565,21 @@ float4 main(PixelInput input) : SV_TARGET
 			if (FAILED(hr)) { return false; };
 
 			// Create constant buffers.
+			// Vertex shader
+			// Scene constant buffer.
+			ConstantBufferTypes::SceneConstantBuffer initialSceneBufferData = {};
+			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::SceneConstantBuffer), &initialSceneBufferData, &gSceneBuffer);
+			if (!success) { return false; }
+			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gSceneBuffer.GetAddressOf());
+
+			// Object constant buffer.
 			ConstantBufferTypes::ObjectConstantBuffer initialObjectBufferData = {};
 			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::ObjectConstantBuffer), &initialObjectBufferData, &gObjectBuffer);
 			if (!success) { return false; }
-			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
+			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gObjectBuffer.GetAddressOf());
 
+			// Pixel shader.
+			// Material constant buffer.
 			ConstantBufferTypes::MaterialConstantBuffer initialMaterialBufferData = {};
 			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::MaterialConstantBuffer), static_cast<const void*>(&initialMaterialBufferData), &gMaterialBuffer);
 			if (!success) { return false; }
@@ -594,6 +621,7 @@ float4 main(PixelInput input) : SV_TARGET
 			gPixelShaderBuffer.clear();
 			gPixelShader.Reset();
 
+			gSceneBuffer.Reset();
 			gObjectBuffer.Reset();
 			gMaterialBuffer.Reset();
 
@@ -717,6 +745,11 @@ float4 main(PixelInput input) : SV_TARGET
 			gD3D11DeviceContext->IASetIndexBuffer(gIndexBuffers[static_cast<size_t>(indexBufferId)].Get(), DXGI_FORMAT_R32_UINT, 0);
 
 			gD3D11DeviceContext->DrawIndexed(indexCount, 0, 0);
+		}
+
+		bool SetSceneBufferData(const ConstantBufferTypes::SceneConstantBuffer& data)
+		{
+			return UpdateConstantBuffer(gSceneBuffer.Get(), &data, sizeof(ConstantBufferTypes::SceneConstantBuffer));
 		}
 
 		bool SetObjectBufferData(const ConstantBufferTypes::ObjectConstantBuffer& data)

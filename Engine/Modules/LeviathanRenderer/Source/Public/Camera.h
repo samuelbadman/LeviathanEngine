@@ -41,6 +41,7 @@ namespace LeviathanRenderer
 		inline void SetOrthoWidth(float orthoWidth) { OrthoWidth = orthoWidth; }
 		inline const LeviathanCore::MathTypes::Vector3& GetPosition() const { return Position; }
 		inline const LeviathanCore::MathTypes::Euler& GetOrientation() const { return Orientation; }
+		inline const LeviathanCore::MathTypes::Matrix4x4& GetViewMatrix() const { return ViewMatrix; }
 		inline const LeviathanCore::MathTypes::Matrix4x4& GetViewProjectionMatrix() const { return ViewProjectionMatrix; }
 
 		void AddYawRotation(const float yawDeltaRadians);

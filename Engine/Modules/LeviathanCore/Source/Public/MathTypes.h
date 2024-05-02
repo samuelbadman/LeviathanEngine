@@ -77,6 +77,27 @@ namespace LeviathanCore
 			Vector3 operator-(const Vector3& rhs) const;
 		};
 
+		//class Matrix3x3
+		//{
+		//private:
+		//	float Matrix[3 * 3] =
+		//	{
+		//		1.0f, 0.0f, 0.0f,
+		//		0.0f, 1.0f, 0.0f,
+		//		0.0f, 0.0f, 1.0f
+		//	};
+
+		//public:
+		//	// Constructors.
+		//	Matrix3x3() = default;
+		//	Matrix3x3(float e00, float e10, float e20,
+		//		float e01, float e11, float e21,
+		//		float e02, float e12, float e22);
+
+		//	// Returns an identity 3x3 matrix.
+		//	static Matrix3x3 Identity();
+		//};
+
 		class Matrix4x4
 		{
 		private:
@@ -96,7 +117,7 @@ namespace LeviathanCore
 				float e02, float e12, float e22, float e32,
 				float e03, float e13, float e23, float e33);
 
-			// Returns an identity matrix.
+			// Returns an identity 4x4 matrix.
 			static Matrix4x4 Identity();
 
 			// Returns the transposed input matrix.

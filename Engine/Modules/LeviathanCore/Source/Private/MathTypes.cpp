@@ -66,8 +66,18 @@ namespace LeviathanCore
 			return Vector3(GetX() - rhs.GetX(), GetY() - rhs.GetY(), GetZ() - rhs.GetZ());
 		}
 
+		//Matrix3x3::Matrix3x3(float e00, float e10, float e20, float e01, float e11, float e21, float e02, float e12, float e22)
+		//	: Matrix{ e00, e10, e20, e01, e11, e21, e02, e12, e22 }
+		//{
+		//}
+
+		//Matrix3x3 Matrix3x3::Identity()
+		//{
+		//	return Matrix3x3();
+		//}
+
 		Matrix4x4::Matrix4x4(float e00, float e10, float e20, float e30, float e01, float e11, float e21, float e31, float e02, float e12, float e22, float e32, float e03, float e13, float e23, float e33)
-			: Matrix{  e00,  e10,  e20,  e30,  e01,  e11,  e21,  e31,  e02,  e12,  e22,  e32,  e03,  e13,  e23,  e33 }
+			: Matrix{ e00,  e10,  e20,  e30,  e01,  e11,  e21,  e31,  e02,  e12,  e22,  e32,  e03,  e13,  e23,  e33 }
 		{
 		}
 
@@ -173,7 +183,7 @@ namespace LeviathanCore
 
 		Matrix4x4 Matrix4x4::OrthographicProjection(float viewWidth, float viewHeight, float nearZ, float farZ)
 		{
-			Matrix4x4 ortho= {};
+			Matrix4x4 ortho = {};
 			ortho.Matrix[0] = 2.0f / viewWidth;
 			ortho.Matrix[5] = 2.0f / viewHeight;
 			ortho.Matrix[10] = 1.0f / (farZ - nearZ);

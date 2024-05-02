@@ -6,10 +6,22 @@ namespace LeviathanRenderer
 	{
 		// Constant buffers in HLSL must by 16 byte aligned.
 
+		struct SceneConstantBuffer
+		{
+			// 64 bytes.
+			float ViewMatrix[4 * 4] =
+			{
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f
+			};
+		};
+
 		struct ObjectConstantBuffer
 		{
 			// 64 bytes.
-			float WorldViewProjection[4 * 4] =
+			float WorldViewMatrix[4 * 4] =
 			{
 				1.0f, 0.0f, 0.0f, 0.0f,
 				0.0f, 1.0f, 0.0f, 0.0f,
@@ -18,7 +30,16 @@ namespace LeviathanRenderer
 			};
 
 			// 64 bytes.
-			float World[4 * 4] =
+			float WorldViewProjectionMatrix[4 * 4] =
+			{
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f
+			};
+
+			// 64 bytes.
+			float NormalMatrix[4 * 4] =
 			{
 				1.0f, 0.0f, 0.0f, 0.0f,
 				0.0f, 1.0f, 0.0f, 0.0f,

@@ -7,6 +7,7 @@ namespace LeviathanRenderer
 {
 	namespace ConstantBufferTypes
 	{
+		struct SceneConstantBuffer;
 		struct ObjectConstantBuffer;
 		struct MaterialConstantBuffer;
 	}
@@ -27,6 +28,7 @@ namespace LeviathanRenderer
 	void BeginFrame();
 	void EndFrame();
 	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId);
+	bool SetSceneData(const ConstantBufferTypes::SceneConstantBuffer& sceneData);
 	bool SetObjectData(const ConstantBufferTypes::ObjectConstantBuffer& objectData);
 	bool SetMaterialData(const ConstantBufferTypes::MaterialConstantBuffer& materialData);
 	void Present();

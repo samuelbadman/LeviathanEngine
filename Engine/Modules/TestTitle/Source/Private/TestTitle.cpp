@@ -253,6 +253,11 @@ namespace TestTitle
 		// Begin frame.
 		LeviathanRenderer::BeginFrame();
 
+		// Update scene data.
+		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
+		memcpy(sceneData.ViewMatrix, gSceneCamera.GetViewMatrix().Data(), sizeof(float) * 16);
+		LeviathanRenderer::SetSceneData(sceneData);
+
 		// Object 1 (dynamic).
 		if (gIndexCount > 0)
 		{
@@ -261,17 +266,25 @@ namespace TestTitle
 			LeviathanRenderer::SetMaterialData(materialData);
 
 			// Calculate world matrix.
-			Transform objectTransform = {};
-			objectTransform.Rotation.SetYawRadians(LeviathanCore::MathLibrary::DegreesToRadians(35.0f));
+			// TODO: Move scene updates into tick.
+			static Transform objectTransform = {};
+			objectTransform.Rotation.SetYawRadians(objectTransform.Rotation.GetYawRadians() + 0.0001f);
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransform.Matrix();
 
+			// Calculate world view matrix.
+			const LeviathanCore::MathTypes::Matrix4x4 worldViewMatrix = gSceneCamera.GetViewMatrix() * worldMatrix;
+
+			// Calculate normal matrix.
+			const LeviathanCore::MathTypes::Matrix4x4 normalMatrix = LeviathanCore::MathTypes::Matrix4x4::Transpose(LeviathanCore::MathTypes::Matrix4x4::Inverse(worldViewMatrix));
+
 			// Calculate world view projection matrix.
-			LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * worldMatrix;
+			const LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * worldMatrix;
 
 			// Update object data.
 			LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer objectData = {};
-			memcpy(objectData.WorldViewProjection, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
-			memcpy(objectData.World, worldMatrix.Data(), sizeof(float) * 16);
+			memcpy(objectData.WorldViewMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
+			memcpy(objectData.WorldViewProjectionMatrix, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
+			memcpy(objectData.NormalMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
 			LeviathanRenderer::SetObjectData(objectData);
 
 			// Draw.
