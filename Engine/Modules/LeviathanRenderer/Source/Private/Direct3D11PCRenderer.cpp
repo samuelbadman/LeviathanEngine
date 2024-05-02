@@ -77,6 +77,7 @@ namespace LeviathanRenderer
 cbuffer ObjectBuffer : register(b0)
 {
     float4x4 WorldViewProjection;
+    float3x4 World;
 };
 
 struct VertexInput
@@ -88,7 +89,7 @@ struct VertexInput
 struct VertexOutput
 {
     float4 Position : SV_POSITION;
-    float3 Normal : NORMAL;
+    float3 NormalWorldSpace : NORMAL;
 };
 
 VertexOutput main(VertexInput input)
@@ -96,7 +97,7 @@ VertexOutput main(VertexInput input)
     VertexOutput output;
 
     output.Position = mul(WorldViewProjection, float4(input.Position, 1.0f));
-    output.Normal = input.Normal;
+    output.NormalWorldSpace = mul(World, float4(input.Normal, 0.0f));
 				
     return output;
 }
@@ -111,7 +112,7 @@ cbuffer MaterialBuffer : register(b0)
 struct PixelInput
 {
     float4 Position : SV_POSITION;
-    float3 Normal : NORMAL;
+    float3 NormalWorldSpace : NORMAL;
 };
 
 float4 main(PixelInput input) : SV_TARGET

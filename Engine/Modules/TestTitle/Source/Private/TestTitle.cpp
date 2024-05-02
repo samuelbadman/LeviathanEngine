@@ -257,19 +257,22 @@ namespace TestTitle
 		if (gIndexCount > 0)
 		{
 			// Update material data.
-			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer quadMaterialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
-			LeviathanRenderer::SetMaterialData(quadMaterialData);
+			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer materialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
+			LeviathanRenderer::SetMaterialData(materialData);
 
 			// Calculate world matrix.
 			Transform objectTransform = {};
+			objectTransform.Rotation.SetYawRadians(LeviathanCore::MathLibrary::DegreesToRadians(60.0f));
+			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransform.Matrix();
 
 			// Calculate world view projection matrix.
-			LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * objectTransform.Matrix();
+			LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * worldMatrix;
 
 			// Update object data.
-			LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer quadObjectData = {};
-			memcpy(quadObjectData.WorldViewProjection, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
-			LeviathanRenderer::SetObjectData(quadObjectData);
+			LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer objectData = {};
+			memcpy(objectData.WorldViewProjection, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
+			memcpy(objectData.World, worldMatrix.Data(), sizeof(float) * 16);
+			LeviathanRenderer::SetObjectData(objectData);
 
 			// Draw.
 			LeviathanRenderer::Draw(gIndexCount, gSingleVertexStrideBytes, gVertexBufferId, gIndexBufferId);
