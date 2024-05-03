@@ -1,2 +1,2 @@
 # Leviathan Engine
-In development 3D game engine written in C++.
+In development 3D video game engine written in C++.
