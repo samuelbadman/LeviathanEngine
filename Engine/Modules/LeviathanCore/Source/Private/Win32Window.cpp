@@ -83,6 +83,11 @@ namespace LeviathanCore
 				return platformWindow->ExitFullscreen();
 			}
 
+			bool IsPlatformWindowFullscreen(PlatformWindow* const platformWindow)
+			{
+				return platformWindow->IsFullscreen();
+			}
+
 			bool GetPlatformWindowRenderAreaDimensions(PlatformWindow* const platformWindow, int& outWidth, int& outHeight)
 			{
 				return platformWindow->GetRenderAreaDimensions(outWidth, outHeight);
@@ -634,6 +639,7 @@ namespace LeviathanCore
 
 				// Show the window.
 				ShowWindow(Hwnd, SW_SHOW);
+				Fullscreen = false;
 
 				return true;
 			}

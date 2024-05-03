@@ -353,6 +353,21 @@ namespace LeviathanCore
 			return LeviathanCore::Platform::Window::CaptureCursor(RuntimeWindow);
 		}
 
+		bool IsRuntimeWindowFullscreen()
+		{
+			return LeviathanCore::Platform::Window::IsPlatformWindowFullscreen(RuntimeWindow);
+		}
+
+		bool RuntimeWindowEnterFullscreen()
+		{
+			return LeviathanCore::Platform::Window::EnterFullscreen(RuntimeWindow);
+		}
+
+		bool RuntimeWindowExitFullscreen()
+		{
+			return LeviathanCore::Platform::Window::ExitFullscreen(RuntimeWindow);
+		}
+
 		bool SetCursorPosInRuntimeWindow(int x, int y)
 		{
 			return LeviathanCore::Platform::Window::SetCursorPositionRelativeToPlatformWindow(RuntimeWindow, x, y);

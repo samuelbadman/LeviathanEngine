@@ -54,6 +54,7 @@ namespace LeviathanCore
 			bool IsPlatformWindowMinimized(PlatformWindow* const platformWindow);
 			bool EnterFullscreen(PlatformWindow* const platformWindow);
 			bool ExitFullscreen(PlatformWindow* const platformWindow);
+			bool IsPlatformWindowFullscreen(PlatformWindow* const platformWindow);
 			bool GetPlatformWindowRenderAreaDimensions(PlatformWindow* const platformWindow, int& outWidth, int& outHeight);
 			bool SetCursorPositionRelativeToPlatformWindow(PlatformWindow* const platformWindow, int x, int y);
 

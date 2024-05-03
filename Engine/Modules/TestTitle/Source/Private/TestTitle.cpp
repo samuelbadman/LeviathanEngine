@@ -113,6 +113,7 @@ namespace TestTitle
 	{
 		// Poll input keys.
 		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::RightMouseButton);
+		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::F);
 
 		if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
 		{
@@ -163,6 +164,23 @@ namespace TestTitle
 			else if (wasKeyReleased(data))
 			{
 				LeviathanCore::Platform::ShowPlatformCursor(true);
+			}
+
+			break;
+		}
+
+		case LeviathanCore::InputKey::Keys::F:
+		{
+			if (wasKeyPressed(data, isRepeatKey))
+			{
+				if (LeviathanCore::Core::IsRuntimeWindowFullscreen())
+				{
+					LeviathanCore::Core::RuntimeWindowExitFullscreen();
+				}
+				else
+				{
+					LeviathanCore::Core::RuntimeWindowEnterFullscreen();
+				}
 			}
 
 			break;
