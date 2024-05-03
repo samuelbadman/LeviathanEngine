@@ -287,7 +287,7 @@ namespace TestTitle
 
 			// Calculate world matrix.
 			// TODO: Move scene updates into tick.
-			const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
+			[[maybe_unused]] const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
 
 			static Transform objectTransform = {};
 			objectTransform.Rotation.SetYawRadians(objectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));

@@ -96,8 +96,8 @@ struct VertexInput
 struct VertexOutput
 {
     float4 PositionClipSpace : SV_POSITION;
-    float3 PositionViewSpace : POSITION;
-    float3 NormalViewSpace : NORMAL;
+    float3 PositionViewSpace : POSITION_VIEW_SPACE;
+    float3 NormalViewSpace : NORMAL_VIEW_SPACE;
     float3 LightColor : LIGHT_COLOR;
     float3 LightPositionViewSpace : LIGHT_POSITION_VIEW_SPACE;
 };
@@ -112,7 +112,7 @@ VertexOutput main(VertexInput input)
 
     output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position, 1.0f));
     output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
-    output.NormalViewSpace = mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz;
+    output.NormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
     output.LightColor = lightColor;
 
     // TODO: Move this calculation onto CPU.
@@ -131,26 +131,40 @@ cbuffer MaterialBuffer : register(b0)
 struct PixelInput
 {
     float4 PositionClipSpace : SV_POSITION;
-    float3 PositionViewSpace : POSITION;
-    float3 NormalViewSpace : NORMAL;
+    float3 PositionViewSpace : POSITION_VIEW_SPACE;
+    float3 NormalViewSpace : NORMAL_VIEW_SPACE;
     float3 LightColor : LIGHT_COLOR;
     float3 LightPositionViewSpace : LIGHT_POSITION_VIEW_SPACE;
 };
 
-float4 main(PixelInput input) : SV_TARGET
+float3 Phong(float ambient, float specular, float shininess, float3 lightPositionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 lightColor)
 {
     // Phong lighting model.
     // Calculate ambient lighting term.
-    float ambientStrength = 0.1f;
-    float3 ambient = ambientStrength * input.LightColor;
+    float3 ambientTerm = ambient * lightColor;
     
     // Calculate diffuse lighting term.
-    float3 positionToLightViewSpace = normalize(input.LightPositionViewSpace - input.PositionViewSpace);
-    float diffuseStrength = max(dot(input.NormalViewSpace, positionToLightViewSpace), 0.0f);
-    float3 diffuse = diffuseStrength * input.LightColor;
+    float3 positionToLightViewSpace = normalize(lightPositionViewSpace - positionViewSpace);
+    float diffuse = saturate(dot(normalViewSpace, positionToLightViewSpace));
+    float3 diffuseTerm = diffuse * lightColor;
     
-    // Calculate total lighting term and apply to object material color.
-    float3 lighting = ambient + diffuse;
+    // Calculate specular lighting term.
+    float3 positionToViewViewSpace = normalize(-positionViewSpace);
+    float3 reflectedViewSpace = normalize(reflect(-positionToLightViewSpace, normalViewSpace));
+    float spec = pow(saturate(dot(positionToViewViewSpace, reflectedViewSpace)), shininess);
+    float3 specularTerm = specular * spec * lightColor;
+    
+    // Calculate total lighting term.
+    return ambientTerm + diffuseTerm + specularTerm;
+}
+
+float4 main(PixelInput input) : SV_TARGET
+{
+    float ambient = 0.1f;
+    float specular = 0.4f;
+    float shininess = 16.0f;
+
+    float3 lighting = Phong(ambient, specular, shininess, input.LightPositionViewSpace, input.PositionViewSpace, input.NormalViewSpace, input.LightColor);
     return float4(Color.rgb * lighting, 1.0f);
 }
 		)";
