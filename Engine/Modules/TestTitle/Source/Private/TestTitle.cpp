@@ -151,8 +151,6 @@ namespace TestTitle
 
 		const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
 
-		// TODO: Add fullscreen toggle.
-
 		switch (key.GetKey())
 		{
 		case LeviathanCore::InputKey::Keys::RightMouseButton:
