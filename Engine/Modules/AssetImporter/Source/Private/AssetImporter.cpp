@@ -22,3 +22,8 @@ AssetImporter::AssetTypes::Mesh AssetImporter::CombineMeshes(const AssetImporter
 {
 	return ModelImporter::CombineMeshes(meshes, count);
 }
+
+AssetImporter::AssetTypes::Mesh AssetImporter::GeneratePlanePrimitiveModel(float planeWidth)
+{
+	return ModelImporter::GeneratePlanePrimitive(planeWidth);
+}

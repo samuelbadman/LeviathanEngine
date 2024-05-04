@@ -136,3 +136,42 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::CombineMeshes(cons
 
 	return result;
 }
+
+AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GeneratePlanePrimitive(float width)
+{
+	const float halfWidth = width / 2.0f;
+
+	AssetImporter::AssetTypes::Mesh result =
+	{
+		.Positions =
+		{
+			LeviathanCore::MathTypes::Vector3(-halfWidth, halfWidth, 0.0f),
+			LeviathanCore::MathTypes::Vector3(halfWidth, halfWidth, 0.0f),
+			LeviathanCore::MathTypes::Vector3(halfWidth, -halfWidth, 0.0f),
+			LeviathanCore::MathTypes::Vector3(-halfWidth, -halfWidth, 0.0f)
+		},
+
+		.Normals =
+		{
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f)
+		},
+
+		.TextureCoordinates =
+		{
+			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f)
+		},
+
+		.Indices =
+		{ 
+			0, 1, 2, 2, 3, 0 
+		}
+	};
+
+	return result;
+}

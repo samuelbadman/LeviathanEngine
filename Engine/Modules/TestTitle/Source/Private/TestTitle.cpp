@@ -288,7 +288,7 @@ namespace TestTitle
 			[[maybe_unused]] const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
 
 			static Transform objectTransform = {};
-			objectTransform.Rotation.SetYawRadians(objectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
+			//objectTransform.Rotation.SetYawRadians(objectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransform.Matrix();
 
 			// Calculate world view matrix.
@@ -399,11 +399,13 @@ namespace TestTitle
 
 		// Create scene.
 		// Import model from disk.
-		std::vector<AssetImporter::AssetTypes::Mesh> model = {};
-		if (AssetImporter::ImportModel("Model.fbx", model))
+		AssetImporter::AssetTypes::Mesh model = AssetImporter::GeneratePlanePrimitiveModel(1.0f);
+		//std::vector<AssetImporter::AssetTypes::Mesh> model = {};
+		//if (AssetImporter::ImportModel("Model.fbx", model))
 		{
 			// Combine model meshes into a single mesh buffer.
-			AssetImporter::AssetTypes::Mesh combinedModel = AssetImporter::CombineMeshes(model.data(), model.size());
+			AssetImporter::AssetTypes::Mesh combinedModel = model;
+			//AssetImporter::AssetTypes::Mesh combinedModel = AssetImporter::CombineMeshes(model.data(), model.size());
 
 			// Build render mesh.
 			// Render mesh definition.

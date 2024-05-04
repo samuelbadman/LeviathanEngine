@@ -14,5 +14,7 @@ namespace AssetImporter
 
 		// Returns all of the input meshes combined into a single mesh.
 		AssetImporter::AssetTypes::Mesh CombineMeshes(const AssetImporter::AssetTypes::Mesh* const meshes, const size_t count);
+
+		AssetImporter::AssetTypes::Mesh GeneratePlanePrimitive(float width);
 	}
 }
