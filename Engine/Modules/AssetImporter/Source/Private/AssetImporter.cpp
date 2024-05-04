@@ -27,3 +27,8 @@ AssetImporter::AssetTypes::Mesh AssetImporter::GeneratePlanePrimitiveModel(float
 {
 	return ModelImporter::GeneratePlanePrimitive(planeWidth);
 }
+
+AssetImporter::AssetTypes::Mesh AssetImporter::GenerateCubePrimitiveModel(float cubeWidth)
+{
+	return ModelImporter::GenerateCubePrimitive(cubeWidth);
+}

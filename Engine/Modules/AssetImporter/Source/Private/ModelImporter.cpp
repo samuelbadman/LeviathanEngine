@@ -141,7 +141,7 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GeneratePlanePrimi
 {
 	const float halfWidth = width / 2.0f;
 
-	AssetImporter::AssetTypes::Mesh result =
+	return AssetImporter::AssetTypes::Mesh
 	{
 		.Positions =
 		{
@@ -168,10 +168,105 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GeneratePlanePrimi
 		},
 
 		.Indices =
-		{ 
-			0, 1, 2, 2, 3, 0 
+		{
+			0, 1, 2, 2, 3, 0
 		}
 	};
+}
 
-	return result;
+AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCubePrimitive(float width)
+{
+	const float halfWidth = width / 2.0f;
+
+	return AssetImporter::AssetTypes::Mesh
+	{
+		.Positions =
+		{
+			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,   halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth,  halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth,  halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,  halfWidth,  halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,   halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,   halfWidth, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,  halfWidth,  halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,  halfWidth,  halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth,  halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth,  halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth,  halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth,  halfWidth)
+		},
+
+		.Normals =
+		{
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
+			LeviathanCore::MathTypes::Vector3(1.0f, 0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(1.0f, 0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector3(1.0f, 0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(1.0f, 0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(-1.0f, 0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(-1.0f, 0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(-1.0f, 0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(-1.0f, 0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f)
+		},
+
+		.TextureCoordinates =
+		{
+			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
+			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f)
+		},
+
+		.Indices =
+		{
+			0, 1, 2, 0, 2, 3, 10, 8, 4, 10, 4, 5, 22, 20, 6, 22, 6, 7, 19, 16, 14, 19, 14, 12, 15, 17, 21, 15, 21, 9, 11, 23, 13, 23, 18, 13
+		}
+	};
 }
