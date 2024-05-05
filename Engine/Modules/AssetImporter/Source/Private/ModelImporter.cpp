@@ -398,7 +398,7 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCylinderPr
 	// Base cap.
 	int numberOfCapVertices = sectors + 2;
 
-	LeviathanCore::MathTypes::Vector3 capCenter = LeviathanCore::MathTypes::Vector3{ 0.f, 0.f, -height / 2.f };
+	LeviathanCore::MathTypes::Vector3 capCenter{ 0.f, 0.f, -height / 2.f };
 
 	for (int i = 0; i < numberOfCapVertices; i++)
 	{
@@ -456,6 +456,118 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCylinderPr
 	for (int32_t i = topCapStart + 2; i < topCapStart + sectors; i++)
 	{
 		result.Indices.push_back(topCapStart);
+		result.Indices.push_back(i - 1);
+		result.Indices.push_back(i);
+	}
+
+	// Side.
+	unsigned int k1, k2;
+	for (int i = 0; i < stacks; ++i)
+	{
+		k1 = i * (sectors + 1);
+		k2 = k1 + sectors + 1;
+
+		for (int j = 0; j < sectors; ++j, ++k1, ++k2)
+		{
+			result.Indices.push_back(k1);
+			result.Indices.push_back(k1 + 1);
+			result.Indices.push_back(k2);
+			result.Indices.push_back(k2);
+			result.Indices.push_back(k1 + 1);
+			result.Indices.push_back(k2 + 1);
+		}
+	}
+
+	std::reverse(result.Indices.begin(), result.Indices.end());
+
+	return result;
+}
+
+AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateConePrimitive(float baseRadius, float height, int32_t sectors, int32_t stacks)
+{
+	AssetImporter::AssetTypes::Mesh result = {};
+
+	// Vertices.
+	// Side.
+	float z = 0.f;
+	float radius = 0.f;
+
+	// Get normals for cylinder sides.
+	std::vector<float> sideNormals;
+	float sectorStep = LeviathanCore::MathLibrary::TwoPi / sectors;
+	float sectorAngle = 0.f;
+
+	float zAngle = LeviathanCore::MathLibrary::ATan2(baseRadius - 0.f, height);
+	float x0 = LeviathanCore::MathLibrary::Cos(zAngle);
+	float y0 = 0;
+	float z0 = LeviathanCore::MathLibrary::Sin(zAngle);
+
+	for (int i = 0; i <= sectors; ++i)
+	{
+		sectorAngle = i * sectorStep;
+		sideNormals.push_back(LeviathanCore::MathLibrary::Cos(sectorAngle) * x0 - LeviathanCore::MathLibrary::Sin(sectorAngle) * y0);
+		sideNormals.push_back(LeviathanCore::MathLibrary::Sin(sectorAngle) * x0 + LeviathanCore::MathLibrary::Cos(sectorAngle) * y0);
+		sideNormals.push_back(z0);
+	}
+
+	// Get unit circle vertices.
+	std::vector<float> unitCircleVertices;
+
+	for (int i = 0; i <= sectors; ++i)
+	{
+		sectorAngle = i * sectorStep;
+		unitCircleVertices.push_back(LeviathanCore::MathLibrary::Cos(sectorAngle));
+		unitCircleVertices.push_back(LeviathanCore::MathLibrary::Sin(sectorAngle));
+		unitCircleVertices.push_back(0);
+	}
+
+	for (int i = stacks; i >= 0; i--)
+	{
+		z = -(height * 0.5f) + (float)i / stacks * height;
+		radius = baseRadius + (float)i / stacks * (0.f - baseRadius);
+		float t = 1.0f - (float)i / stacks;
+
+		for (int32_t j = 0, k = 0; j <= sectors; ++j, k += 3)
+		{
+			result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ unitCircleVertices[static_cast<size_t>(k)] * radius, unitCircleVertices[static_cast<size_t>(k) + 1] * radius, z });
+
+			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ static_cast<float>(j) / sectors, t });
+
+			result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ sideNormals[static_cast<size_t>(k)], sideNormals[static_cast<size_t>(k) + 1], sideNormals[static_cast<size_t>(k) + 2] });
+		}
+	}
+
+	int baseCapStart = (int)result.Positions.size();
+
+	// Base cap.
+	int numberOfCapVertices = sectors + 2;
+
+	LeviathanCore::MathTypes::Vector3 capCenter{ 0.f, 0.f, -height / 2.f };
+
+	for (int i = 0; i < numberOfCapVertices; i++)
+	{
+		auto const& position = result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.GetX() + (baseRadius * LeviathanCore::MathLibrary::Cos((float)i * LeviathanCore::MathLibrary::TwoPi / (float)sectors)),
+			capCenter.GetY() + (baseRadius * LeviathanCore::MathLibrary::Sin((float)i * LeviathanCore::MathLibrary::TwoPi / (float)sectors)),
+			capCenter.GetZ() });
+
+		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f - (position.GetX()) / (2.f * baseRadius), 0.5f - (position.GetY()) / (2.f * baseRadius) });
+
+		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -1.0f });
+	}
+
+	{
+		result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.GetX(), capCenter.GetY(), capCenter.GetZ() });
+		
+		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f, 0.5f });
+
+		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -1.0f });
+	}
+
+	// Indices.
+	// Base cap.
+	for (int32_t i = baseCapStart + 2; i < baseCapStart + sectors; i++)
+	{
+		result.Indices.push_back(baseCapStart);
 		result.Indices.push_back(i - 1);
 		result.Indices.push_back(i);
 	}

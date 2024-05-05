@@ -43,3 +43,8 @@ AssetImporter::AssetTypes::Mesh AssetImporter::GenerateCylinderPrimitiveModel(fl
 {
 	return ModelImporter::GenerateCylinderPrimitive(cylinderBaseRadius, cylinderTopRadius, cylinderHeight, cylinderSectors, cylinderStacks);
 }
+
+AssetImporter::AssetTypes::Mesh AssetImporter::GenerateConePrimitiveModel(float coneBaseRadius, float coneHeight, int32_t coneSectors, int32_t coneStacks)
+{
+	return ModelImporter::GenerateConePrimitive(coneBaseRadius, coneHeight, coneSectors, coneStacks);
+}
