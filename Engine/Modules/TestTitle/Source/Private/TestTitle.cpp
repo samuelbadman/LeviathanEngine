@@ -288,7 +288,7 @@ namespace TestTitle
 			[[maybe_unused]] const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
 
 			static Transform objectTransform = {};
-			//objectTransform.Rotation.SetYawRadians(objectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
+			objectTransform.Rotation.SetYawRadians(objectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransform.Matrix();
 
 			// Calculate world view matrix.
