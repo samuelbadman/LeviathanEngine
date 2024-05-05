@@ -36,5 +36,17 @@ namespace LeviathanCore
 		{
 			return value * value;
 		}
+
+		template <typename T>
+		constexpr T Cos(T radians)
+		{
+			return cos(radians);
+		}
+
+		template <typename T>
+		constexpr T Sin(T radians)
+		{
+			return sin(radians);
+		}
 	}
 }

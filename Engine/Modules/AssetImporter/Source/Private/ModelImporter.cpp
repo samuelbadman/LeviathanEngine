@@ -1,6 +1,7 @@
 #include "ModelImporter.h"
 #include "AssetTypes.h"
 #include "MathTypes.h"
+#include "MathLibrary.h"
 #include "Logging.h"
 
 // Mesh attributes are appended onto the end of the vectors passed to out parameters.
@@ -269,4 +270,74 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCubePrimit
 			0, 1, 2, 0, 2, 3, 10, 8, 4, 10, 4, 5, 22, 20, 6, 22, 6, 7, 19, 16, 14, 19, 14, 12, 15, 17, 21, 15, 21, 9, 11, 23, 13, 23, 18, 13
 		}
 	};
+}
+
+AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateSpherePrimitive(float radius, int32_t sectors, int32_t stacks)
+{
+	float sectorStep = 2.f * LeviathanCore::MathLibrary::Pi / static_cast<float>(sectors);
+	float stackStep = LeviathanCore::MathLibrary::Pi / stacks;
+	float sectorAngle = 0.f;
+	float stackAngle = 0.f;
+
+	float xy = 0.f;
+	float lengthInv = 1.0f / radius;
+
+	AssetImporter::AssetTypes::Mesh result = {};
+
+	// Vertices.
+	for (int i = stacks; i >= 0; i--)
+	{
+		stackAngle = LeviathanCore::MathLibrary::Pi / 2 - i * stackStep;
+		xy = radius * LeviathanCore::MathLibrary::Cos(stackAngle);
+
+		for (int j = 0; j <= sectors; j++)
+		{
+			sectorAngle = j * sectorStep;
+
+			result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ xy * LeviathanCore::MathLibrary::Cos(sectorAngle),
+				xy * LeviathanCore::MathLibrary::Sin(sectorAngle),
+				radius * LeviathanCore::MathLibrary::Sin(stackAngle) });
+
+
+			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ static_cast<float>(j) / sectors,
+				static_cast<float>(i) / stacks });
+
+			const size_t positionIndex = result.Positions.size() - 1;
+			result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ result.Positions[positionIndex].GetX() * lengthInv,
+				result.Positions[positionIndex].GetY() * lengthInv,
+				 result.Positions[positionIndex].GetZ() * lengthInv });
+		}
+	}
+
+	// Indices.
+	unsigned int k1 = 0;
+	unsigned int k2 = 0;
+
+	for (int i = 0; i < stacks; i++)
+	{
+		k1 = i * (sectors + 1);
+		k2 = k1 + sectors + 1;
+
+		for (int j = 0; j < sectors; j++, k1++, k2++)
+		{
+			if (i != 0)
+			{
+				result.Indices.push_back(k1);
+				result.Indices.push_back(k2);
+				result.Indices.push_back(k1 + 1);
+			}
+
+			if (i != (stacks - 1))
+			{
+				result.Indices.push_back(k1 + 1);
+				result.Indices.push_back(k2);
+				result.Indices.push_back(k2 + 1);
+			}
+		}
+	}
+
+	std::reverse(result.Indices.begin(), result.Indices.end());
+
+	// Return result.
+	return result;
 }

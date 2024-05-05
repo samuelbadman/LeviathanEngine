@@ -32,3 +32,8 @@ AssetImporter::AssetTypes::Mesh AssetImporter::GenerateCubePrimitiveModel(float 
 {
 	return ModelImporter::GenerateCubePrimitive(cubeWidth);
 }
+
+AssetImporter::AssetTypes::Mesh AssetImporter::GenerateSpherePrimitiveModel(float sphereRadius, int32_t sphereSectors, int32_t sphereStacks)
+{
+	return ModelImporter::GenerateSpherePrimitive(sphereRadius, sphereSectors, sphereStacks);
+}

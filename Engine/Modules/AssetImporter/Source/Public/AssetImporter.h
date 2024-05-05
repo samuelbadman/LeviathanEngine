@@ -14,4 +14,5 @@ namespace AssetImporter
 	AssetImporter::AssetTypes::Mesh CombineMeshes(const AssetImporter::AssetTypes::Mesh* const meshes, const size_t count);
 	AssetImporter::AssetTypes::Mesh GeneratePlanePrimitiveModel(float planeWidth);
 	AssetImporter::AssetTypes::Mesh GenerateCubePrimitiveModel(float cubeWidth);
+	AssetImporter::AssetTypes::Mesh GenerateSpherePrimitiveModel(float sphereRadius, int32_t sphereSectors, int32_t sphereStacks);
 }
