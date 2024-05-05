@@ -18,6 +18,6 @@ namespace AssetImporter
 		AssetImporter::AssetTypes::Mesh GeneratePlanePrimitive(float width);
 		AssetImporter::AssetTypes::Mesh GenerateCubePrimitive(float width);
 		AssetImporter::AssetTypes::Mesh GenerateSpherePrimitive(float radius, int32_t sectors, int32_t stacks);
-
+		AssetImporter::AssetTypes::Mesh GenerateCylinderPrimitive(float baseRadius, float topRadius, float height, int32_t sectors, int32_t stacks);
 	}
 }

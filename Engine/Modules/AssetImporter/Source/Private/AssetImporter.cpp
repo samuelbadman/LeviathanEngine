@@ -37,3 +37,9 @@ AssetImporter::AssetTypes::Mesh AssetImporter::GenerateSpherePrimitiveModel(floa
 {
 	return ModelImporter::GenerateSpherePrimitive(sphereRadius, sphereSectors, sphereStacks);
 }
+
+AssetImporter::AssetTypes::Mesh AssetImporter::GenerateCylinderPrimitiveModel(float cylinderBaseRadius, float cylinderTopRadius, float cylinderHeight, int32_t cylinderSectors, 
+	int32_t cylinderStacks)
+{
+	return ModelImporter::GenerateCylinderPrimitive(cylinderBaseRadius, cylinderTopRadius, cylinderHeight, cylinderSectors, cylinderStacks);
+}

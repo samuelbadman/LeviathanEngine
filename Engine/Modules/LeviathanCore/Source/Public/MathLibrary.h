@@ -32,7 +32,7 @@ namespace LeviathanCore
 
 		// Returns the value squared.
 		template <typename T>
-		T Square(T value)
+		constexpr T Square(T value)
 		{
 			return value * value;
 		}
@@ -47,6 +47,12 @@ namespace LeviathanCore
 		constexpr T Sin(T radians)
 		{
 			return sin(radians);
+		}
+
+		template <typename T>
+		constexpr T ATan2(T y, T x)
+		{
+			return atan2(y, x);
 		}
 	}
 }
