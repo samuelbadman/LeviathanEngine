@@ -399,7 +399,7 @@ namespace TestTitle
 
 		// Create scene.
 		// Import model from disk.
-		AssetImporter::AssetTypes::Mesh model = AssetImporter::GenerateCubePrimitiveModel(1.0f);
+		AssetImporter::AssetTypes::Mesh model = AssetImporter::GenerateCubePrimitiveModel(0.5f);
 		//std::vector<AssetImporter::AssetTypes::Mesh> model = {};
 		//if (AssetImporter::ImportModel("Model.fbx", model))
 		{

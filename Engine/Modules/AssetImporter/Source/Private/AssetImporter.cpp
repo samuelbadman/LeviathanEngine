@@ -23,14 +23,14 @@ AssetImporter::AssetTypes::Mesh AssetImporter::CombineMeshes(const AssetImporter
 	return ModelImporter::CombineMeshes(meshes, count);
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::GeneratePlanePrimitiveModel(float planeWidth)
+AssetImporter::AssetTypes::Mesh AssetImporter::GeneratePlanePrimitiveModel(float planeHalfWidth)
 {
-	return ModelImporter::GeneratePlanePrimitive(planeWidth);
+	return ModelImporter::GeneratePlanePrimitive(planeHalfWidth);
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::GenerateCubePrimitiveModel(float cubeWidth)
+AssetImporter::AssetTypes::Mesh AssetImporter::GenerateCubePrimitiveModel(float cubeHalfWidth)
 {
-	return ModelImporter::GenerateCubePrimitive(cubeWidth);
+	return ModelImporter::GenerateCubePrimitive(cubeHalfWidth);
 }
 
 AssetImporter::AssetTypes::Mesh AssetImporter::GenerateSpherePrimitiveModel(float sphereRadius, int32_t sphereSectors, int32_t sphereStacks)

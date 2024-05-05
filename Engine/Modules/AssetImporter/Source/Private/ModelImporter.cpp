@@ -138,10 +138,8 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::CombineMeshes(cons
 	return result;
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GeneratePlanePrimitive(float width)
+AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GeneratePlanePrimitive(float halfWidth)
 {
-	const float halfWidth = width / 2.0f;
-
 	return AssetImporter::AssetTypes::Mesh
 	{
 		.Positions =
@@ -175,10 +173,8 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GeneratePlanePrimi
 	};
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCubePrimitive(float width)
+AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCubePrimitive(float halfWidth)
 {
-	const float halfWidth = width / 2.0f;
-
 	return AssetImporter::AssetTypes::Mesh
 	{
 		.Positions =
