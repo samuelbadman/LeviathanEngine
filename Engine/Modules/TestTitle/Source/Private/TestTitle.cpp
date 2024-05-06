@@ -281,7 +281,10 @@ namespace TestTitle
 		if (gIndexCount > 0)
 		{
 			// Update material data.
-			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer materialData = { {0.0f, 1.0f, 0.0f, 1.0f} };
+			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer materialData = 
+			{
+				.Color = {0.0f, 1.0f, 0.0f, 1.0f}
+			};
 			LeviathanRenderer::SetMaterialData(materialData);
 
 			// Calculate world matrix.

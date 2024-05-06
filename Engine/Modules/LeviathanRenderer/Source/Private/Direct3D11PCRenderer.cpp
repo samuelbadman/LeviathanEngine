@@ -98,7 +98,7 @@ struct VertexOutput
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 NormalViewSpace : NORMAL_VIEW_SPACE;
-    float3 LightColor : LIGHT_COLOR;
+    float3 Light : LIGHT;
     float3 LightPositionViewSpace : LIGHT_POSITION_VIEW_SPACE;
 };
 
@@ -106,6 +106,7 @@ VertexOutput main(VertexInput input)
 {
     // TODO: Organise light data into scene buffer.
     float3 lightColor = float3(1.0f, 1.0f, 1.0f);
+    float lightBrightness = 1.0f;
     float3 lightPositionWorldSpace = float3(0.0f, 2.0f, -2.0f);
 
     VertexOutput output;
@@ -113,7 +114,7 @@ VertexOutput main(VertexInput input)
     output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position, 1.0f));
     output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
     output.NormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
-    output.LightColor = lightColor;
+    output.Light = lightColor * lightBrightness;
 
     // TODO: Move this calculation onto CPU.
     output.LightPositionViewSpace = mul(ViewMatrix, float4(lightPositionWorldSpace, 1.0f)).xyz;
@@ -133,26 +134,27 @@ struct PixelInput
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 NormalViewSpace : NORMAL_VIEW_SPACE;
-    float3 LightColor : LIGHT_COLOR;
+    float3 Light : LIGHT;
     float3 LightPositionViewSpace : LIGHT_POSITION_VIEW_SPACE;
 };
 
-float3 Phong(float ambient, float specular, float shininess, float3 lightPositionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 lightColor)
+float3 Phong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess, 
+    float3 lightPositionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 light)
 {
     // Phong lighting model.
     // Calculate ambient lighting term.
-    float3 ambientTerm = ambient * lightColor;
-    
+    float3 ambientTerm = surfaceAmbient * light;
+
     // Calculate diffuse lighting term.
     float3 positionToLightViewSpace = normalize(lightPositionViewSpace - positionViewSpace);
-    float diffuse = saturate(dot(normalViewSpace, positionToLightViewSpace));
-    float3 diffuseTerm = diffuse * lightColor;
+    float diff = saturate(dot(normalViewSpace, positionToLightViewSpace));
+    float3 diffuseTerm = diff * surfaceDiffuse * light;
     
     // Calculate specular lighting term.
     float3 positionToViewViewSpace = normalize(-positionViewSpace);
     float3 reflectedViewSpace = normalize(reflect(-positionToLightViewSpace, normalViewSpace));
-    float spec = pow(saturate(dot(positionToViewViewSpace, reflectedViewSpace)), shininess);
-    float3 specularTerm = specular * spec * lightColor;
+    float spec = pow(saturate(dot(positionToViewViewSpace, reflectedViewSpace)), surfaceShininess);
+    float3 specularTerm = spec * surfaceSpecular * light;
     
     // Calculate total lighting term.
     return ambientTerm + diffuseTerm + specularTerm;
@@ -160,12 +162,23 @@ float3 Phong(float ambient, float specular, float shininess, float3 lightPositio
 
 float4 main(PixelInput input) : SV_TARGET
 {
-    float ambient = 0.1f;
-    float specular = 0.4f;
-    float shininess = 16.0f;
+    // Material properties.
+    // Ambient color and reflection amount.
+    float3 ambient = Color.rgb;
+    float ambientReflection = 0.1f;
+    // Diffuse color and reflection amount.
+    float3 diffuse = Color.rgb;
+    float diffuseReflection = 0.6f;
+    // Specular color and reflection amount.
+    float3 specular = float3(1.0f, 1.0f, 1.0f);
+    float specularReflection = 0.3f;
+    // Shininess. 
+    float shininess = 32.0f;
 
-    float3 lighting = Phong(ambient, specular, shininess, input.LightPositionViewSpace, input.PositionViewSpace, input.NormalViewSpace, input.LightColor);
-    return float4(Color.rgb * lighting, 1.0f);
+    float3 resultColor = Phong(ambient * ambientReflection, diffuse * diffuseReflection, specular * specularReflection, shininess,
+        input.LightPositionViewSpace, input.PositionViewSpace, input.NormalViewSpace, input.Light);
+
+    return float4(resultColor, 1.0f);
 }
 		)";
 
