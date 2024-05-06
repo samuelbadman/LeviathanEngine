@@ -2,7 +2,7 @@
 
 #include "MathTypes.h"
 
-namespace AssetImporter
+namespace LeviathanAssets
 {
 	namespace AssetTypes
 	{

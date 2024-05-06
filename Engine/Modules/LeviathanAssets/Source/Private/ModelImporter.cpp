@@ -5,12 +5,12 @@
 #include "Logging.h"
 
 // Mesh attributes are appended onto the end of the vectors passed to out parameters.
-static AssetImporter::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unused]] const aiScene* scene)
+static LeviathanAssets::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unused]] const aiScene* scene)
 {
 	const unsigned int numVertices = mesh->mNumVertices;
 	const unsigned int numFaces = mesh->mNumFaces;
 
-	AssetImporter::AssetTypes::Mesh result = {};
+	LeviathanAssets::AssetTypes::Mesh result = {};
 
 	// Pre-allocate memory for mesh attribute data.
 	result.Positions.reserve(static_cast<size_t>(numVertices));
@@ -54,7 +54,7 @@ static AssetImporter::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unused]
 }
 
 // Processes each mesh in the node being processed. Each meshe's attribute data is appended to the end of the out vectors.
-static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<AssetImporter::AssetTypes::Mesh>& outMeshes)
+static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<LeviathanAssets::AssetTypes::Mesh>& outMeshes)
 {
 	// Process each mesh in the node.
 	for (size_t i = 0; i < node->mNumMeshes; ++i)
@@ -70,8 +70,10 @@ static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<AssetImp
 	}
 }
 
-bool AssetImporter::ModelImporter::LoadModel(std::string_view file, std::vector<AssetImporter::AssetTypes::Mesh>& outMeshes)
+bool LeviathanAssets::ModelImporter::LoadModel(std::string_view file, std::vector<AssetTypes::Mesh>& outMeshes)
 {
+	outMeshes.clear();
+
 	Assimp::Importer importer = {};
 	const aiScene* scene = importer.ReadFile(file.data(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 
@@ -88,14 +90,14 @@ bool AssetImporter::ModelImporter::LoadModel(std::string_view file, std::vector<
 	return true;
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::CombineMeshes(const AssetImporter::AssetTypes::Mesh* const meshes, const size_t count)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(const AssetTypes::Mesh* const meshes, const size_t count)
 {
 	if ((!meshes) || (count == 0))
 	{
-		return AssetImporter::AssetTypes::Mesh();
+		return AssetTypes::Mesh();
 	}
 
-	AssetImporter::AssetTypes::Mesh result = {};
+	AssetTypes::Mesh result = {};
 
 	// Count total number of vertices and indices in the model and .
 	size_t vertexCount = 0;
@@ -138,9 +140,9 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::CombineMeshes(cons
 	return result;
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GeneratePlanePrimitive(float halfWidth)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GeneratePlanePrimitive(float halfWidth)
 {
-	return AssetImporter::AssetTypes::Mesh
+	return AssetTypes::Mesh
 	{
 		.Positions =
 		{
@@ -173,9 +175,9 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GeneratePlanePrimi
 	};
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCubePrimitive(float halfWidth)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCubePrimitive(float halfWidth)
 {
-	return AssetImporter::AssetTypes::Mesh
+	return AssetTypes::Mesh
 	{
 		.Positions =
 		{
@@ -268,7 +270,7 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCubePrimit
 	};
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateSpherePrimitive(float radius, int32_t sectors, int32_t stacks)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateSpherePrimitive(float radius, int32_t sectors, int32_t stacks)
 {
 	float sectorStep = 2.f * LeviathanCore::MathLibrary::Pi / static_cast<float>(sectors);
 	float stackStep = LeviathanCore::MathLibrary::Pi / stacks;
@@ -278,7 +280,7 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateSpherePrim
 	float xy = 0.f;
 	float lengthInv = 1.0f / radius;
 
-	AssetImporter::AssetTypes::Mesh result = {};
+	AssetTypes::Mesh result = {};
 
 	// Vertices.
 	for (int i = stacks; i >= 0; i--)
@@ -337,9 +339,9 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateSpherePrim
 	return result;
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCylinderPrimitive(float baseRadius, float topRadius, float height, int32_t sectors, int32_t stacks)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCylinderPrimitive(float baseRadius, float topRadius, float height, int32_t sectors, int32_t stacks)
 {
-	AssetImporter::AssetTypes::Mesh result = {};
+	AssetTypes::Mesh result = {};
 
 	// Vertices.
 	// Side.
@@ -479,9 +481,9 @@ AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateCylinderPr
 	return result;
 }
 
-AssetImporter::AssetTypes::Mesh AssetImporter::ModelImporter::GenerateConePrimitive(float baseRadius, float height, int32_t sectors, int32_t stacks)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateConePrimitive(float baseRadius, float height, int32_t sectors, int32_t stacks)
 {
-	AssetImporter::AssetTypes::Mesh result = {};
+	AssetTypes::Mesh result = {};
 
 	// Vertices.
 	// Side.

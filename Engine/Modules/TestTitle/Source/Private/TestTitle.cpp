@@ -2,9 +2,10 @@
 #include "LeviathanCore.h"
 #include "LeviathanInputCore.h"
 #include "LeviathanRenderer.h"
-#include "AssetImporter.h"
+#include "LeviathanAssets.h"
 
 #include "AssetTypes.h"
+#include "ModelImporter.h"
 #include "MathTypes.h"
 #include "MathLibrary.h"
 #include "Camera.h"
@@ -330,7 +331,7 @@ namespace TestTitle
 	static void OnCleanup()
 	{
 		// Shutdown engine modules used by title.
-		AssetImporter::Shutdown();
+		LeviathanAssets::Shutdown();
 		LeviathanRenderer::Shutdown();
 		LeviathanInputCore::Shutdown();
 
@@ -370,7 +371,7 @@ namespace TestTitle
 			return false;
 		}
 
-		if (!AssetImporter::Initialize())
+		if (!LeviathanAssets::Initialize())
 		{
 			return false;
 		}
@@ -399,13 +400,13 @@ namespace TestTitle
 
 		// Create scene.
 		// Import model from disk.
-		AssetImporter::AssetTypes::Mesh model = AssetImporter::GenerateCubePrimitiveModel(0.5f);
-		//std::vector<AssetImporter::AssetTypes::Mesh> model = {};
-		//if (AssetImporter::ImportModel("Model.fbx", model))
+		LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCubePrimitive(0.5f);
+		//std::vector<LeviathanAssets::AssetTypes::Mesh> model = {};
+		//if (LeviathanAssets::ModelImporter::LoadModel("Model.fbx", model))
 		{
 			// Combine model meshes into a single mesh buffer.
-			AssetImporter::AssetTypes::Mesh combinedModel = model;
-			//AssetImporter::AssetTypes::Mesh combinedModel = AssetImporter::CombineMeshes(model.data(), model.size());
+			LeviathanAssets::AssetTypes::Mesh combinedModel = model;
+			//LeviathanAssets::AssetTypes::Mesh combinedModel = LeviathanAssets::ModelImporter::CombineMeshes(model.data(), model.size());
 
 			// Build render mesh.
 			// Render mesh definition.
