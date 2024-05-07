@@ -22,9 +22,11 @@ namespace LeviathanCore
 
 			inline float GetX() const { return Components[XComponent]; }
 			inline float GetY() const { return Components[YComponent]; }
-
 			void SetX(const float x) { Components[XComponent] = x; }
 			void SetY(const float y) { Components[YComponent] = y; }
+
+			inline const float* Data() const { return Components; }
+			inline float* Data() { return Components; }
 		};
 
 		class Vector3
@@ -63,6 +65,9 @@ namespace LeviathanCore
 			inline void SetY(const float y) { Components[YComponent] = y; }
 			inline void SetZ(const float z) { Components[ZComponent] = z; }
 
+			inline const float* Data() const { return Components; }
+			inline float* Data() { return Components; }
+
 			// Returns the vector pointing in the same direction with unit length 1.
 			Vector3 AsNormalizedSafe() const;
 
@@ -75,6 +80,35 @@ namespace LeviathanCore
 			Vector3 operator*(float rhs) const;
 			Vector3 operator+(const Vector3& rhs) const;
 			Vector3 operator-(const Vector3& rhs) const;
+		};
+
+		class Vector4
+		{
+		private:
+			static constexpr size_t XComponent = 0;
+			static constexpr size_t YComponent = 1;
+			static constexpr size_t ZComponent = 2;
+			static constexpr size_t WComponent = 3;
+
+		private:
+			float Components[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+		public:
+			Vector4() = default;
+			Vector4(float x, float y, float z, float w);
+			Vector4(const Vector3& xyz, float w);
+
+			inline float GetX() const { return Components[XComponent]; }
+			inline float GetY() const { return Components[YComponent]; }
+			inline float GetZ() const { return Components[ZComponent]; }
+			inline float GetW() const { return Components[WComponent]; }
+			inline float SetX(float x) { Components[XComponent] = x; }
+			inline float SetY(float y) { Components[YComponent] = y; }
+			inline float SetZ(float z) { Components[ZComponent] = z; }
+			inline float SetW(float w) { Components[WComponent] = w; }
+
+			inline const float* Data() const { return Components; }
+			inline float* Data() { return Components; }
 		};
 
 		//class Matrix3x3
@@ -161,10 +195,13 @@ namespace LeviathanCore
 			// Operators.
 			Matrix4x4 operator*(const Matrix4x4& rhs) const;
 			void operator*=(const Matrix4x4& rhs);
+			Vector4 operator*(const Vector4& rhs) const;
 
 		private:
 			// Returns the result matrix of matrix a multiplied with matrix b.
 			static Matrix4x4 Multiply(const Matrix4x4& a, const Matrix4x4& b);
+			// Returns the result vector of matrix a multiplied with vector4 b.
+			static Vector4 Multiply(const Matrix4x4& a, const Vector4& b);
 		};
 
 		class Euler

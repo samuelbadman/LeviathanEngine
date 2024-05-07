@@ -77,7 +77,8 @@ namespace LeviathanRenderer
 		static const std::string gVertexShaderSourceCode = R"(
 cbuffer SceneBuffer : register(b0)
 {
-    float4x4 ViewMatrix;
+    float4 Light;
+    float4 LightPositionViewSpace;
 }
 
 cbuffer ObjectBuffer : register(b1)
@@ -104,20 +105,13 @@ struct VertexOutput
 
 VertexOutput main(VertexInput input)
 {
-    // TODO: Organise light data into scene buffer.
-    float3 lightColor = float3(1.0f, 1.0f, 1.0f);
-    float lightBrightness = 1.0f;
-    float3 lightPositionWorldSpace = float3(0.0f, 2.0f, -2.0f);
-
     VertexOutput output;
 
     output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position, 1.0f));
     output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
     output.NormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
-    output.Light = lightColor * lightBrightness;
-
-    // TODO: Move this calculation onto CPU.
-    output.LightPositionViewSpace = mul(ViewMatrix, float4(lightPositionWorldSpace, 1.0f)).xyz;
+    output.Light = Light.xyz;
+    output.LightPositionViewSpace = LightPositionViewSpace.xyz;
 				
     return output;
 }

@@ -272,9 +272,22 @@ namespace TestTitle
 		// Begin frame.
 		LeviathanRenderer::BeginFrame();
 
+		// Define light.
+		static const LeviathanCore::MathTypes::Vector3 lightColor{ 1.0f, 1.0f, 1.0f };
+		static const float lightBrightness = 1.0f;
+		static const LeviathanCore::MathTypes::Vector3 lightPositionWorldSpace{ 0.0f, 2.0f, -2.0f };
+
+		// Calculate light intensity.
+		LeviathanCore::MathTypes::Vector3 light = lightColor * lightBrightness;
+
+		// Calculate view space light position.
+		const LeviathanCore::MathTypes::Vector4 lightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(lightPositionWorldSpace, 1.0f);
+		const LeviathanCore::MathTypes::Vector3 lightPositionViewSpace{ lightPositionViewSpace4.GetX(), lightPositionViewSpace4.GetY(), lightPositionViewSpace4.GetZ() };
+
 		// Update scene data.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
-		memcpy(sceneData.ViewMatrix, gSceneCamera.GetViewMatrix().Data(), sizeof(float) * 16);
+		memcpy(sceneData.Light, light.Data(), sizeof(float) * 3);
+		memcpy(sceneData.LightPositionViewSpace, lightPositionViewSpace.Data(), sizeof(float) * 3);
 		LeviathanRenderer::SetSceneData(sceneData);
 
 		// Object 1 (dynamic).

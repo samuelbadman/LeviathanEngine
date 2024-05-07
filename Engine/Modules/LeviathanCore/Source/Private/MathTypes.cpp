@@ -3,6 +3,7 @@
 
 namespace LeviathanCore
 {
+	// TODO: Replace GLM math with custom math implementations.
 	namespace MathTypes
 	{
 		float Vector3::DotProduct(const Vector3& a, const Vector3& b)
@@ -64,6 +65,16 @@ namespace LeviathanCore
 		Vector3 Vector3::operator-(const Vector3& rhs) const
 		{
 			return Vector3(GetX() - rhs.GetX(), GetY() - rhs.GetY(), GetZ() - rhs.GetZ());
+		}
+
+		Vector4::Vector4(float x, float y, float z, float w)
+			: Components{ x, y, z, w }
+		{
+		}
+
+		Vector4::Vector4(const Vector3& xyz, float w)
+			:Components{ xyz.GetX(), xyz.GetY(), xyz.GetZ(), w }
+		{
 		}
 
 		//Matrix3x3::Matrix3x3(float e00, float e10, float e20, float e01, float e11, float e21, float e02, float e12, float e22)
@@ -219,6 +230,17 @@ namespace LeviathanCore
 			return result;
 		}
 
+		Vector4 Matrix4x4::Multiply(const Matrix4x4& a, const Vector4& b)
+		{
+			glm::mat4x4 glmMatA = {};
+			memcpy(&glmMatA[0], a.Data(), sizeof(float) * 16);
+
+			glm::vec4 glmVec4{ b.GetX(), b.GetY(), b.GetZ(), b.GetW() };
+
+			const glm::vec4 glmResult = glmMatA * glmVec4;
+			return Vector4(glmResult.x, glmResult.y, glmResult.z, glmResult.w);
+		}
+
 		Matrix4x4 Matrix4x4::operator*(const Matrix4x4& rhs) const
 		{
 			return Matrix4x4::Multiply(*this, rhs);
@@ -227,6 +249,11 @@ namespace LeviathanCore
 		void Matrix4x4::operator*=(const Matrix4x4& rhs)
 		{
 			*this = Matrix4x4::Multiply(*this, rhs);
+		}
+
+		Vector4 Matrix4x4::operator*(const Vector4& rhs) const
+		{
+			return Matrix4x4::Multiply(*this, rhs);
 		}
 
 		Euler::Euler(float pitchRadians, float yawRadians, float rollRadians)
