@@ -44,12 +44,12 @@ namespace TestTitle
 		}
 	};
 
-	struct Light
+	struct DirectionalLight
 	{
 		LeviathanCore::MathTypes::Vector3 Color{ 1.0f, 1.0f, 1.0f };
 		float Brightness = 1.0f;
-		// Position in world space.
-		LeviathanCore::MathTypes::Vector3 Position{ 0.0f, 0.0f, 0.0f };
+		// Direction in world space.
+		LeviathanCore::MathTypes::Vector3 Direction{ -0.577350259f, -0.577350259f, 0.577350259f };
 	};
 
 	static size_t gSingleVertexStrideBytes = 0;
@@ -61,7 +61,7 @@ namespace TestTitle
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
 
-	static Light gSceneLight = {};
+	static DirectionalLight gSceneDirectionalLight = {};
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
@@ -288,16 +288,16 @@ namespace TestTitle
 		LeviathanRenderer::BeginFrame();
 
 		// Calculate light intensity.
-		LeviathanCore::MathTypes::Vector3 light = gSceneLight.Color * gSceneLight.Brightness;
+		LeviathanCore::MathTypes::Vector3 light = gSceneDirectionalLight.Color * gSceneDirectionalLight.Brightness;
 
-		// Calculate view space light position.
-		const LeviathanCore::MathTypes::Vector4 lightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneLight.Position, 1.0f);
-		const LeviathanCore::MathTypes::Vector3 lightPositionViewSpace{ lightPositionViewSpace4.GetX(), lightPositionViewSpace4.GetY(), lightPositionViewSpace4.GetZ() };
+		// Calculate view space light direction.
+		const LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLight.Direction, 0.0f);
+		const LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.GetX(), lightDirectionViewSpace4.GetY(), lightDirectionViewSpace4.GetZ() };
 
 		// Update scene data.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
 		memcpy(sceneData.Light, light.Data(), sizeof(float) * 3);
-		memcpy(sceneData.LightPositionViewSpace, lightPositionViewSpace.Data(), sizeof(float) * 3);
+		memcpy(sceneData.LightDirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
 		LeviathanRenderer::SetSceneData(sceneData);
 
 		// Object 1 (dynamic).
@@ -505,9 +505,9 @@ namespace TestTitle
 		gSceneCamera.UpdateViewProjectionMatrix();
 
 		// Define scene light.
-		gSceneLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
-		gSceneLight.Brightness = 1.0f;
-		gSceneLight.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 2.0f, -2.0f };
+		gSceneDirectionalLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
+		gSceneDirectionalLight.Brightness = 1.0f;
+		gSceneDirectionalLight.Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 1.0f }.AsNormalizedSafe();
 
 		// ECS module prototype code region.
 #pragma region 

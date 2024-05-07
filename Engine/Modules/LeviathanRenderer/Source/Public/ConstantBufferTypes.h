@@ -12,7 +12,7 @@ namespace LeviathanRenderer
 			float Light[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 			// 16 bytes.
-			float LightPositionViewSpace[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			float LightDirectionViewSpace[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		};
 
 		struct ObjectConstantBuffer
