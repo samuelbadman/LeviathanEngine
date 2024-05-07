@@ -27,8 +27,8 @@ namespace TestTitle
 
 	struct Transform
 	{
-		LeviathanCore::MathTypes::Vector3 Translation = {};
-		LeviathanCore::MathTypes::Euler Rotation = {};
+		LeviathanCore::MathTypes::Vector3 Translation = { 0.0f, 0.0f, 0.0f };
+		LeviathanCore::MathTypes::Euler Rotation = { 0.0f, 0.0f, 0.0f };
 		LeviathanCore::MathTypes::Vector3 Scale = LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f);
 
 		Transform() = default;
@@ -56,6 +56,8 @@ namespace TestTitle
 	static unsigned int gIndexCount = 0;
 	static LeviathanRenderer::RendererResourceID::IDType gVertexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gIndexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
+
+	static Transform gObjectTransform = {};
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
 
@@ -142,6 +144,9 @@ namespace TestTitle
 			LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(x, y);
 			LeviathanCore::Core::SetCursorPosInRuntimeWindow(x / 2, y / 2);
 		}
+
+		// Update object transform.
+		gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
 	}
 
 	static void OnPostTick()
@@ -299,19 +304,14 @@ namespace TestTitle
 		if (gIndexCount > 0)
 		{
 			// Update material data.
-			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer materialData = 
+			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer materialData =
 			{
 				.Color = {0.0f, 1.0f, 0.0f, 1.0f}
 			};
 			LeviathanRenderer::SetMaterialData(materialData);
 
 			// Calculate world matrix.
-			// TODO: Move scene updates into tick.
-			[[maybe_unused]] const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
-
-			static Transform objectTransform = {};
-			objectTransform.Rotation.SetYawRadians(objectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
-			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransform.Matrix();
+			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
 
 			// Calculate world view matrix.
 			const LeviathanCore::MathTypes::Matrix4x4 worldViewMatrix = gSceneCamera.GetViewMatrix() * worldMatrix;
@@ -485,6 +485,9 @@ namespace TestTitle
 		//	2, // Top right.
 		//	3 // Bottom right.
 		//};
+
+		// Define object transform.
+		gObjectTransform = {};
 
 		// Define scene camera.
 		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.5f));
