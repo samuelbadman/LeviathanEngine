@@ -44,12 +44,22 @@ namespace TestTitle
 		}
 	};
 
+	struct Light
+	{
+		LeviathanCore::MathTypes::Vector3 Color{ 1.0f, 1.0f, 1.0f };
+		float Brightness = 1.0f;
+		// Position in world space.
+		LeviathanCore::MathTypes::Vector3 Position{ 0.0f, 0.0f, 0.0f };
+	};
+
 	static size_t gSingleVertexStrideBytes = 0;
 	static unsigned int gIndexCount = 0;
 	static LeviathanRenderer::RendererResourceID::IDType gVertexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gIndexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
+
+	static Light gSceneLight = {};
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
@@ -272,16 +282,11 @@ namespace TestTitle
 		// Begin frame.
 		LeviathanRenderer::BeginFrame();
 
-		// Define light.
-		static const LeviathanCore::MathTypes::Vector3 lightColor{ 1.0f, 1.0f, 1.0f };
-		static const float lightBrightness = 1.0f;
-		static const LeviathanCore::MathTypes::Vector3 lightPositionWorldSpace{ 0.0f, 2.0f, -2.0f };
-
 		// Calculate light intensity.
-		LeviathanCore::MathTypes::Vector3 light = lightColor * lightBrightness;
+		LeviathanCore::MathTypes::Vector3 light = gSceneLight.Color * gSceneLight.Brightness;
 
 		// Calculate view space light position.
-		const LeviathanCore::MathTypes::Vector4 lightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(lightPositionWorldSpace, 1.0f);
+		const LeviathanCore::MathTypes::Vector4 lightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneLight.Position, 1.0f);
 		const LeviathanCore::MathTypes::Vector3 lightPositionViewSpace{ lightPositionViewSpace4.GetX(), lightPositionViewSpace4.GetY(), lightPositionViewSpace4.GetZ() };
 
 		// Update scene data.
@@ -495,6 +500,11 @@ namespace TestTitle
 
 		gSceneCamera.UpdateProjectionMatrix(windowWidth, windowHeight);
 		gSceneCamera.UpdateViewProjectionMatrix();
+
+		// Define scene light.
+		gSceneLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
+		gSceneLight.Brightness = 1.0f;
+		gSceneLight.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 2.0f, -2.0f };
 
 		// ECS module prototype code region.
 #pragma region 
