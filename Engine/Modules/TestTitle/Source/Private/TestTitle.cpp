@@ -469,7 +469,7 @@ namespace TestTitle
 		//};
 
 		// Define scene camera.
-		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -5.0f));
+		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.5f));
 
 		gSceneCamera.UpdateViewMatrix();
 
