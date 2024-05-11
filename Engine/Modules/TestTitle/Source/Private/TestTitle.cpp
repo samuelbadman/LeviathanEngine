@@ -58,6 +58,9 @@ namespace TestTitle
 		float Brightness = 1.0f;
 		// Position in world space.
 		LeviathanCore::MathTypes::Vector3 Position{ 0.0f, 0.0f, 0.0f };
+		float Constant = 0.0f;
+		float Linear = 0.0f;
+		float Quadratic = 1.0f;
 	};
 
 	static size_t gSingleVertexStrideBytes = 0;
@@ -329,6 +332,9 @@ namespace TestTitle
 
 			memcpy(&(sceneData.PointLights + (i * 4))->Radiance, pointLightRadiance.Data(), sizeof(float) * 3);
 			memcpy(&(sceneData.PointLights + (i * 4))->PositionViewSpace, pointLightPositionViewSpace.Data(), sizeof(float) * 3);
+			memcpy(&(sceneData.PointLights + (i * 4))->Constant, &gScenePointLight[i].Constant, sizeof(float));
+			memcpy(&(sceneData.PointLights + (i * 4))->Linear, &gScenePointLight[i].Linear, sizeof(float));
+			memcpy(&(sceneData.PointLights + (i * 4))->Quadratic, &gScenePointLight[i].Quadratic, sizeof(float));
 		}
 
 		LeviathanRenderer::UpdateSceneData(0, &sceneData, sizeof(LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer));
@@ -545,6 +551,9 @@ namespace TestTitle
 		gScenePointLight[0].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gScenePointLight[0].Brightness = 1.0f;
 		gScenePointLight[0].Position = LeviathanCore::MathTypes::Vector3{ 0.6f, 1.0f, -1.0f };
+		gScenePointLight[0].Constant = 0.0f;
+		gScenePointLight[0].Linear = 0.0f;
+		gScenePointLight[0].Quadratic = 1.0f;
 
 		// ECS module prototype code region.
 #pragma region 
