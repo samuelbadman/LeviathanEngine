@@ -108,13 +108,18 @@ VertexOutput main(VertexInput input)
 		)";
 
 		static const std::string gPixelShaderSourceCode = R"(
+// Renderer constants.
 #define MAX_DIRECTIONAL_LIGHT_COUNT 3
+#define MAX_POINT_LIGHT_COUNT 10
 
 cbuffer SceneBuffer : register(b0)
 {
     uint DirectionalLightCount;
+    uint PointLightCount;
     float3 DirectionalLightRadiance[MAX_DIRECTIONAL_LIGHT_COUNT];
     float3 LightDirectionViewSpace[MAX_DIRECTIONAL_LIGHT_COUNT];
+    float3 PointLightRadiance[MAX_POINT_LIGHT_COUNT];
+    float3 PointLightPositionViewSpace[MAX_POINT_LIGHT_COUNT];
 }
 
 cbuffer MaterialBuffer : register(b1)
@@ -130,22 +135,22 @@ struct PixelInput
 };
 
 float3 Phong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess,
-    float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance)
+    float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance, float attenuation)
 {
     // Phong lighting model.
     // Calculate ambient lighting term.
-    float3 ambientTerm = surfaceAmbient * radiance;
+    float3 ambientTerm = surfaceAmbient * radiance * attenuation;
 
     // Calculate diffuse lighting term.
     float3 positionToLightViewSpace = normalize(-lightDirectionViewSpace);
     float diff = saturate(dot(normalViewSpace, positionToLightViewSpace));
-    float3 diffuseTerm = diff * surfaceDiffuse * radiance;
+    float3 diffuseTerm = diff * surfaceDiffuse * radiance * attenuation;
     
     // Calculate specular lighting term.
     float3 positionToViewViewSpace = normalize(-positionViewSpace);
     float3 reflectedViewSpace = normalize(reflect(-positionToLightViewSpace, normalViewSpace));
     float spec = pow(saturate(dot(positionToViewViewSpace, reflectedViewSpace)), surfaceShininess);
-    float3 specularTerm = spec * surfaceSpecular * radiance;
+    float3 specularTerm = spec * surfaceSpecular * radiance * attenuation;
     
     // Calculate total lighting term.
     return ambientTerm + diffuseTerm + specularTerm;
@@ -168,10 +173,23 @@ float4 main(PixelInput input) : SV_TARGET
 
     float3 resultColor = float3(0.0f, 0.0f, 0.0f);
     
+    // Directional lights.
     for (uint i = 0; i < DirectionalLightCount; ++i)
     {
         resultColor += Phong(ambient * ambientReflection, diffuse * diffuseReflection, specular * specularReflection, shininess,
-            LightDirectionViewSpace[i], input.PositionViewSpace, input.NormalViewSpace, DirectionalLightRadiance[i]);
+            LightDirectionViewSpace[i], input.PositionViewSpace, input.NormalViewSpace, DirectionalLightRadiance[i], 1.0f);
+    }
+    
+    // Point lights.
+    for (uint i = 0; i < PointLightCount; ++i)
+    {
+        float3 lightToPositionViewSpace = input.PositionViewSpace - PointLightPositionViewSpace[i];
+
+        float distance = length(lightToPositionViewSpace);
+        float attenuation = PointLightRadiance[i] / (distance * distance);
+
+        resultColor += Phong(ambient * ambientReflection, diffuse * diffuseReflection, specular * specularReflection, shininess,
+            lightToPositionViewSpace, input.PositionViewSpace, input.NormalViewSpace, PointLightRadiance[i], attenuation);
     }
 
     return float4(resultColor, 1.0f);

@@ -35,9 +35,14 @@ namespace LeviathanRenderer
 		struct SceneConstantBuffer
 		{
 			uint32_t DirectionalLightCount = 0;
-			uint32_t Padding[3] = { 0 };
-			float DirectionalLightRadiance[4 * RendererConstants::MaxDirectionalLights] = { 0.0f };
-			float LightDirectionViewSpace[4 * RendererConstants::MaxDirectionalLights] = { 0.0f };
+			uint32_t PointLightCount = 0;
+			uint32_t Padding[2] = { 0 };
+
+			float DirectionalLightRadiance[4 * RendererConstants::MaxDirectionalLightCount] = { 0.0f };
+			float LightDirectionViewSpace[4 * RendererConstants::MaxDirectionalLightCount] = { 0.0f };
+
+			float PointLightRadiance[4 * RendererConstants::MaxPointLightCount] = { 0.0f };
+			float PointLightPositionViewSpace[4 * RendererConstants::MaxPointLightCount] = { 0.0f };
 		};
 
 		struct MaterialConstantBuffer

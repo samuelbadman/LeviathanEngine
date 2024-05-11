@@ -4,6 +4,7 @@ namespace LeviathanRenderer
 {
 	namespace RendererConstants
 	{
-		static constexpr size_t MaxDirectionalLights = 3;
+		static constexpr size_t MaxDirectionalLightCount = 3;
+		static constexpr size_t MaxPointLightCount = 10;
 	}
 }

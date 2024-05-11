@@ -52,6 +52,14 @@ namespace TestTitle
 		LeviathanCore::MathTypes::Vector3 Direction{ -0.577350259f, -0.577350259f, 0.577350259f };
 	};
 
+	struct PointLight
+	{
+		LeviathanCore::MathTypes::Vector3 Color{ 1.0f, 1.0f, 1.0f };
+		float Brightness = 1.0f;
+		// Position in world space.
+		LeviathanCore::MathTypes::Vector3 Position{ 0.0f, 0.0f, 0.0f };
+	};
+
 	static size_t gSingleVertexStrideBytes = 0;
 	static unsigned int gIndexCount = 0;
 	static LeviathanRenderer::RendererResourceID::IDType gVertexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
@@ -63,6 +71,9 @@ namespace TestTitle
 
 	static constexpr size_t gSceneDirectionalLightCount = 1;
 	static DirectionalLight gSceneDirectionalLight[gSceneDirectionalLightCount] = {};
+
+	static constexpr size_t gScenePointLightCount = 1;
+	static PointLight gScenePointLight[gScenePointLightCount];
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
@@ -289,9 +300,10 @@ namespace TestTitle
 		LeviathanRenderer::BeginFrame();
 
 		// Update scene data.
-		// Scene lights.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
-		sceneData.DirectionalLightCount = gSceneDirectionalLightCount;
+		//sceneData.DirectionalLightCount = gSceneDirectionalLightCount;
+		sceneData.DirectionalLightCount = 0;
+		sceneData.PointLightCount = gScenePointLightCount;
 
 		// For each directional light.
 		for (size_t i = 0; i < gSceneDirectionalLightCount; ++i)
@@ -308,6 +320,17 @@ namespace TestTitle
 			memcpy(sceneData.LightDirectionViewSpace + (i * 4), lightDirectionViewSpace.Data(), sizeof(float) * 3);
 		}
 
+		// For each point light.
+		for (size_t i = 0; i < gScenePointLightCount; ++i)
+		{
+			LeviathanCore::MathTypes::Vector3 pointLightRadiance = gScenePointLight[i].Color * gScenePointLight[i].Brightness;
+			LeviathanCore::MathTypes::Vector4 pointLightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gScenePointLight[i].Position, 1.0f };
+			LeviathanCore::MathTypes::Vector3 pointLightPositionViewSpace{ pointLightPositionViewSpace4.GetX(), pointLightPositionViewSpace4.GetY(), pointLightPositionViewSpace4.GetZ() };
+
+			memcpy(sceneData.PointLightRadiance + (i * 4), pointLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(sceneData.PointLightPositionViewSpace + (i * 4), pointLightPositionViewSpace.Data(), sizeof(float) * 3);
+		}
+
 		LeviathanRenderer::UpdateSceneData(0, &sceneData, sizeof(LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer));
 
 		// Object 1 (dynamic).
@@ -318,7 +341,7 @@ namespace TestTitle
 			{
 				.Color = {0.0f, 1.0f, 0.0f, 1.0f}
 			};
-			LeviathanRenderer::UpdateMaterialData( 0, &materialData, sizeof(LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer));
+			LeviathanRenderer::UpdateMaterialData(0, &materialData, sizeof(LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer));
 
 			// Calculate world matrix.
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
@@ -518,6 +541,10 @@ namespace TestTitle
 		gSceneDirectionalLight[0].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gSceneDirectionalLight[0].Brightness = 1.0f;
 		gSceneDirectionalLight[0].Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 1.0f }.AsNormalizedSafe();
+
+		gScenePointLight[0].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
+		gScenePointLight[0].Brightness = 1.0f;
+		gScenePointLight[0].Position = LeviathanCore::MathTypes::Vector3{ 0.75f, 1.0f, -1.0f };
 
 		// ECS module prototype code region.
 #pragma region 
