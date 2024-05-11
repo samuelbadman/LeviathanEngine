@@ -108,11 +108,13 @@ VertexOutput main(VertexInput input)
 		)";
 
 		static const std::string gPixelShaderSourceCode = R"(
+#define MAX_DIRECTIONAL_LIGHT_COUNT 3
+
 cbuffer SceneBuffer : register(b0)
 {
-    uint NumberDirectionalLights;
-    float3 DirectionalLightRadiance[2];
-    float3 LightDirectionViewSpace[2];
+    uint DirectionalLightCount;
+    float3 DirectionalLightRadiance[MAX_DIRECTIONAL_LIGHT_COUNT];
+    float3 LightDirectionViewSpace[MAX_DIRECTIONAL_LIGHT_COUNT];
 }
 
 cbuffer MaterialBuffer : register(b1)
@@ -166,7 +168,7 @@ float4 main(PixelInput input) : SV_TARGET
 
     float3 resultColor = float3(0.0f, 0.0f, 0.0f);
     
-    for (int i = 0; i < NumberDirectionalLights; ++i)
+    for (uint i = 0; i < DirectionalLightCount; ++i)
     {
         resultColor += Phong(ambient * ambientReflection, diffuse * diffuseReflection, specular * specularReflection, shininess,
             LightDirectionViewSpace[i], input.PositionViewSpace, input.NormalViewSpace, DirectionalLightRadiance[i]);
@@ -416,13 +418,13 @@ float4 main(PixelInput input) : SV_TARGET
 			return SUCCEEDED(gD3D11Device->CreateBuffer(&desc, &initialData, ppOutBuffer));
 		}
 
-		[[nodiscard]] static bool UpdateConstantBuffer(ID3D11Buffer* pBuffer, const void* pNewData, size_t byteWidth)
+		[[nodiscard]] static bool UpdateConstantBuffer(ID3D11Buffer* pBuffer, size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 		{
 			D3D11_MAPPED_SUBRESOURCE mappedResource = {};
 			HRESULT hr = gD3D11DeviceContext->Map(pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			if (FAILED(hr)) { return false; }
 
-			memcpy(mappedResource.pData, pNewData, byteWidth);
+			memcpy(static_cast<char*>(mappedResource.pData) + byteOffsetIntoBuffer, pNewData, byteWidth);
 
 			gD3D11DeviceContext->Unmap(pBuffer, 0);
 
@@ -769,19 +771,19 @@ float4 main(PixelInput input) : SV_TARGET
 			gD3D11DeviceContext->DrawIndexed(indexCount, 0, 0);
 		}
 
-		bool UpdateSceneBufferData(const ConstantBufferTypes::SceneConstantBuffer& data)
+		bool UpdateObjectBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 		{
-			return UpdateConstantBuffer(gSceneBuffer.Get(), &data, sizeof(ConstantBufferTypes::SceneConstantBuffer));
+			return UpdateConstantBuffer(gObjectBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
-		bool UpdateObjectBufferData(const ConstantBufferTypes::ObjectConstantBuffer& data)
+		bool UpdateSceneBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 		{
-			return UpdateConstantBuffer(gObjectBuffer.Get(), &data, sizeof(ConstantBufferTypes::ObjectConstantBuffer));
+			return UpdateConstantBuffer(gSceneBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
-		bool UpdateMaterialBufferData(const ConstantBufferTypes::MaterialConstantBuffer& data)
+		bool UpdateMaterialBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 		{
-			return UpdateConstantBuffer(gMaterialBuffer.Get(), &data, sizeof(ConstantBufferTypes::MaterialConstantBuffer));
+			return UpdateConstantBuffer(gMaterialBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
 #ifdef LEVIATHAN_WITH_TOOLS

@@ -16,6 +16,8 @@ namespace LeviathanRenderer
 		struct MaterialConstantBuffer;
 	}
 
+	enum class DataBufferType : uint8_t;
+
 	namespace Renderer
 	{
 		[[nodiscard]] bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount);
@@ -31,9 +33,9 @@ namespace LeviathanRenderer
 		void BeginRenderPass();
 		void Present();
 		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId);
-		[[nodiscard]] bool UpdateSceneBufferData(const ConstantBufferTypes::SceneConstantBuffer& data);
-		[[nodiscard]] bool UpdateObjectBufferData(const ConstantBufferTypes::ObjectConstantBuffer& data);
-		[[nodiscard]] bool UpdateMaterialBufferData(const ConstantBufferTypes::MaterialConstantBuffer& data);
+		[[nodiscard]] bool UpdateObjectBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+		[[nodiscard]] bool UpdateSceneBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+		[[nodiscard]] bool UpdateMaterialBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
 #ifdef LEVIATHAN_WITH_TOOLS
 		bool ImGuiRendererInitialize();

@@ -141,19 +141,19 @@ namespace LeviathanRenderer
 		Renderer::DrawIndexed(indexCount, singleVertexStrideBytes, vertexBufferId, indexBufferId);
 	}
 
-	bool UpdateSceneData(const ConstantBufferTypes::SceneConstantBuffer& sceneData)
+	bool UpdateObjectData( size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 	{
-		return Renderer::UpdateSceneBufferData(sceneData);
+		return Renderer::UpdateObjectBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
-	bool UpdateObjectData(const ConstantBufferTypes::ObjectConstantBuffer& objectData)
+	bool UpdateSceneData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 	{
-		return Renderer::UpdateObjectBufferData(objectData);
+		return Renderer::UpdateSceneBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
-	bool UpdateMaterialData(const ConstantBufferTypes::MaterialConstantBuffer& materialData)
+	bool UpdateMaterialData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 	{
-		return Renderer::UpdateMaterialBufferData(materialData);
+		return Renderer::UpdateMaterialBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
 	void Present()

@@ -28,8 +28,8 @@ namespace LeviathanRenderer
 	void BeginFrame();
 	void EndFrame();
 	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId);
-	bool UpdateSceneData(const ConstantBufferTypes::SceneConstantBuffer& sceneData);
-	bool UpdateObjectData(const ConstantBufferTypes::ObjectConstantBuffer& objectData);
-	bool UpdateMaterialData(const ConstantBufferTypes::MaterialConstantBuffer& materialData);
+	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+	bool UpdateSceneData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+	bool UpdateMaterialData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 	void Present();
 }

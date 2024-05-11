@@ -61,7 +61,8 @@ namespace TestTitle
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
 
-	static DirectionalLight gSceneDirectionalLight[2] = {};
+	static constexpr size_t gSceneDirectionalLightCount = 1;
+	static DirectionalLight gSceneDirectionalLight[gSceneDirectionalLightCount] = {};
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
@@ -290,9 +291,10 @@ namespace TestTitle
 		// Update scene data.
 		// Scene lights.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
+		sceneData.DirectionalLightCount = gSceneDirectionalLightCount;
 
 		// For each directional light.
-		for (size_t i = 0; i < 2; ++i)
+		for (size_t i = 0; i < gSceneDirectionalLightCount; ++i)
 		{
 			// Radiance.
 			LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLight[i].Color * gSceneDirectionalLight[i].Brightness;
@@ -301,14 +303,12 @@ namespace TestTitle
 			const LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLight[i].Direction, 0.0f);
 			const LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.GetX(), lightDirectionViewSpace4.GetY(), lightDirectionViewSpace4.GetZ() };
 
-			// Copy to scene data. TODO: Set this value directly with calculation instead of copying in.
+			// Copy to scene data.
 			memcpy(sceneData.DirectionalLightRadiance + (i * 4), directionalLightRadiance.Data(), sizeof(float) * 3);
 			memcpy(sceneData.LightDirectionViewSpace + (i * 4), lightDirectionViewSpace.Data(), sizeof(float) * 3);
 		}
 
-		sceneData.NumberDirectionalLights = 2;
-
-		LeviathanRenderer::UpdateSceneData(sceneData);
+		LeviathanRenderer::UpdateSceneData(0, &sceneData, sizeof(LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer));
 
 		// Object 1 (dynamic).
 		if (gIndexCount > 0)
@@ -318,7 +318,7 @@ namespace TestTitle
 			{
 				.Color = {0.0f, 1.0f, 0.0f, 1.0f}
 			};
-			LeviathanRenderer::UpdateMaterialData(materialData);
+			LeviathanRenderer::UpdateMaterialData( 0, &materialData, sizeof(LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer));
 
 			// Calculate world matrix.
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
@@ -337,7 +337,7 @@ namespace TestTitle
 			memcpy(objectData.WorldViewMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
 			memcpy(objectData.WorldViewProjectionMatrix, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
 			memcpy(objectData.NormalMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
-			LeviathanRenderer::UpdateObjectData(objectData);
+			LeviathanRenderer::UpdateObjectData(0, &objectData, sizeof(LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer));
 
 			// Draw.
 			LeviathanRenderer::Draw(gIndexCount, gSingleVertexStrideBytes, gVertexBufferId, gIndexBufferId);
@@ -518,10 +518,6 @@ namespace TestTitle
 		gSceneDirectionalLight[0].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gSceneDirectionalLight[0].Brightness = 1.0f;
 		gSceneDirectionalLight[0].Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 1.0f }.AsNormalizedSafe();
-
-		gSceneDirectionalLight[1].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
-		gSceneDirectionalLight[1].Brightness = 1.0f;
-		gSceneDirectionalLight[1].Direction = LeviathanCore::MathTypes::Vector3{ 1.0f, -1.0f, 0.0f }.AsNormalizedSafe();
 
 		// ECS module prototype code region.
 #pragma region 
