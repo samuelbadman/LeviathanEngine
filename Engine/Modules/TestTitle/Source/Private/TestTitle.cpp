@@ -302,9 +302,11 @@ namespace TestTitle
 			const LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.GetX(), lightDirectionViewSpace4.GetY(), lightDirectionViewSpace4.GetZ() };
 
 			// Copy to scene data. TODO: Set this value directly with calculation instead of copying in.
-			memcpy(&sceneData.DirectionalLightRadiance[0] + (i * 4), directionalLightRadiance.Data(), sizeof(float) * 3);
-			memcpy(&sceneData.LightDirectionViewSpace[0] + (i * 4), lightDirectionViewSpace.Data(), sizeof(float) * 3);
+			memcpy(sceneData.DirectionalLightRadiance + (i * 4), directionalLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(sceneData.LightDirectionViewSpace + (i * 4), lightDirectionViewSpace.Data(), sizeof(float) * 3);
 		}
+
+		sceneData.NumberDirectionalLights = 2;
 
 		LeviathanRenderer::UpdateSceneData(sceneData);
 

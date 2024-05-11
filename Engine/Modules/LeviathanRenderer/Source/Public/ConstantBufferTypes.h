@@ -6,6 +6,8 @@ namespace LeviathanRenderer
 	{
 		struct SceneConstantBuffer
 		{
+			uint32_t NumberDirectionalLights = 2;
+			uint32_t Padding[3] = { 0 };
 			float DirectionalLightRadiance[8] = { 0.0f };
 			float LightDirectionViewSpace[8] = { 0.0f };
 		};
