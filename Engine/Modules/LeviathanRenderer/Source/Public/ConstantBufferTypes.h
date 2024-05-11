@@ -9,7 +9,7 @@ namespace LeviathanRenderer
 		struct SceneConstantBuffer
 		{
 			// 16 bytes.
-			float Light[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			float DirectionalLightRadiance[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 			// 16 bytes.
 			float LightDirectionViewSpace[4] = { 0.0f, 0.0f, 0.0f, 1.0f };

@@ -146,7 +146,7 @@ namespace TestTitle
 		}
 
 		// Update object transform.
-		gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
+		//gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
 	}
 
 	static void OnPostTick()
@@ -288,7 +288,7 @@ namespace TestTitle
 		LeviathanRenderer::BeginFrame();
 
 		// Calculate light intensity.
-		LeviathanCore::MathTypes::Vector3 light = gSceneDirectionalLight.Color * gSceneDirectionalLight.Brightness;
+		LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLight.Color * gSceneDirectionalLight.Brightness;
 
 		// Calculate view space light direction.
 		const LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLight.Direction, 0.0f);
@@ -296,7 +296,7 @@ namespace TestTitle
 
 		// Update scene data.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
-		memcpy(sceneData.Light, light.Data(), sizeof(float) * 3);
+		memcpy(sceneData.DirectionalLightRadiance, directionalLightRadiance.Data(), sizeof(float) * 3);
 		memcpy(sceneData.LightDirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
 		LeviathanRenderer::SetSceneData(sceneData);
 

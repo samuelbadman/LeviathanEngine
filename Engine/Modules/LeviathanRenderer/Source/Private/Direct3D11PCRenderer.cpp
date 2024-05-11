@@ -77,7 +77,7 @@ namespace LeviathanRenderer
 		static const std::string gVertexShaderSourceCode = R"(
 cbuffer SceneBuffer : register(b0)
 {
-    float4 Light;
+    float4 DirectionalLightRadiance;
     float4 LightDirectionViewSpace;
 }
 
@@ -99,7 +99,7 @@ struct VertexOutput
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 NormalViewSpace : NORMAL_VIEW_SPACE;
-    float3 Light : LIGHT;
+    float3 DirectionalLightRadiance : DIRECTIONAL_LIGHT_RADIANCE;
     float3 LightDirectionViewSpace : LIGHT_DIRECTION_VIEW_SPACE;
 };
 
@@ -110,7 +110,7 @@ VertexOutput main(VertexInput input)
     output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position, 1.0f));
     output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
     output.NormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
-    output.Light = Light.xyz;
+    output.DirectionalLightRadiance = DirectionalLightRadiance.xyz;
     output.LightDirectionViewSpace = LightDirectionViewSpace.xyz;
 				
     return output;
@@ -128,27 +128,27 @@ struct PixelInput
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 NormalViewSpace : NORMAL_VIEW_SPACE;
-    float3 Light : LIGHT;
+    float3 DirectionalLightRadiance : DIRECTIONAL_LIGHT_RADIANCE;
     float3 LightDirectionViewSpace : LIGHT_DIRECTION_VIEW_SPACE;
 };
 
-float3 Phong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess, 
-    float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 light)
+float3 Phong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess,
+    float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance)
 {
     // Phong lighting model.
     // Calculate ambient lighting term.
-    float3 ambientTerm = surfaceAmbient * light;
+    float3 ambientTerm = surfaceAmbient * radiance;
 
     // Calculate diffuse lighting term.
     float3 positionToLightViewSpace = normalize(-lightDirectionViewSpace);
     float diff = saturate(dot(normalViewSpace, positionToLightViewSpace));
-    float3 diffuseTerm = diff * surfaceDiffuse * light;
+    float3 diffuseTerm = diff * surfaceDiffuse * radiance;
     
     // Calculate specular lighting term.
     float3 positionToViewViewSpace = normalize(-positionViewSpace);
     float3 reflectedViewSpace = normalize(reflect(-positionToLightViewSpace, normalViewSpace));
     float spec = pow(saturate(dot(positionToViewViewSpace, reflectedViewSpace)), surfaceShininess);
-    float3 specularTerm = spec * surfaceSpecular * light;
+    float3 specularTerm = spec * surfaceSpecular * radiance;
     
     // Calculate total lighting term.
     return ambientTerm + diffuseTerm + specularTerm;
@@ -170,7 +170,7 @@ float4 main(PixelInput input) : SV_TARGET
     float shininess = 64.0f;
 
     float3 resultColor = Phong(ambient * ambientReflection, diffuse * diffuseReflection, specular * specularReflection, shininess,
-        input.LightDirectionViewSpace, input.PositionViewSpace, input.NormalViewSpace, input.Light);
+        input.LightDirectionViewSpace, input.PositionViewSpace, input.NormalViewSpace, input.DirectionalLightRadiance);
 
     return float4(resultColor, 1.0f);
 }
