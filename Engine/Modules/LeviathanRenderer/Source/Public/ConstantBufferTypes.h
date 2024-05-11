@@ -1,10 +1,37 @@
 #pragma once
 #include "RendererConstants.h"
+#include "LightTypes.h"
 
 namespace LeviathanRenderer
 {
 	namespace ConstantBufferTypes
 	{
+		namespace LightTypes
+		{
+			struct DirectionalLight
+			{
+				LeviathanCore::MathTypes::Vector3 Radiance{ 0.0f, 0.0f, 0.0f };
+				float Padding0 = 0.0f;
+
+				LeviathanCore::MathTypes::Vector3 DirectionViewSpace{ 0.0f, 0.0f, 0.0f };
+				float Padding1 = 0.0f;
+			};
+
+			struct PointLight
+			{
+				float Constant = 0.0f;
+				float Linear = 0.0f;
+				float Quadratic = 0.0f;
+				float Padding0 = 0.0f;
+
+				LeviathanCore::MathTypes::Vector3 Radiance{ 0.0f, 0.0f, 0.0f };
+				float Padding1 = 0.0f;
+
+				LeviathanCore::MathTypes::Vector3 PositionViewSpace{ 0.0f, 0.0f, 0.0f };
+				float Padding2 = 0.0f;
+			};
+		}
+
 		struct ObjectConstantBuffer
 		{
 			float WorldViewMatrix[4 * 4] =
@@ -38,11 +65,9 @@ namespace LeviathanRenderer
 			uint32_t PointLightCount = 0;
 			uint32_t Padding[2] = { 0 };
 
-			float DirectionalLightRadiance[4 * RendererConstants::MaxDirectionalLightCount] = { 0.0f };
-			float LightDirectionViewSpace[4 * RendererConstants::MaxDirectionalLightCount] = { 0.0f };
+			LightTypes::DirectionalLight DirectionalLights[RendererConstants::MaxDirectionalLightCount] = {};
 
-			float PointLightRadiance[4 * RendererConstants::MaxPointLightCount] = { 0.0f };
-			float PointLightPositionViewSpace[4 * RendererConstants::MaxPointLightCount] = { 0.0f };
+			LightTypes::PointLight PointLights[RendererConstants::MaxPointLightCount] = {};
 		};
 
 		struct MaterialConstantBuffer

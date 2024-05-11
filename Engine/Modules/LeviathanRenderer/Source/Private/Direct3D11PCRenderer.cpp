@@ -112,14 +112,27 @@ VertexOutput main(VertexInput input)
 #define MAX_DIRECTIONAL_LIGHT_COUNT 3
 #define MAX_POINT_LIGHT_COUNT 10
 
+struct DirectionalLight
+{
+    float3 Radiance;
+    float3 DirectionViewSpace;
+};
+
+struct PointLight
+{
+    float Constant;
+    float Linear;
+    float Quadratic;
+    float3 Radiance;
+    float3 PositionViewSpace;
+};
+
 cbuffer SceneBuffer : register(b0)
 {
     uint DirectionalLightCount;
     uint PointLightCount;
-    float3 DirectionalLightRadiance[MAX_DIRECTIONAL_LIGHT_COUNT];
-    float3 LightDirectionViewSpace[MAX_DIRECTIONAL_LIGHT_COUNT];
-    float3 PointLightRadiance[MAX_POINT_LIGHT_COUNT];
-    float3 PointLightPositionViewSpace[MAX_POINT_LIGHT_COUNT];
+    DirectionalLight DirectionalLights[MAX_DIRECTIONAL_LIGHT_COUNT];
+    PointLight PointLights[MAX_POINT_LIGHT_COUNT];
 }
 
 cbuffer MaterialBuffer : register(b1)
@@ -215,14 +228,14 @@ float4 main(PixelInput input) : SV_TARGET
     for (uint i = 0; i < DirectionalLightCount; ++i)
     {
         resultColor += DirectionalPhong(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
-            LightDirectionViewSpace[i], input.PositionViewSpace, input.NormalViewSpace, DirectionalLightRadiance[i]);
+            DirectionalLights[i].DirectionViewSpace, input.PositionViewSpace, input.NormalViewSpace, DirectionalLights[i].Radiance);
     }
     
     // Point lights.
     for (uint i = 0; i < PointLightCount; ++i)
     {
         resultColor += PointPhong(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
-            input.PositionViewSpace, PointLightPositionViewSpace[i], input.NormalViewSpace, PointLightRadiance[i]);
+            input.PositionViewSpace, PointLights[i].PositionViewSpace, input.NormalViewSpace, PointLights[i].Radiance);
     }
 
     return float4(resultColor, 1.0f);

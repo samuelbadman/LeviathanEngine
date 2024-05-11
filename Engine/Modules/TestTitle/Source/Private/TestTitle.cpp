@@ -316,8 +316,8 @@ namespace TestTitle
 			const LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.GetX(), lightDirectionViewSpace4.GetY(), lightDirectionViewSpace4.GetZ() };
 
 			// Copy to scene data.
-			memcpy(sceneData.DirectionalLightRadiance + (i * 4), directionalLightRadiance.Data(), sizeof(float) * 3);
-			memcpy(sceneData.LightDirectionViewSpace + (i * 4), lightDirectionViewSpace.Data(), sizeof(float) * 3);
+			memcpy(&(sceneData.DirectionalLights + (i * 4))->Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(&(sceneData.DirectionalLights + (i * 4))->DirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
 		}
 
 		// For each point light.
@@ -327,8 +327,8 @@ namespace TestTitle
 			LeviathanCore::MathTypes::Vector4 pointLightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gScenePointLight[i].Position, 1.0f };
 			LeviathanCore::MathTypes::Vector3 pointLightPositionViewSpace{ pointLightPositionViewSpace4.GetX(), pointLightPositionViewSpace4.GetY(), pointLightPositionViewSpace4.GetZ() };
 
-			memcpy(sceneData.PointLightRadiance + (i * 4), pointLightRadiance.Data(), sizeof(float) * 3);
-			memcpy(sceneData.PointLightPositionViewSpace + (i * 4), pointLightPositionViewSpace.Data(), sizeof(float) * 3);
+			memcpy(&(sceneData.PointLights + (i * 4))->Radiance, pointLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(&(sceneData.PointLights + (i * 4))->PositionViewSpace, pointLightPositionViewSpace.Data(), sizeof(float) * 3);
 		}
 
 		LeviathanRenderer::UpdateSceneData(0, &sceneData, sizeof(LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer));
