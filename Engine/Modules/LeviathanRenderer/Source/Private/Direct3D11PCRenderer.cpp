@@ -134,30 +134,60 @@ struct PixelInput
     float3 NormalViewSpace : NORMAL_VIEW_SPACE;
 };
 
-float3 Phong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess,
-    float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance, float attenuation)
+float3 PhongAmbient(float3 surfaceAmbient, float3 radiance)
 {
-    // Phong lighting model.
-    // Calculate ambient lighting term.
-    float3 ambientTerm = surfaceAmbient * radiance * attenuation;
+    return surfaceAmbient * radiance;
+}
 
-    // Calculate diffuse lighting term.
+float3 PhongDiffuse(float3 surfaceDiffuse, float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance)
+{
     float3 positionToLightViewSpace = normalize(-lightDirectionViewSpace);
     float diff = saturate(dot(normalViewSpace, positionToLightViewSpace));
-    float3 diffuseTerm = diff * surfaceDiffuse * radiance * attenuation;
-    
-    // Calculate specular lighting term.
+    return diff * surfaceDiffuse * radiance;
+}
+
+float3 PhongSpecular(float3 surfaceSpecular, float surfaceShininess, float3 positionViewSpace, float3 lightDirectionViewSpace, float3 normalViewSpace, float3 radiance)
+{
     float3 positionToViewViewSpace = normalize(-positionViewSpace);
-    float3 reflectedViewSpace = normalize(reflect(-positionToLightViewSpace, normalViewSpace));
+    float3 reflectedViewSpace = normalize(reflect(lightDirectionViewSpace, normalViewSpace));
     float spec = pow(saturate(dot(positionToViewViewSpace, reflectedViewSpace)), surfaceShininess);
-    float3 specularTerm = spec * surfaceSpecular * radiance * attenuation;
+    return spec * surfaceSpecular * radiance;
+}
+
+// Calculates lit surface color using the phong lighting model for a directional light.
+float3 PhongDirectional(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess,
+    float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance)
+{
+    float3 ambient = PhongAmbient(surfaceAmbient, radiance);
+    float3 diffuse = PhongDiffuse(surfaceDiffuse, lightDirectionViewSpace, positionViewSpace, normalViewSpace, radiance);
+    float3 specular = PhongSpecular(surfaceSpecular, surfaceShininess, positionViewSpace, lightDirectionViewSpace, normalViewSpace, radiance);
+
+    return ambient + diffuse + specular;
+}
+
+// Calculates lit surface color using the phong lighting model for a point light.
+float3 PhongPoint(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess, 
+    float3 positionViewSpace, float3 lightPositionViewSpace, float3 normalViewSpace, float3 radiance)
+{
+    float3 lightToPositionViewSpace = positionViewSpace - lightPositionViewSpace;
+
+    float3 ambient = PhongAmbient(surfaceAmbient, radiance);
+    float3 diffuse = PhongDiffuse(surfaceDiffuse, lightToPositionViewSpace, positionViewSpace, normalViewSpace, radiance);
+    float3 specular = PhongSpecular(surfaceSpecular, surfaceShininess, positionViewSpace, lightToPositionViewSpace, normalViewSpace, radiance);
     
-    // Calculate total lighting term.
-    return ambientTerm + diffuseTerm + specularTerm;
+    float distance = length(lightToPositionViewSpace);
+    float attenuation = radiance / (distance * distance);
+    
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+
+    return ambient + diffuse + specular;
 }
 
 float4 main(PixelInput input) : SV_TARGET
 {
+    // TODO: Move material properties onto CPU.
     // Material properties.
     // Ambient color and reflection amount.
     float3 ambient = Color.rgb;
@@ -171,25 +201,25 @@ float4 main(PixelInput input) : SV_TARGET
     // Shininess. 
     float shininess = 64.0f;
 
+    float3 surfaceAmbient = ambient * ambientReflection;
+    float3 surfaceDiffuse = diffuse * diffuseReflection;
+    float3 surfaceSpecular = specular * specularReflection;
+
+    // Lighting.
     float3 resultColor = float3(0.0f, 0.0f, 0.0f);
     
     // Directional lights.
     for (uint i = 0; i < DirectionalLightCount; ++i)
     {
-        resultColor += Phong(ambient * ambientReflection, diffuse * diffuseReflection, specular * specularReflection, shininess,
-            LightDirectionViewSpace[i], input.PositionViewSpace, input.NormalViewSpace, DirectionalLightRadiance[i], 1.0f);
+        resultColor += PhongDirectional(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
+            LightDirectionViewSpace[i], input.PositionViewSpace, input.NormalViewSpace, DirectionalLightRadiance[i]);
     }
     
     // Point lights.
     for (uint i = 0; i < PointLightCount; ++i)
     {
-        float3 lightToPositionViewSpace = input.PositionViewSpace - PointLightPositionViewSpace[i];
-
-        float distance = length(lightToPositionViewSpace);
-        float attenuation = PointLightRadiance[i] / (distance * distance);
-
-        resultColor += Phong(ambient * ambientReflection, diffuse * diffuseReflection, specular * specularReflection, shininess,
-            lightToPositionViewSpace, input.PositionViewSpace, input.NormalViewSpace, PointLightRadiance[i], attenuation);
+        resultColor += PhongPoint(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
+            input.PositionViewSpace, PointLightPositionViewSpace[i], input.NormalViewSpace, PointLightRadiance[i]);
     }
 
     return float4(resultColor, 1.0f);

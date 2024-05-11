@@ -158,7 +158,7 @@ namespace TestTitle
 		}
 
 		// Update object transform.
-		//gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
+		gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
 	}
 
 	static void OnPostTick()
@@ -544,7 +544,7 @@ namespace TestTitle
 
 		gScenePointLight[0].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gScenePointLight[0].Brightness = 1.0f;
-		gScenePointLight[0].Position = LeviathanCore::MathTypes::Vector3{ 0.75f, 1.0f, -1.0f };
+		gScenePointLight[0].Position = LeviathanCore::MathTypes::Vector3{ 0.6f, 1.0f, -1.0f };
 
 		// ECS module prototype code region.
 #pragma region 
