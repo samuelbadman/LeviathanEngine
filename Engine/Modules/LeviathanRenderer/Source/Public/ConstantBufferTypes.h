@@ -4,20 +4,14 @@ namespace LeviathanRenderer
 {
 	namespace ConstantBufferTypes
 	{
-		// Constant buffer attributes in HLSL must be 16 byte aligned.
-
 		struct SceneConstantBuffer
 		{
-			// 16 bytes.
-			float DirectionalLightRadiance[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-			// 16 bytes.
-			float LightDirectionViewSpace[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			float DirectionalLightRadiance[8] = { 0.0f };
+			float LightDirectionViewSpace[8] = { 0.0f };
 		};
 
 		struct ObjectConstantBuffer
 		{
-			// 64 bytes.
 			float WorldViewMatrix[4 * 4] =
 			{
 				1.0f, 0.0f, 0.0f, 0.0f,
@@ -26,7 +20,6 @@ namespace LeviathanRenderer
 				0.0f, 0.0f, 0.0f, 1.0f
 			};
 
-			// 64 bytes.
 			float WorldViewProjectionMatrix[4 * 4] =
 			{
 				1.0f, 0.0f, 0.0f, 0.0f,
@@ -35,7 +28,6 @@ namespace LeviathanRenderer
 				0.0f, 0.0f, 0.0f, 1.0f
 			};
 
-			// 64 bytes.
 			float NormalMatrix[4 * 4] =
 			{
 				1.0f, 0.0f, 0.0f, 0.0f,
@@ -47,7 +39,6 @@ namespace LeviathanRenderer
 
 		struct MaterialConstantBuffer
 		{
-			// 16 bytes.
 			float Color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		};
 	}

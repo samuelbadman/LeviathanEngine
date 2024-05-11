@@ -77,8 +77,8 @@ namespace LeviathanRenderer
 		static const std::string gVertexShaderSourceCode = R"(
 cbuffer SceneBuffer : register(b0)
 {
-    float4 DirectionalLightRadiance;
-    float4 LightDirectionViewSpace;
+    float3 DirectionalLightRadiance[2];
+    float3 LightDirectionViewSpace[2];
 }
 
 cbuffer ObjectBuffer : register(b1)
@@ -99,8 +99,8 @@ struct VertexOutput
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 NormalViewSpace : NORMAL_VIEW_SPACE;
-    float3 DirectionalLightRadiance : DIRECTIONAL_LIGHT_RADIANCE;
-    float3 LightDirectionViewSpace : LIGHT_DIRECTION_VIEW_SPACE;
+    float3 DirectionalLightRadiance[2] : DIRECTIONAL_LIGHT_RADIANCE;
+    float3 LightDirectionViewSpace[2] : LIGHT_DIRECTION_VIEW_SPACE;
 };
 
 VertexOutput main(VertexInput input)
@@ -110,8 +110,12 @@ VertexOutput main(VertexInput input)
     output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position, 1.0f));
     output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
     output.NormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
-    output.DirectionalLightRadiance = DirectionalLightRadiance.xyz;
-    output.LightDirectionViewSpace = LightDirectionViewSpace.xyz;
+
+    for (int i = 0; i < 2; ++i)
+    {
+        output.DirectionalLightRadiance[i] = DirectionalLightRadiance[i];
+        output.LightDirectionViewSpace[i] = LightDirectionViewSpace[i];
+    }
 				
     return output;
 }
@@ -128,8 +132,8 @@ struct PixelInput
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 NormalViewSpace : NORMAL_VIEW_SPACE;
-    float3 DirectionalLightRadiance : DIRECTIONAL_LIGHT_RADIANCE;
-    float3 LightDirectionViewSpace : LIGHT_DIRECTION_VIEW_SPACE;
+    float3 DirectionalLightRadiance[2] : DIRECTIONAL_LIGHT_RADIANCE;
+    float3 LightDirectionViewSpace[2] : LIGHT_DIRECTION_VIEW_SPACE;
 };
 
 float3 Phong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess,
@@ -169,8 +173,13 @@ float4 main(PixelInput input) : SV_TARGET
     // Shininess. 
     float shininess = 64.0f;
 
-    float3 resultColor = Phong(ambient * ambientReflection, diffuse * diffuseReflection, specular * specularReflection, shininess,
-        input.LightDirectionViewSpace, input.PositionViewSpace, input.NormalViewSpace, input.DirectionalLightRadiance);
+    float3 resultColor = float3(0.0f, 0.0f, 0.0f);
+    
+    for (int i = 0; i < 2; ++i)
+    {
+        resultColor += Phong(ambient * ambientReflection, diffuse * diffuseReflection, specular * specularReflection, shininess,
+        input.LightDirectionViewSpace[i], input.PositionViewSpace, input.NormalViewSpace, input.DirectionalLightRadiance[i]);
+    }
 
     return float4(resultColor, 1.0f);
 }
@@ -768,17 +777,17 @@ float4 main(PixelInput input) : SV_TARGET
 			gD3D11DeviceContext->DrawIndexed(indexCount, 0, 0);
 		}
 
-		bool SetSceneBufferData(const ConstantBufferTypes::SceneConstantBuffer& data)
+		bool UpdateSceneBufferData(const ConstantBufferTypes::SceneConstantBuffer& data)
 		{
 			return UpdateConstantBuffer(gSceneBuffer.Get(), &data, sizeof(ConstantBufferTypes::SceneConstantBuffer));
 		}
 
-		bool SetObjectBufferData(const ConstantBufferTypes::ObjectConstantBuffer& data)
+		bool UpdateObjectBufferData(const ConstantBufferTypes::ObjectConstantBuffer& data)
 		{
 			return UpdateConstantBuffer(gObjectBuffer.Get(), &data, sizeof(ConstantBufferTypes::ObjectConstantBuffer));
 		}
 
-		bool SetMaterialBufferData(const ConstantBufferTypes::MaterialConstantBuffer& data)
+		bool UpdateMaterialBufferData(const ConstantBufferTypes::MaterialConstantBuffer& data)
 		{
 			return UpdateConstantBuffer(gMaterialBuffer.Get(), &data, sizeof(ConstantBufferTypes::MaterialConstantBuffer));
 		}

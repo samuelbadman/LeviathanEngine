@@ -61,7 +61,7 @@ namespace TestTitle
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
 
-	static DirectionalLight gSceneDirectionalLight = {};
+	static DirectionalLight gSceneDirectionalLight[2] = {};
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
@@ -287,18 +287,26 @@ namespace TestTitle
 		// Begin frame.
 		LeviathanRenderer::BeginFrame();
 
-		// Calculate light intensity.
-		LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLight.Color * gSceneDirectionalLight.Brightness;
-
-		// Calculate view space light direction.
-		const LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLight.Direction, 0.0f);
-		const LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.GetX(), lightDirectionViewSpace4.GetY(), lightDirectionViewSpace4.GetZ() };
-
 		// Update scene data.
+		// Scene lights.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
-		memcpy(sceneData.DirectionalLightRadiance, directionalLightRadiance.Data(), sizeof(float) * 3);
-		memcpy(sceneData.LightDirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
-		LeviathanRenderer::SetSceneData(sceneData);
+
+		// For each directional light.
+		for (size_t i = 0; i < 2; ++i)
+		{
+			// Radiance.
+			LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLight[i].Color * gSceneDirectionalLight[i].Brightness;
+
+			// View space light direction.
+			const LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLight[i].Direction, 0.0f);
+			const LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.GetX(), lightDirectionViewSpace4.GetY(), lightDirectionViewSpace4.GetZ() };
+
+			// Copy to scene data. TODO: Set this value directly with calculation instead of copying in.
+			memcpy(&sceneData.DirectionalLightRadiance[0] + (i * 4), directionalLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(&sceneData.LightDirectionViewSpace[0] + (i * 4), lightDirectionViewSpace.Data(), sizeof(float) * 3);
+		}
+
+		LeviathanRenderer::UpdateSceneData(sceneData);
 
 		// Object 1 (dynamic).
 		if (gIndexCount > 0)
@@ -308,7 +316,7 @@ namespace TestTitle
 			{
 				.Color = {0.0f, 1.0f, 0.0f, 1.0f}
 			};
-			LeviathanRenderer::SetMaterialData(materialData);
+			LeviathanRenderer::UpdateMaterialData(materialData);
 
 			// Calculate world matrix.
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
@@ -327,7 +335,7 @@ namespace TestTitle
 			memcpy(objectData.WorldViewMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
 			memcpy(objectData.WorldViewProjectionMatrix, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
 			memcpy(objectData.NormalMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
-			LeviathanRenderer::SetObjectData(objectData);
+			LeviathanRenderer::UpdateObjectData(objectData);
 
 			// Draw.
 			LeviathanRenderer::Draw(gIndexCount, gSingleVertexStrideBytes, gVertexBufferId, gIndexBufferId);
@@ -505,9 +513,13 @@ namespace TestTitle
 		gSceneCamera.UpdateViewProjectionMatrix();
 
 		// Define scene light.
-		gSceneDirectionalLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
-		gSceneDirectionalLight.Brightness = 1.0f;
-		gSceneDirectionalLight.Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 1.0f }.AsNormalizedSafe();
+		gSceneDirectionalLight[0].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
+		gSceneDirectionalLight[0].Brightness = 1.0f;
+		gSceneDirectionalLight[0].Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 1.0f }.AsNormalizedSafe();
+
+		gSceneDirectionalLight[1].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
+		gSceneDirectionalLight[1].Brightness = 1.0f;
+		gSceneDirectionalLight[1].Direction = LeviathanCore::MathTypes::Vector3{ 1.0f, -1.0f, 0.0f }.AsNormalizedSafe();
 
 		// ECS module prototype code region.
 #pragma region 
