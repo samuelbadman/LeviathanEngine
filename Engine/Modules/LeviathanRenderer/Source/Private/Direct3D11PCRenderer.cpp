@@ -134,11 +134,13 @@ struct PixelInput
     float3 NormalViewSpace : NORMAL_VIEW_SPACE;
 };
 
+// Calculates the ambient component of the Phong lighting model.
 float3 PhongAmbient(float3 surfaceAmbient, float3 radiance)
 {
     return surfaceAmbient * radiance;
 }
 
+// Calculates the diffuse component of the Phong lighting model.
 float3 PhongDiffuse(float3 surfaceDiffuse, float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance)
 {
     float3 positionToLightViewSpace = normalize(-lightDirectionViewSpace);
@@ -146,6 +148,7 @@ float3 PhongDiffuse(float3 surfaceDiffuse, float3 lightDirectionViewSpace, float
     return diff * surfaceDiffuse * radiance;
 }
 
+// Calculates the specular component of the Phong lighting model.
 float3 PhongSpecular(float3 surfaceSpecular, float surfaceShininess, float3 positionViewSpace, float3 lightDirectionViewSpace, float3 normalViewSpace, float3 radiance)
 {
     float3 positionToViewViewSpace = normalize(-positionViewSpace);
@@ -154,8 +157,8 @@ float3 PhongSpecular(float3 surfaceSpecular, float surfaceShininess, float3 posi
     return spec * surfaceSpecular * radiance;
 }
 
-// Calculates lit surface color using the phong lighting model for a directional light.
-float3 PhongDirectional(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess,
+// Calculates lit surface color for a directional light using the Phong lighting model.
+float3 DirectionalPhong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess,
     float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance)
 {
     float3 ambient = PhongAmbient(surfaceAmbient, radiance);
@@ -165,8 +168,8 @@ float3 PhongDirectional(float3 surfaceAmbient, float3 surfaceDiffuse, float3 sur
     return ambient + diffuse + specular;
 }
 
-// Calculates lit surface color using the phong lighting model for a point light.
-float3 PhongPoint(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess, 
+// Calculates lit surface color for a point light using the Phong lighting model.
+float3 PointPhong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess, 
     float3 positionViewSpace, float3 lightPositionViewSpace, float3 normalViewSpace, float3 radiance)
 {
     float3 lightToPositionViewSpace = positionViewSpace - lightPositionViewSpace;
@@ -211,14 +214,14 @@ float4 main(PixelInput input) : SV_TARGET
     // Directional lights.
     for (uint i = 0; i < DirectionalLightCount; ++i)
     {
-        resultColor += PhongDirectional(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
+        resultColor += DirectionalPhong(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
             LightDirectionViewSpace[i], input.PositionViewSpace, input.NormalViewSpace, DirectionalLightRadiance[i]);
     }
     
     // Point lights.
     for (uint i = 0; i < PointLightCount; ++i)
     {
-        resultColor += PhongPoint(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
+        resultColor += PointPhong(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
             input.PositionViewSpace, PointLightPositionViewSpace[i], input.NormalViewSpace, PointLightRadiance[i]);
     }
 
