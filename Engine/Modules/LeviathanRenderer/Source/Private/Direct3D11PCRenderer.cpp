@@ -111,6 +111,7 @@ VertexOutput main(VertexInput input)
 // Renderer constants.
 #define MAX_DIRECTIONAL_LIGHT_COUNT 3
 #define MAX_POINT_LIGHT_COUNT 10
+#define MAX_SPOT_LIGHT_COUNT 10
 
 struct DirectionalLight
 {
@@ -127,12 +128,26 @@ struct PointLight
     float3 PositionViewSpace;
 };
 
+struct SpotLight
+{
+    float3 Radiance;
+    float3 PositionViewSpace;
+    float3 DirectionViewSpace;
+    float CosineInnerConeAngle;
+    float CosineOuterConeAngle;
+    float Constant;
+    float Linear;
+    float Quadratic;
+};
+
 cbuffer SceneBuffer : register(b0)
 {
     uint DirectionalLightCount;
     uint PointLightCount;
+    uint SpotLightCount;
     DirectionalLight DirectionalLights[MAX_DIRECTIONAL_LIGHT_COUNT];
     PointLight PointLights[MAX_POINT_LIGHT_COUNT];
+    SpotLight SpotLights[MAX_SPOT_LIGHT_COUNT];
 }
 
 cbuffer MaterialBuffer : register(b1)
@@ -146,6 +161,12 @@ struct PixelInput
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 NormalViewSpace : NORMAL_VIEW_SPACE;
 };
+
+float Attenuation(float3 lightToPosition, float3 radiance, float attenuationConstant, float attenuationLinear, float attenuationQuadratic)
+{
+    const float distance = length(lightToPosition);
+    return radiance / (attenuationConstant + (attenuationLinear * distance) + (attenuationQuadratic * (distance * distance)));
+}
 
 // Calculates the ambient component of the Phong lighting model.
 float3 PhongAmbient(float3 surfaceAmbient, float3 radiance)
@@ -191,13 +212,43 @@ float3 PointPhong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSp
     float3 diffuse = PhongDiffuse(surfaceDiffuse, lightToPositionViewSpace, positionViewSpace, normalViewSpace, radiance);
     float3 specular = PhongSpecular(surfaceSpecular, surfaceShininess, positionViewSpace, lightToPositionViewSpace, normalViewSpace, radiance);
     
-    float distance = length(lightToPositionViewSpace);
-    float attenuation = radiance / (attenuationConstant + (attenuationLinear * distance) + (attenuationQuadratic * (distance * distance)));
+    float attenuation = Attenuation(lightToPositionViewSpace, radiance, attenuationConstant, attenuationLinear, attenuationQuadratic);
     
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
 
+    return ambient + diffuse + specular;
+}
+
+// Calculates lit surface color for a spot light using the Phong lighting model.
+float3 SpotPhong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess, float3 lightPositionViewSpace,
+    float3 lightDirectionViewSpace, float lightCosineInnerConeAngle, float lightCosineOuterConeAngle, float3 positionViewSpace, float3 normalViewSpace,
+    float3 radiance, float attenuationConstant, float attenuationLinear, float attenuationQuadratic)
+{
+    float3 lightToPositionViewSpace = lightPositionViewSpace - positionViewSpace;
+
+    // Ambient, diffuse and specular.
+    float3 ambient = PhongAmbient(surfaceAmbient, radiance);
+    float3 diffuse = PhongDiffuse(surfaceDiffuse, -lightToPositionViewSpace, positionViewSpace, normalViewSpace, radiance);
+    float3 specular = PhongSpecular(surfaceSpecular, surfaceShininess, positionViewSpace, -lightToPositionViewSpace, normalViewSpace, radiance);
+
+    // Spotlight soft edges.
+    float theta = dot(normalize(lightToPositionViewSpace), normalize(-lightDirectionViewSpace));
+    float epsilon = lightCosineInnerConeAngle - lightCosineOuterConeAngle;
+    float intensity = clamp((theta - lightCosineOuterConeAngle) / epsilon, 0.0f, 1.0f);
+    
+    ambient *= intensity;
+    diffuse *= intensity;
+    specular *= intensity;
+    
+    // Attenuation.
+    float attenuation = Attenuation(lightToPositionViewSpace, radiance, attenuationConstant, attenuationLinear, attenuationQuadratic);
+        
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+        
     return ambient + diffuse + specular;
 }
 
@@ -235,9 +286,18 @@ float4 main(PixelInput input) : SV_TARGET
     for (uint i = 0; i < PointLightCount; ++i)
     {
         resultColor += PointPhong(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
-            input.PositionViewSpace, PointLights[i].PositionViewSpace, input.NormalViewSpace, PointLights[i].Radiance, PointLights[i].Constant, PointLights[i].Linear, PointLights[i].Quadratic);
+            input.PositionViewSpace, PointLights[i].PositionViewSpace, input.NormalViewSpace, PointLights[i].Radiance,
+            PointLights[i].Constant, PointLights[i].Linear, PointLights[i].Quadratic);
     }
 
+    // Spot lights.
+    for (uint i = 0; i < SpotLightCount; ++i)
+    {
+        resultColor += SpotPhong(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess, SpotLights[i].PositionViewSpace, SpotLights[i].DirectionViewSpace,
+            SpotLights[i].CosineInnerConeAngle, SpotLights[i].CosineOuterConeAngle, input.PositionViewSpace, input.NormalViewSpace, SpotLights[i].Radiance,
+            SpotLights[i].Constant, SpotLights[i].Linear, SpotLights[i].Quadratic);
+    }
+    
     return float4(resultColor, 1.0f);
 }
 		)";

@@ -11,10 +11,10 @@ namespace LeviathanRenderer
 			struct DirectionalLight
 			{
 				LeviathanCore::MathTypes::Vector3 Radiance{ 0.0f, 0.0f, 0.0f };
-				float Padding0 = 0.0f;
+				char Padding0[4] = { 0 };
 
 				LeviathanCore::MathTypes::Vector3 DirectionViewSpace{ 0.0f, 0.0f, 0.0f };
-				float Padding1 = 0.0f;
+				char Padding1[4] = { 0 };
 			};
 
 			struct PointLight
@@ -22,13 +22,30 @@ namespace LeviathanRenderer
 				float Constant = 0.0f;
 				float Linear = 0.0f;
 				float Quadratic = 0.0f;
-				float Padding0 = 0.0f;
+				char Padding0[4] = { 0 };
 
 				LeviathanCore::MathTypes::Vector3 Radiance{ 0.0f, 0.0f, 0.0f };
-				float Padding1 = 0.0f;
+				char Padding1[4] = { 0 };
 
 				LeviathanCore::MathTypes::Vector3 PositionViewSpace{ 0.0f, 0.0f, 0.0f };
-				float Padding2 = 0.0f;
+				char Padding2[4] = { 0 };
+			};
+
+			struct SpotLight
+			{
+				LeviathanCore::MathTypes::Vector3 Radiance{ 0.0f, 0.0f, 0.0f };
+				char Padding0[4] = { 0 };
+
+				LeviathanCore::MathTypes::Vector3 PositionViewSpace{ 0.0f, 0.0f, 0.0f };
+				char Padding1[4] = { 0 };
+
+				LeviathanCore::MathTypes::Vector3 DirectionViewSpace{ 0.0f, 0.0f, 0.0f };
+				float CosineInnerConeAngle = 0.0f;
+
+				float CosineOuterConeAngle = 0.0f;
+				float Constant = 0.0f;
+				float Linear = 0.0f;
+				float Quadratic = 0.0f;
 			};
 		}
 
@@ -63,11 +80,12 @@ namespace LeviathanRenderer
 		{
 			uint32_t DirectionalLightCount = 0;
 			uint32_t PointLightCount = 0;
-			uint32_t Padding[2] = { 0 };
+			uint32_t SpotLightCount = 0;
+			char Padding0[4] = { 0 };
 
 			LightTypes::DirectionalLight DirectionalLights[RendererConstants::MaxDirectionalLightCount] = {};
-
 			LightTypes::PointLight PointLights[RendererConstants::MaxPointLightCount] = {};
+			LightTypes::SpotLight SpotLights[RendererConstants::MaxSpotLightCount] = {};
 		};
 
 		struct MaterialConstantBuffer
