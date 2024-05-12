@@ -10,10 +10,10 @@ namespace LeviathanRenderer
 		{
 			struct DirectionalLight
 			{
-				LeviathanCore::MathTypes::Vector3 Radiance{ 0.0f, 0.0f, 0.0f };
+				float Radiance[3] = { 0.0f };
 				char Padding0[4] = { 0 };
 
-				LeviathanCore::MathTypes::Vector3 DirectionViewSpace{ 0.0f, 0.0f, 0.0f };
+				float DirectionViewSpace[3] = { 0.0f };
 				char Padding1[4] = { 0 };
 			};
 
@@ -24,22 +24,22 @@ namespace LeviathanRenderer
 				float Quadratic = 0.0f;
 				char Padding0[4] = { 0 };
 
-				LeviathanCore::MathTypes::Vector3 Radiance{ 0.0f, 0.0f, 0.0f };
+				float Radiance[3] = { 0.0f };
 				char Padding1[4] = { 0 };
 
-				LeviathanCore::MathTypes::Vector3 PositionViewSpace{ 0.0f, 0.0f, 0.0f };
+				float PositionViewSpace[3] = { 0.0f };
 				char Padding2[4] = { 0 };
 			};
 
 			struct SpotLight
 			{
-				LeviathanCore::MathTypes::Vector3 Radiance{ 0.0f, 0.0f, 0.0f };
+				float Radiance[3] = { 0.0f };
 				char Padding0[4] = { 0 };
 
-				LeviathanCore::MathTypes::Vector3 PositionViewSpace{ 0.0f, 0.0f, 0.0f };
+				float PositionViewSpace[3] = { 0.0f };
 				char Padding1[4] = { 0 };
 
-				LeviathanCore::MathTypes::Vector3 DirectionViewSpace{ 0.0f, 0.0f, 0.0f };
+				float DirectionViewSpace[3] = { 0.0f };
 				float CosineInnerConeAngle = 0.0f;
 
 				float CosineOuterConeAngle = 0.0f;
