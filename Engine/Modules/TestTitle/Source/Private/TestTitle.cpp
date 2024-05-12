@@ -333,8 +333,10 @@ namespace TestTitle
 			LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLights[i].Direction, 0.0f);
 			LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.GetX(), lightDirectionViewSpace4.GetY(), lightDirectionViewSpace4.GetZ() };
 
-			memcpy(&(sceneData.DirectionalLights + (i * 4))->Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
-			memcpy(&(sceneData.DirectionalLights + (i * 4))->DirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
+			LeviathanRenderer::ConstantBufferTypes::LightTypes::DirectionalLight& directionalLightData = *(sceneData.DirectionalLights + (i * 4));
+
+			memcpy(&directionalLightData.Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(&directionalLightData.DirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
 		}
 
 		// For each point light.
@@ -344,11 +346,13 @@ namespace TestTitle
 			LeviathanCore::MathTypes::Vector4 pointLightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gScenePointLights[i].Position, 1.0f };
 			LeviathanCore::MathTypes::Vector3 pointLightPositionViewSpace{ pointLightPositionViewSpace4.GetX(), pointLightPositionViewSpace4.GetY(), pointLightPositionViewSpace4.GetZ() };
 
-			memcpy(&(sceneData.PointLights + (i * 4))->Radiance, pointLightRadiance.Data(), sizeof(float) * 3);
-			memcpy(&(sceneData.PointLights + (i * 4))->PositionViewSpace, pointLightPositionViewSpace.Data(), sizeof(float) * 3);
-			(sceneData.PointLights + (i * 4))->Constant = gScenePointLights[i].Constant;
-			(sceneData.PointLights + (i * 4))->Linear = gScenePointLights[i].Linear;
-			(sceneData.PointLights + (i * 4))->Quadratic = gScenePointLights[i].Quadratic;
+			LeviathanRenderer::ConstantBufferTypes::LightTypes::PointLight& pointLightData = *(sceneData.PointLights + (i * 4));
+
+			memcpy(&pointLightData.Radiance, pointLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(&pointLightData.PositionViewSpace, pointLightPositionViewSpace.Data(), sizeof(float) * 3);
+			pointLightData.Constant = gScenePointLights[i].Constant;
+			pointLightData.Linear = gScenePointLights[i].Linear;
+			pointLightData.Quadratic = gScenePointLights[i].Quadratic;
 		}
 
 		// For each spot light.
@@ -360,14 +364,16 @@ namespace TestTitle
 			LeviathanCore::MathTypes::Vector4 spotLightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gSceneSpotLights[i].Direction, 0.0f };
 			LeviathanCore::MathTypes::Vector3 spotLightDirectionViewSpace{ spotLightDirectionViewSpace4.GetX(), spotLightDirectionViewSpace4.GetY(), spotLightDirectionViewSpace4.GetZ() };
 
-			memcpy(&(sceneData.SpotLights + (i * 4))->Radiance, spotLightRadiance.Data(), sizeof(float) * 3);
-			memcpy(&(sceneData.SpotLights + (i * 4))->PositionViewSpace, spotLightPositionViewSpace.Data(), sizeof(float) * 3);
-			memcpy(&(sceneData.SpotLights + (i * 4))->DirectionViewSpace, spotLightDirectionViewSpace.Data(), sizeof(float) * 3);
-			(sceneData.SpotLights + (i * 4))->CosineInnerConeAngle = LeviathanCore::MathLibrary::Cos(gSceneSpotLights[i].InnerConeAngleRadians);
-			(sceneData.SpotLights + (i * 4))->CosineOuterConeAngle = LeviathanCore::MathLibrary::Cos(gSceneSpotLights[i].OuterConeAngleRadians);
-			(sceneData.SpotLights + (i * 4))->Constant = gSceneSpotLights[i].Constant;
-			(sceneData.SpotLights + (i * 4))->Linear = gSceneSpotLights[i].Linear;
-			(sceneData.SpotLights + (i * 4))->Quadratic = gSceneSpotLights[i].Quadratic;
+			LeviathanRenderer::ConstantBufferTypes::LightTypes::SpotLight& spotLightData = *(sceneData.SpotLights + (i * 4));
+
+			memcpy(&spotLightData.Radiance, spotLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(&spotLightData.PositionViewSpace, spotLightPositionViewSpace.Data(), sizeof(float) * 3);
+			memcpy(&spotLightData.DirectionViewSpace, spotLightDirectionViewSpace.Data(), sizeof(float) * 3);
+			spotLightData.CosineInnerConeAngle = LeviathanCore::MathLibrary::Cos(gSceneSpotLights[i].InnerConeAngleRadians);
+			spotLightData.CosineOuterConeAngle = LeviathanCore::MathLibrary::Cos(gSceneSpotLights[i].OuterConeAngleRadians);
+			spotLightData.Constant = gSceneSpotLights[i].Constant;
+			spotLightData.Linear = gSceneSpotLights[i].Linear;
+			spotLightData.Quadratic = gSceneSpotLights[i].Quadratic;
 		}
 
 		LeviathanRenderer::UpdateSceneData(0, &sceneData, sizeof(LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer));
