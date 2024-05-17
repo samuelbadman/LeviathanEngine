@@ -19,11 +19,6 @@ namespace LeviathanRenderer
 
 			struct PointLight
 			{
-				float Constant = 0.0f;
-				float Linear = 0.0f;
-				float Quadratic = 0.0f;
-				char Padding0[4] = { 0 };
-
 				float Radiance[3] = { 0.0f };
 				char Padding1[4] = { 0 };
 
@@ -43,9 +38,7 @@ namespace LeviathanRenderer
 				float CosineInnerConeAngle = 0.0f;
 
 				float CosineOuterConeAngle = 0.0f;
-				float Constant = 0.0f;
-				float Linear = 0.0f;
-				float Quadratic = 0.0f;
+				char Padding2[4 * 3];
 			};
 		}
 
