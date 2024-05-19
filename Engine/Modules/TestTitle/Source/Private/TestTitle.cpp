@@ -68,8 +68,8 @@ namespace TestTitle
 		LeviathanCore::MathTypes::Vector3 Position{ 0.0f, 0.0f, 0.0f };
 		// Direction in world space.
 		LeviathanCore::MathTypes::Vector3 Direction{ 0.0f, -1.0f, 0.0f };
-		float InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(1.0f);
-		float OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(12.0f);
+		float InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f);
+		float OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(17.5f);
 	};
 
 	static size_t gSingleVertexStrideBytes = 0;
@@ -588,7 +588,7 @@ namespace TestTitle
 		gSceneSpotLights[0].Brightness = 1.0f;
 		gSceneSpotLights[0].Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -1.5f };
 		gSceneSpotLights[0].Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe();
-		gSceneSpotLights[0].InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(1.0f);
+		gSceneSpotLights[0].InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f);
 		gSceneSpotLights[0].OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(17.5f);
 
 		// ECS module prototype code region.
