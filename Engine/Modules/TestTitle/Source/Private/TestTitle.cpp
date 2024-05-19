@@ -316,9 +316,9 @@ namespace TestTitle
 
 		// Update scene data.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
-		sceneData.DirectionalLightCount = 0;
+		sceneData.DirectionalLightCount = gSceneDirectionalLightCount;
 		sceneData.PointLightCount = 0;
-		sceneData.SpotLightCount = gSceneSpotLightCount;
+		sceneData.SpotLightCount = 0;
 
 		// For each directional light.
 		for (size_t i = 0; i < gSceneDirectionalLightCount; ++i)
