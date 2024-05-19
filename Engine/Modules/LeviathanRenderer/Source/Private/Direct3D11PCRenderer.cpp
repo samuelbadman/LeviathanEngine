@@ -92,7 +92,7 @@ struct VertexOutput
 {
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
-    float3 NormalViewSpace : NORMAL_VIEW_SPACE;
+    float3 InterpolatedNormalViewSpace : INTERPOLATED_NORMAL_VIEW_SPACE;
 };
 
 VertexOutput main(VertexInput input)
@@ -101,7 +101,7 @@ VertexOutput main(VertexInput input)
 
     output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position, 1.0f));
     output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
-    output.NormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
+    output.InterpolatedNormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
 				
     return output;
 }
@@ -109,9 +109,12 @@ VertexOutput main(VertexInput input)
 
 		static const std::string gPixelShaderSourceCode = R"(
 // Renderer constants.
-#define MAX_DIRECTIONAL_LIGHT_COUNT 3
+#define MAX_DIRECTIONAL_LIGHT_COUNT 10
 #define MAX_POINT_LIGHT_COUNT 10
 #define MAX_SPOT_LIGHT_COUNT 10
+
+// Shader definitions.
+#define PI 3.14159265359
 
 struct DirectionalLight
 {
@@ -146,151 +149,121 @@ cbuffer SceneBuffer : register(b0)
 
 cbuffer MaterialBuffer : register(b1)
 {
-    float4 Color;
+    float3 Color;
+    float Roughness;
+    float Metallic;
 };
 
 struct PixelInput
 {
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
-    float3 NormalViewSpace : NORMAL_VIEW_SPACE;
+    float3 InterpolatedNormalViewSpace : INTERPOLATED_NORMAL_VIEW_SPACE;
 };
 
-float Attenuation(float3 lightToPosition, float3 radiance)
+float Square(float x)
 {
-    const float distance = length(lightToPosition);
-    return radiance / (distance * distance);
+    return x * x;
 }
 
-// Calculates the ambient component of the Phong lighting model.
-float3 PhongAmbient(float3 surfaceAmbient, float3 radiance)
+float Attenuation(float distance)
 {
-    return surfaceAmbient * radiance;
+    return 1.0f / Square(distance);
 }
 
-// Calculates the diffuse component of the Phong lighting model.
-float3 PhongDiffuse(float3 surfaceDiffuse, float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance)
+float3 Lambert(float3 color)
 {
-    float3 positionToLightViewSpace = normalize(-lightDirectionViewSpace);
-    float diff = saturate(dot(normalViewSpace, positionToLightViewSpace));
-    return diff * surfaceDiffuse * radiance;
+    return color / PI;
 }
 
-// Calculates the specular component of the Phong lighting model.
-float3 PhongSpecular(float3 surfaceSpecular, float surfaceShininess, float3 positionViewSpace, float3 lightDirectionViewSpace, float3 normalViewSpace, float3 radiance)
+float3 DiffuseBRDF(float kD, float3 lambert)
 {
-    float3 positionToViewViewSpace = normalize(-positionViewSpace);
-    float3 reflectedViewSpace = normalize(reflect(lightDirectionViewSpace, normalViewSpace));
-    float spec = pow(saturate(dot(positionToViewViewSpace, reflectedViewSpace)), surfaceShininess);
-    return spec * surfaceSpecular * radiance;
+    return kD * lambert;
 }
 
-// Calculates lit surface color for a directional light using the Phong lighting model.
-float3 DirectionalPhong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess,
-    float3 lightDirectionViewSpace, float3 positionViewSpace, float3 normalViewSpace, float3 radiance)
+float TrowbridgeReitzGGX(float roughness, float3 halfVector, float3 surfaceNormal)
 {
-    float3 ambient = PhongAmbient(surfaceAmbient, radiance);
-    float3 diffuse = PhongDiffuse(surfaceDiffuse, lightDirectionViewSpace, positionViewSpace, normalViewSpace, radiance);
-    float3 specular = PhongSpecular(surfaceSpecular, surfaceShininess, positionViewSpace, lightDirectionViewSpace, normalViewSpace, radiance);
-
-    return ambient + diffuse + specular;
+    float roughnessSquared = Square(roughness) * Square(roughness); // Roughness is raised to the power of 4 instead of 2 based on the experience of Disney and Epic Games.
+    return roughnessSquared / (PI * Square((Square(dot(surfaceNormal, halfVector)) * (roughnessSquared - 1) + 1)));
 }
 
-// Calculates lit surface color for a point light using the Phong lighting model.
-float3 PointPhong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess,
-    float3 positionViewSpace, float3 lightPositionViewSpace, float3 normalViewSpace, float3 radiance)
+float SchlickGGX(float nDotV, float k)
 {
-    float3 lightToPositionViewSpace = positionViewSpace - lightPositionViewSpace;
-
-    float3 ambient = PhongAmbient(surfaceAmbient, radiance);
-    float3 diffuse = PhongDiffuse(surfaceDiffuse, lightToPositionViewSpace, positionViewSpace, normalViewSpace, radiance);
-    float3 specular = PhongSpecular(surfaceSpecular, surfaceShininess, positionViewSpace, lightToPositionViewSpace, normalViewSpace, radiance);
-    
-    float attenuation = Attenuation(lightToPositionViewSpace, radiance);
-    
-    ambient *= attenuation;
-    diffuse *= attenuation;
-    specular *= attenuation;
-
-    return ambient + diffuse + specular;
+    return nDotV / (nDotV * (1.0f - k) + k);
 }
 
-// Calculates lit surface color for a spot light using the Phong lighting model.
-float3 SpotPhong(float3 surfaceAmbient, float3 surfaceDiffuse, float3 surfaceSpecular, float surfaceShininess, float3 lightPositionViewSpace,
-    float3 lightDirectionViewSpace, float lightCosineInnerConeAngle, float lightCosineOuterConeAngle, float3 positionViewSpace, float3 normalViewSpace,
-    float3 radiance)
+float Smith(float nDotV, float nDotL, float roughness)
 {
-    float3 lightToPositionViewSpace = lightPositionViewSpace - positionViewSpace;
+    float k = Square(roughness + 1.0f) / 8.0f;
+    return SchlickGGX(nDotV, k) * SchlickGGX(nDotL, k);
+}
 
-    // Ambient, diffuse and specular.
-    float3 ambient = PhongAmbient(surfaceAmbient, radiance);
-    float3 diffuse = PhongDiffuse(surfaceDiffuse, -lightToPositionViewSpace, positionViewSpace, normalViewSpace, radiance);
-    float3 specular = PhongSpecular(surfaceSpecular, surfaceShininess, positionViewSpace, -lightToPositionViewSpace, normalViewSpace, radiance);
-
-    // Spotlight soft edges.
-    float theta = dot(normalize(lightToPositionViewSpace), normalize(-lightDirectionViewSpace));
-    float epsilon = lightCosineInnerConeAngle - lightCosineOuterConeAngle;
-    float intensity = clamp((theta - lightCosineOuterConeAngle) / epsilon, 0.0f, 1.0f);
-    
-    ambient *= intensity;
-    diffuse *= intensity;
-    specular *= intensity;
-    
-    // Attenuation.
-    float attenuation = Attenuation(lightToPositionViewSpace, radiance);
-        
-    ambient *= attenuation;
-    diffuse *= attenuation;
-    specular *= attenuation;
-        
-    return ambient + diffuse + specular;
+float3 SchlickFresnel(float vDotH, float3 surfaceColor, float metallic)
+{
+    float3 f0 = float3(0.04f, 0.04f, 0.04f);
+    f0 = lerp(f0, surfaceColor, metallic);
+    return f0 + (1.0f - f0) * pow(saturate(1.0f - vDotH), 5.0f);
 }
 
 float4 main(PixelInput input) : SV_TARGET
 {
-    // TODO: Move material properties onto CPU.
-    // Material properties.
-    // Ambient color and reflection amount.
-    float3 ambient = Color.rgb;
-    float ambientReflection = 0.1f;
-    // Diffuse color and reflection amount.
-    float3 diffuse = Color.rgb;
-    float diffuseReflection = 0.6f;
-    // Specular color and reflection amount.
-    float3 specular = float3(1.0f, 1.0f, 1.0f);
-    float specularReflection = 0.3f;
-    // Shininess. 
-    float shininess = 64.0f;
+    // Final color = Cook Torrance BRDF * Light intensity * nDotL
 
-    float3 surfaceAmbient = ambient * ambientReflection;
-    float3 surfaceDiffuse = diffuse * diffuseReflection;
-    float3 surfaceSpecular = specular * specularReflection;
+    // Cook Torrance BRDF = (kD * fLambert) + (kS * fCookTorrance)
+    // kD + kS = 1
+    // fLambert = base color / pi
+    // fCookTorrance = d * f * g / 4 * dot(surface normal, surface to light direction) * dot(surface normal, surface to view direction)
+    // d (Normal distribution function): GGX by Trowbridge & Reitz.
+    // g (Geometry function): Schlick-GGX by Schlick & Beckmann using Smith's method.
+    // f (Fresnel function): Schlick approximation.
+    
+    // Light intensity = light radiance
+    // nDotL = dot(surface normal, surface to light direction)
+    
+    float3 baseColor = Color.rgb;
+    float roughness = Roughness;
+    float metallic = Metallic;
+    float3 surfaceNormal = input.InterpolatedNormalViewSpace;
+    
+    float3 totalColor = float3(0.0f, 0.0f, 0.0f);
 
-    // Lighting.
-    float3 resultColor = float3(0.0f, 0.0f, 0.0f);
-    
-    // Directional lights.
-    for (uint i = 0; i < DirectionalLightCount; ++i)
-    {
-        resultColor += DirectionalPhong(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
-            DirectionalLights[i].DirectionViewSpace, input.PositionViewSpace, input.NormalViewSpace, DirectionalLights[i].Radiance);
-    }
-    
+    float3 surfaceToViewDirectionViewSpace = normalize(-input.PositionViewSpace);
+    float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionViewSpace));
+
     // Point lights.
-    for (uint i = 0; i < PointLightCount; ++i)
+    for (int i = 0; i < PointLightCount; ++i)
     {
-        resultColor += PointPhong(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess,
-            input.PositionViewSpace, PointLights[i].PositionViewSpace, input.NormalViewSpace, PointLights[i].Radiance);
-    }
+        float3 surfaceToLightVectorViewSpace = PointLights[i].PositionViewSpace - input.PositionViewSpace;
+        float attenuation = Attenuation(length(surfaceToLightVectorViewSpace));
+        float3 radiance = attenuation * PointLights[i].Radiance;
+        float3 surfaceToLightDirectionViewSpace = normalize(surfaceToLightVectorViewSpace);
+        float3 halfDirectionViewSpace = normalize(surfaceToViewDirectionViewSpace + surfaceToLightDirectionViewSpace);
+        
+        float nDotH = saturate(dot(surfaceNormal, halfDirectionViewSpace));
+        float vDotH = saturate(dot(surfaceToViewDirectionViewSpace, halfDirectionViewSpace));
+        float nDotL = saturate(dot(surfaceNormal, surfaceToLightDirectionViewSpace));
 
-    // Spot lights.
-    for (uint i = 0; i < SpotLightCount; ++i)
-    {
-        resultColor += SpotPhong(surfaceAmbient, surfaceDiffuse, surfaceSpecular, shininess, SpotLights[i].PositionViewSpace, SpotLights[i].DirectionViewSpace,
-            SpotLights[i].CosineInnerConeAngle, SpotLights[i].CosineOuterConeAngle, input.PositionViewSpace, input.NormalViewSpace, SpotLights[i].Radiance);
+        float3 f = SchlickFresnel(vDotH, baseColor, metallic);
+        float3 kS = f;
+        float3 kD = 1.0f - kS;
+        
+        float3 diffuse = kD * Lambert(baseColor);
+        
+        float d = TrowbridgeReitzGGX(roughness, halfDirectionViewSpace, surfaceNormal);
+        float g = Smith(nDotV, nDotL, roughness);
+        float3 specular = (d * g * f) / (4.0f * nDotL * nDotV);
+
+        totalColor += (diffuse + specular) * radiance * nDotL;
     }
     
-    return float4(resultColor, 1.0f);
+    // HDR tone mapping.
+    totalColor = totalColor / (totalColor + float3(1.0f, 1.0f, 1.0f));
+
+    // Gamma correction.
+    float gammaExponent = 1.0f / 2.2f;
+    float4 finalColor = float4(pow(totalColor, float3(gammaExponent, gammaExponent, gammaExponent)), 1.0f);
+
+    return finalColor;
 }
 		)";
 

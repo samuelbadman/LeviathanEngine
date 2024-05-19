@@ -20,10 +20,10 @@ namespace LeviathanRenderer
 			struct PointLight
 			{
 				float Radiance[3] = { 0.0f };
-				char Padding1[4] = { 0 };
+				char Padding0[4] = { 0 };
 
 				float PositionViewSpace[3] = { 0.0f };
-				char Padding2[4] = { 0 };
+				char Padding1[4] = { 0 };
 			};
 
 			struct SpotLight
@@ -83,7 +83,11 @@ namespace LeviathanRenderer
 
 		struct MaterialConstantBuffer
 		{
-			float Color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			float Color[3] = { 0.0f, 0.0f, 0.0f };
+			float Roughness = 0.5f;
+
+			float Metallic = 0.0f;
+			char Padding[4 * 3] = { 0 };
 		};
 	}
 }

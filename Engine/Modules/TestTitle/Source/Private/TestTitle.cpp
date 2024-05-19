@@ -173,7 +173,7 @@ namespace TestTitle
 		}
 
 		// Update object transform.
-		gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
+		//gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
 	}
 
 	static void OnPostTick()
@@ -317,7 +317,7 @@ namespace TestTitle
 		// Update scene data.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
 		sceneData.DirectionalLightCount = 0;
-		sceneData.PointLightCount = 1;
+		sceneData.PointLightCount = gScenePointLightCount;
 		sceneData.SpotLightCount = 0;
 
 		// For each directional light.
@@ -372,7 +372,7 @@ namespace TestTitle
 			// Update material data.
 			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer materialData =
 			{
-				.Color = {0.0f, 1.0f, 0.0f, 1.0f}
+				.Color = { 0.0f, 1.0f, 0.0f }
 			};
 			LeviathanRenderer::UpdateMaterialData(0, &materialData, sizeof(LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer));
 
@@ -487,7 +487,8 @@ namespace TestTitle
 
 		// Create scene.
 		// Import model from disk.
-		LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCubePrimitive(0.5f);
+		LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateSpherePrimitive(0.5f, 64, 64);
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCubePrimitive(0.5f);
 		//std::vector<LeviathanAssets::AssetTypes::Mesh> model = {};
 		//if (LeviathanAssets::ModelImporter::LoadModel("Model.fbx", model))
 		{
