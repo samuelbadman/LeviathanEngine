@@ -317,8 +317,8 @@ namespace TestTitle
 		// Update scene data.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
 		sceneData.DirectionalLightCount = 0;
-		sceneData.PointLightCount = gScenePointLightCount;
-		sceneData.SpotLightCount = 0;
+		sceneData.PointLightCount = 0;
+		sceneData.SpotLightCount = gSceneSpotLightCount;
 
 		// For each directional light.
 		for (size_t i = 0; i < gSceneDirectionalLightCount; ++i)
@@ -326,6 +326,7 @@ namespace TestTitle
 			LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLights[i].Color * gSceneDirectionalLights[i].Brightness;
 			LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLights[i].Direction, 0.0f);
 			LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.GetX(), lightDirectionViewSpace4.GetY(), lightDirectionViewSpace4.GetZ() };
+			lightDirectionViewSpace.NormalizeSafe();
 
 			LeviathanRenderer::ConstantBufferTypes::LightTypes::DirectionalLight& directionalLightData = *(sceneData.DirectionalLights + (i * 4));
 
@@ -354,6 +355,7 @@ namespace TestTitle
 			LeviathanCore::MathTypes::Vector3 spotLightPositionViewSpace{ spotLightPositionViewSpace4.GetX(), spotLightPositionViewSpace4.GetY(), spotLightPositionViewSpace4.GetZ() };
 			LeviathanCore::MathTypes::Vector4 spotLightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gSceneSpotLights[i].Direction, 0.0f };
 			LeviathanCore::MathTypes::Vector3 spotLightDirectionViewSpace{ spotLightDirectionViewSpace4.GetX(), spotLightDirectionViewSpace4.GetY(), spotLightDirectionViewSpace4.GetZ() };
+			spotLightDirectionViewSpace.NormalizeSafe();
 
 			LeviathanRenderer::ConstantBufferTypes::LightTypes::SpotLight& spotLightData = *(sceneData.SpotLights + (i * 4));
 
@@ -372,7 +374,9 @@ namespace TestTitle
 			// Update material data.
 			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer materialData =
 			{
-				.Color = { 0.0f, 1.0f, 0.0f }
+				.Color = { 0.0f, 1.0f, 0.0f },
+				.Roughness = 0.5f,
+				.Metallic = 0.0f
 			};
 			LeviathanRenderer::UpdateMaterialData(0, &materialData, sizeof(LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer));
 
@@ -582,10 +586,10 @@ namespace TestTitle
 
 		gSceneSpotLights[0].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gSceneSpotLights[0].Brightness = 1.0f;
-		gSceneSpotLights[0].Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 1.5f, 0.0f };
-		gSceneSpotLights[0].Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 0.0f }.AsNormalizedSafe();
+		gSceneSpotLights[0].Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -1.5f };
+		gSceneSpotLights[0].Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe();
 		gSceneSpotLights[0].InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(1.0f);
-		gSceneSpotLights[0].OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(24.0f);
+		gSceneSpotLights[0].OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(17.5f);
 
 		// ECS module prototype code region.
 #pragma region 

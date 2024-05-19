@@ -205,6 +205,27 @@ float3 SchlickFresnel(float vDotH, float3 surfaceColor, float metallic)
     return f0 + (1.0f - f0) * pow(saturate(1.0f - vDotH), 5.0f);
 }
 
+float3 CalculateLighting(float3 surfaceToLightDirection, float3 surfaceToViewDirection, float3 surfaceNormal, float nDotV, float3 radiance, float3 baseColor, float roughness, float metallic)
+{
+    float3 halfDirectionViewSpace = normalize(surfaceToViewDirection + surfaceToLightDirection);
+        
+    float nDotH = saturate(dot(surfaceNormal, halfDirectionViewSpace));
+    float vDotH = saturate(dot(surfaceToViewDirection, halfDirectionViewSpace));
+    float nDotL = saturate(dot(surfaceNormal, surfaceToLightDirection));
+
+    float3 f = SchlickFresnel(vDotH, baseColor, metallic);
+    float3 kS = f;
+    float3 kD = 1.0f - kS;
+        
+    float3 diffuse = kD * Lambert(baseColor);
+        
+    float d = TrowbridgeReitzGGX(roughness, halfDirectionViewSpace, surfaceNormal);
+    float g = Smith(nDotV, nDotL, roughness);
+    float3 specular = (d * g * f) / ((4.0f * nDotL * nDotV) + 0.0001f);
+
+    return (diffuse + specular) * radiance * nDotL;
+}
+
 float4 main(PixelInput input) : SV_TARGET
 {
     // Final color = Cook Torrance BRDF * Light intensity * nDotL
@@ -230,30 +251,33 @@ float4 main(PixelInput input) : SV_TARGET
     float3 surfaceToViewDirectionViewSpace = normalize(-input.PositionViewSpace);
     float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionViewSpace));
 
+    // Directional lights.
+    for (int i = 0; i < DirectionalLightCount; ++i)
+    {
+        float3 surfaceToLightDirectionViewSpace = -DirectionalLights[i].DirectionViewSpace;
+        totalColor += CalculateLighting(surfaceToLightDirectionViewSpace, surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, DirectionalLights[i].Radiance, baseColor, roughness, metallic);
+    }
+    
     // Point lights.
     for (int i = 0; i < PointLightCount; ++i)
     {
         float3 surfaceToLightVectorViewSpace = PointLights[i].PositionViewSpace - input.PositionViewSpace;
         float attenuation = Attenuation(length(surfaceToLightVectorViewSpace));
         float3 radiance = attenuation * PointLights[i].Radiance;
+        totalColor += CalculateLighting(normalize(surfaceToLightVectorViewSpace), surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
+    }
+    
+    // Spot lights.
+    for (int i = 0; i < SpotLightCount; ++i)
+    {
+        float3 surfaceToLightVectorViewSpace = SpotLights[i].PositionViewSpace - input.PositionViewSpace;
         float3 surfaceToLightDirectionViewSpace = normalize(surfaceToLightVectorViewSpace);
-        float3 halfDirectionViewSpace = normalize(surfaceToViewDirectionViewSpace + surfaceToLightDirectionViewSpace);
-        
-        float nDotH = saturate(dot(surfaceNormal, halfDirectionViewSpace));
-        float vDotH = saturate(dot(surfaceToViewDirectionViewSpace, halfDirectionViewSpace));
-        float nDotL = saturate(dot(surfaceNormal, surfaceToLightDirectionViewSpace));
-
-        float3 f = SchlickFresnel(vDotH, baseColor, metallic);
-        float3 kS = f;
-        float3 kD = 1.0f - kS;
-        
-        float3 diffuse = kD * Lambert(baseColor);
-        
-        float d = TrowbridgeReitzGGX(roughness, halfDirectionViewSpace, surfaceNormal);
-        float g = Smith(nDotV, nDotL, roughness);
-        float3 specular = (d * g * f) / (4.0f * nDotL * nDotV);
-
-        totalColor += (diffuse + specular) * radiance * nDotL;
+        float theta = saturate(dot(-surfaceToLightDirectionViewSpace, SpotLights[i].DirectionViewSpace));
+        float epsilon = SpotLights[i].CosineInnerConeAngle - SpotLights[i].CosineOuterConeAngle;
+        float intensity = smoothstep(0.0f, 1.0f, saturate((theta - SpotLights[i].CosineOuterConeAngle) / epsilon));
+        float attenuation = Attenuation(length(surfaceToLightVectorViewSpace));
+        float3 radiance = attenuation * intensity * SpotLights[i].Radiance;
+        totalColor += CalculateLighting(surfaceToLightDirectionViewSpace, surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
     }
     
     // HDR tone mapping.
@@ -643,8 +667,10 @@ float4 main(PixelInput input) : SV_TARGET
 #endif
 
 			success = InitializeShaders(forceRecompile);
-			if (!success) 
-				{ return false; }
+			if (!success)
+			{
+				return false;
+			}
 
 			// Create pipelines.
 			// Create input layout.
