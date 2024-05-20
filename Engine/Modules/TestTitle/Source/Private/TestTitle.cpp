@@ -151,25 +151,28 @@ namespace TestTitle
 
 	static void OnTick([[maybe_unused]] float deltaSeconds)
 	{
-		// Poll input keys.
-		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::RightMouseButton);
-		LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::F);
-
-		if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
+		if (LeviathanCore::Core::IsRuntimeWindowFocused())
 		{
-			// Camera input keys.
-			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::W);
-			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::S);
-			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::D);
-			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
-			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::Q);
-			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::E);
+			// Poll input keys.
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::RightMouseButton);
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::F);
 
-			// Lock mouse cursor to center of runtime window.
-			int x = 0;
-			int y = 0;
-			LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(x, y);
-			LeviathanCore::Core::SetCursorPosInRuntimeWindow(x / 2, y / 2);
+			if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
+			{
+				// Camera input keys.
+				LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::W);
+				LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::S);
+				LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::D);
+				LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::A);
+				LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::Q);
+				LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::E);
+
+				// Lock mouse cursor to center of runtime window.
+				int x = 0;
+				int y = 0;
+				LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(x, y);
+				LeviathanCore::Core::SetCursorPosInRuntimeWindow(x / 2, y / 2);
+			}
 		}
 
 		// Update object transform.

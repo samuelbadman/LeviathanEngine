@@ -88,6 +88,11 @@ namespace LeviathanCore
 				return platformWindow->IsFullscreen();
 			}
 
+			bool IsPlatformWindowFocused(PlatformWindow* const platformWindow)
+			{
+				return platformWindow->IsFocused();
+			}
+
 			bool GetPlatformWindowRenderAreaDimensions(PlatformWindow* const platformWindow, int& outWidth, int& outHeight)
 			{
 				return platformWindow->GetRenderAreaDimensions(outWidth, outHeight);
@@ -658,6 +663,11 @@ namespace LeviathanCore
 				}
 
 				return SetCursorPos(point.x, point.y);
+			}
+
+			bool PlatformWindow::IsFocused() const
+			{
+				return (GetFocus() == Hwnd);
 			}
 
 			void PlatformWindow::WndProcDestroyed()

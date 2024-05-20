@@ -358,6 +358,11 @@ namespace LeviathanCore
 			return LeviathanCore::Platform::Window::IsPlatformWindowFullscreen(RuntimeWindow);
 		}
 
+		bool IsRuntimeWindowFocused()
+		{
+			return LeviathanCore::Platform::Window::IsPlatformWindowFocused(RuntimeWindow);
+		}
+
 		bool RuntimeWindowEnterFullscreen()
 		{
 			return LeviathanCore::Platform::Window::EnterFullscreen(RuntimeWindow);

@@ -65,6 +65,7 @@ namespace LeviathanCore
 				inline int GetClientAreaHeight() const { return ClientAreaHeight; }
 				bool SetCursorPosInWindow(int x, int y);
 				inline bool IsFullscreen() const { return Fullscreen; }
+				bool IsFocused() const;
 
 				Callback<PlatformWindowDestroyedCallbackType>& GetDestroyedCallback() { return DestroyedCallback; }
 				Callback<PlatformWindowClosedCallbackType>& GetClosedCallback() { return ClosedCallback; }
