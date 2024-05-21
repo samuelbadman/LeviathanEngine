@@ -162,10 +162,10 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GeneratePlaneP
 
 		.TextureCoordinates =
 		{
-			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
 			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f)
+			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f)
 		},
 
 		.Indices =
@@ -181,91 +181,91 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCubePr
 	{
 		.Positions =
 		{
-			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,   halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth,  halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth,  halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,  halfWidth,  halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,   halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,   halfWidth, -halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,  halfWidth,  halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,  halfWidth,  halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, halfWidth),
-			LeviathanCore::MathTypes::Vector3(-halfWidth,  -halfWidth, halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth,  halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,   halfWidth,  halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth,  halfWidth),
-			LeviathanCore::MathTypes::Vector3(halfWidth,  -halfWidth,  halfWidth)
+			LeviathanCore::MathTypes::Vector3{halfWidth, halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, -halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, -halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, -halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, -halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, -halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, -halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, -halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, -halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, -halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, -halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, -halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, -halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, halfWidth, -halfWidth},
+			LeviathanCore::MathTypes::Vector3{-halfWidth, halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, halfWidth, halfWidth},
+			LeviathanCore::MathTypes::Vector3{halfWidth, halfWidth, -halfWidth}
 		},
 
 		.Normals =
 		{
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
-			LeviathanCore::MathTypes::Vector3(1.0f, 0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(1.0f, 0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector3(1.0f, 0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(1.0f, 0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(-1.0f, 0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(-1.0f, 0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(-1.0f, 0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(-1.0f, 0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f)
+			LeviathanCore::MathTypes::Vector3{0.000000f, 0.000000f, 1.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 0.000000f, 1.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 0.000000f, 1.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 0.000000f, 1.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, -1.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, -1.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, -1.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, -1.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{-1.000000f, 0.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{-1.000000f, 0.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{-1.000000f, 0.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{-1.000000f, 0.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 0.000000f, -1.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 0.000000f, -1.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 0.000000f, -1.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 0.000000f, -1.000000f},
+			LeviathanCore::MathTypes::Vector3{1.000000f, 0.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{1.000000f, 0.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{1.000000f, 0.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{1.000000f, 0.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 1.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 1.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 1.000000f, 0.000000f},
+			LeviathanCore::MathTypes::Vector3{0.000000f, 1.000000f, 0.000000f}
 		},
 
 		.TextureCoordinates =
 		{
-			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f),
-			LeviathanCore::MathTypes::Vector2(0.0f, 1.0f),
-			LeviathanCore::MathTypes::Vector2(1.0f, 0.0f)
+			LeviathanCore::MathTypes::Vector2{0.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 0.0f},
+			LeviathanCore::MathTypes::Vector2{0.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 1.0f},
+			LeviathanCore::MathTypes::Vector2{1.0f, 0.0f}
 		},
 
 		.Indices =
 		{
-			0, 1, 2, 0, 2, 3, 10, 8, 4, 10, 4, 5, 22, 20, 6, 22, 6, 7, 19, 16, 14, 19, 14, 12, 15, 17, 21, 15, 21, 9, 11, 23, 13, 23, 18, 13
+			0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23
 		}
 	};
 }
@@ -555,7 +555,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateConePr
 
 	{
 		result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.GetX(), capCenter.GetY(), capCenter.GetZ() });
-		
+
 		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f, 0.5f });
 
 		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -1.0f });

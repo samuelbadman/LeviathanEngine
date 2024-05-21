@@ -494,8 +494,11 @@ namespace TestTitle
 
 		// Create scene.
 		// Import model from disk.
-		LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateSpherePrimitive(0.5f, 64, 64);
-		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCubePrimitive(0.5f);
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GeneratePlanePrimitive(0.5f);
+		LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCubePrimitive(0.5f);
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateSpherePrimitive(0.5f, 64, 64);
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCylinderPrimitive(0.5f, 0.5f, 1.0f, 64, 64);
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateConePrimitive(0.5f, 1.0f, 64, 64);
 		//std::vector<LeviathanAssets::AssetTypes::Mesh> model = {};
 		//if (LeviathanAssets::ModelImporter::LoadModel("Model.fbx", model))
 		{
@@ -505,20 +508,21 @@ namespace TestTitle
 
 			// Build render mesh.
 			// Render mesh definition.
-			std::vector<LeviathanRenderer::VertexTypes::VertexPosNorm> vertices = {};
+			std::vector<LeviathanRenderer::VertexTypes::VertexPosNormUV> vertices = {};
 			std::vector<unsigned int> indices = {};
 
-			gSingleVertexStrideBytes = sizeof(LeviathanRenderer::VertexTypes::VertexPosNorm);
+			gSingleVertexStrideBytes = sizeof(LeviathanRenderer::VertexTypes::VertexPosNormUV);
 			gIndexCount = static_cast<unsigned int>(combinedModel.Indices.size());
 
 			// Build render mesh.
 			// For each vertex in the mesh.
 			for (size_t i = 0; i < combinedModel.Positions.size(); ++i)
 			{
-				vertices.emplace_back(LeviathanRenderer::VertexTypes::VertexPosNorm
+				vertices.emplace_back(LeviathanRenderer::VertexTypes::VertexPosNormUV
 					{
-						.Position = {combinedModel.Positions[i].GetX(), combinedModel.Positions[i].GetY(), combinedModel.Positions[i].GetZ()},
-						.Normal = {combinedModel.Normals[i].GetX(), combinedModel.Normals[i].GetY(), combinedModel.Normals[i].GetZ()}
+						.Position = { combinedModel.Positions[i].GetX(), combinedModel.Positions[i].GetY(), combinedModel.Positions[i].GetZ() },
+						.Normal = { combinedModel.Normals[i].GetX(), combinedModel.Normals[i].GetY(), combinedModel.Normals[i].GetZ() },
+						.UV = { combinedModel.TextureCoordinates[i].GetX(), combinedModel.TextureCoordinates[i].GetY() }
 					});
 			}
 
@@ -530,7 +534,7 @@ namespace TestTitle
 			}
 
 			// Create geometry buffers.
-			if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), sizeof(LeviathanRenderer::VertexTypes::VertexPosNorm), gVertexBufferId))
+			if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), sizeof(LeviathanRenderer::VertexTypes::VertexPosNormUV), gVertexBufferId))
 			{
 				return false;
 			}

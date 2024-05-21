@@ -86,6 +86,7 @@ struct VertexInput
 {
     float3 Position : POSITION;
     float3 Normal : NORMAL;
+    float2 UV : TEXTURE_COORD;
 };
 
 struct VertexOutput
@@ -93,16 +94,16 @@ struct VertexOutput
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 InterpolatedNormalViewSpace : INTERPOLATED_NORMAL_VIEW_SPACE;
+    float2 TexCoord : TEXTURE_COORD;
 };
 
 VertexOutput main(VertexInput input)
 {
     VertexOutput output;
-
     output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position, 1.0f));
     output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
     output.InterpolatedNormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
-				
+    output.TexCoord = input.UV;
     return output;
 }
 		)";
@@ -159,6 +160,7 @@ struct PixelInput
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 InterpolatedNormalViewSpace : INTERPOLATED_NORMAL_VIEW_SPACE;
+    float2 TexCoord : TEXTURE_COORD;
 };
 
 float Square(float x)
@@ -228,6 +230,8 @@ float3 CalculateLighting(float3 surfaceToLightDirection, float3 surfaceToViewDir
 
 float4 main(PixelInput input) : SV_TARGET
 {
+    return float4(input.TexCoord.x, input.TexCoord.y, 0.0f, 1.0f);
+
     // Final color = Cook Torrance BRDF * Light intensity * nDotL
 
     // Cook Torrance BRDF = (kD * fLambert) + (kS * fCookTorrance)
@@ -674,7 +678,7 @@ float4 main(PixelInput input) : SV_TARGET
 
 			// Create pipelines.
 			// Create input layout.
-			std::array<D3D11_INPUT_ELEMENT_DESC, 2> inputLayoutDesc =
+			std::array<D3D11_INPUT_ELEMENT_DESC, 3> inputLayoutDesc =
 			{
 				D3D11_INPUT_ELEMENT_DESC
 				{
@@ -697,6 +701,17 @@ float4 main(PixelInput input) : SV_TARGET
 					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
 					.InstanceDataStepRate = 0
 				},
+
+				D3D11_INPUT_ELEMENT_DESC
+				{
+					.SemanticName = "TEXTURE_COORD",
+					.SemanticIndex = 0,
+					.Format = DXGI_FORMAT_R32G32_FLOAT,
+					.InputSlot = 0,
+					.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT,
+					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+					.InstanceDataStepRate = 0
+				}
 			};
 
 			hr = gD3D11Device->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()),
