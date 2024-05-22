@@ -13,5 +13,13 @@ namespace LeviathanAssets
 			std::vector<LeviathanCore::MathTypes::Vector2> TextureCoordinates = {};
 			std::vector<uint32_t> Indices = {};
 		};
+
+		struct Texture
+		{
+			int Width = 0;
+			int Height = 0;
+			int NumComponents = 0;
+			unsigned char* Data = nullptr;
+		};
 	}
 }

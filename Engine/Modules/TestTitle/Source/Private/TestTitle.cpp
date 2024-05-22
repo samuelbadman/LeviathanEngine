@@ -6,6 +6,7 @@
 
 #include "AssetTypes.h"
 #include "ModelImporter.h"
+#include "TextureImporter.h"
 #include "MathTypes.h"
 #include "MathLibrary.h"
 #include "Camera.h"
@@ -544,6 +545,14 @@ namespace TestTitle
 				return false;
 			}
 		}
+
+		// Import textures.
+		LeviathanAssets::AssetTypes::Texture texture = {};
+		if (!LeviathanAssets::TextureImporter::LoadTexture("Cat.png", texture))
+		{
+			LEVIATHAN_LOG("Failed to load texture.");
+		}
+		LEVIATHAN_LOG("Loaded texture. Width: %d, Height: %d, NumComponents: %d", texture.Width, texture.Height, texture.NumComponents);
 
 		// Load quad geometry.
 		//std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
