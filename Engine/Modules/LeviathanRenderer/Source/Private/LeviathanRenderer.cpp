@@ -122,6 +122,16 @@ namespace LeviathanRenderer
 		Renderer::DestroyIndexBuffer(id);
 	}
 
+	bool CreateTexture2D(const Texture2DDescription& description, RendererResourceID::IDType& outID)
+	{
+		return Renderer::CreateTexture2D(description.Width, description.Height, description.Data, description.RowSizeBytes, description.sRGB, outID);
+	}
+
+	void DestroyTexture2D(RendererResourceID::IDType& outID)
+	{
+		Renderer::DestroyTexture(outID);
+	}
+
 	void BeginFrame()
 	{
 		static constexpr float clearColor[] = { 0.f, 0.15f, 0.275f, 1.f };
@@ -141,7 +151,7 @@ namespace LeviathanRenderer
 		Renderer::DrawIndexed(indexCount, singleVertexStrideBytes, vertexBufferId, indexBufferId);
 	}
 
-	bool UpdateObjectData( size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 	{
 		return Renderer::UpdateObjectBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}

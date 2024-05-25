@@ -12,6 +12,15 @@ namespace LeviathanRenderer
 		struct MaterialConstantBuffer;
 	}
 
+	struct Texture2DDescription
+	{
+		uint32_t Width = 0;
+		uint32_t Height = 0;
+		const void* Data = 0;
+		uint32_t RowSizeBytes = 0;
+		bool sRGB = false;
+	};
+
 	[[nodiscard]] bool Initialize();
 	bool Shutdown();
 
@@ -24,6 +33,8 @@ namespace LeviathanRenderer
 	[[nodiscard]] bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId);
 	void DestroyVertexBuffer(RendererResourceID::IDType& id);
 	void DestroyIndexBuffer(RendererResourceID::IDType& id);
+	[[nodiscard]] bool CreateTexture2D(const Texture2DDescription& description, RendererResourceID::IDType& outID);
+	void DestroyTexture2D(RendererResourceID::IDType& outID);
 
 	void BeginFrame();
 	void EndFrame();

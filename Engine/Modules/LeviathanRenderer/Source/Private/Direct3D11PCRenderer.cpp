@@ -65,6 +65,10 @@ namespace LeviathanRenderer
 		// Scene resources.
 		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gVertexBuffers = {};
 		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
+		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> gShaderResourceViews = {};
+
+		// Samplers.
+		static Microsoft::WRL::ComPtr<ID3D11SamplerState> gSamplerState = {};
 
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
@@ -86,7 +90,7 @@ struct VertexInput
 {
     float3 Position : POSITION;
     float3 Normal : NORMAL;
-    float2 UV : TEXTURE_COORD;
+    float2 UV : UV;
 };
 
 struct VertexOutput
@@ -138,6 +142,14 @@ struct SpotLight
     float CosineOuterConeAngle;
 };
 
+struct PixelInput
+{
+    float4 PositionClipSpace : SV_POSITION;
+    float3 PositionViewSpace : POSITION_VIEW_SPACE;
+    float3 InterpolatedNormalViewSpace : INTERPOLATED_NORMAL_VIEW_SPACE;
+    float2 TexCoord : TEXTURE_COORD;
+};
+
 cbuffer SceneBuffer : register(b0)
 {
     uint DirectionalLightCount;
@@ -155,13 +167,8 @@ cbuffer MaterialBuffer : register(b1)
     float Metallic;
 };
 
-struct PixelInput
-{
-    float4 PositionClipSpace : SV_POSITION;
-    float3 PositionViewSpace : POSITION_VIEW_SPACE;
-    float3 InterpolatedNormalViewSpace : INTERPOLATED_NORMAL_VIEW_SPACE;
-    float2 TexCoord : TEXTURE_COORD;
-};
+Texture2D Texture : register(t0);
+SamplerState XSamplerState : register(s0);
 
 float Square(float x)
 {
@@ -230,66 +237,14 @@ float3 CalculateLighting(float3 surfaceToLightDirection, float3 surfaceToViewDir
 
 float4 main(PixelInput input) : SV_TARGET
 {
-    return float4(input.TexCoord.x, input.TexCoord.y, 0.0f, 1.0f);
+    float3 textureColor = Texture.Sample(XSamplerState, input.TexCoord);
 
-    // Final color = Cook Torrance BRDF * Light intensity * nDotL
-
-    // Cook Torrance BRDF = (kD * fLambert) + (kS * fCookTorrance)
-    // kD + kS = 1
-    // fLambert = base color / pi
-    // fCookTorrance = d * f * g / 4 * dot(surface normal, surface to light direction) * dot(surface normal, surface to view direction)
-    // d (Normal distribution function): GGX by Trowbridge & Reitz.
-    // g (Geometry function): Schlick-GGX by Schlick & Beckmann using Smith's method.
-    // f (Fresnel function): Schlick approximation.
-    
-    // Light intensity = light radiance
-    // nDotL = dot(surface normal, surface to light direction)
-    
-    float3 baseColor = Color.rgb;
-    float roughness = Roughness;
-    float metallic = Metallic;
-    float3 surfaceNormal = input.InterpolatedNormalViewSpace;
-    
-    float3 totalColor = float3(0.0f, 0.0f, 0.0f);
-
-    float3 surfaceToViewDirectionViewSpace = normalize(-input.PositionViewSpace);
-    float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionViewSpace));
-
-    // Directional lights.
-    for (int i = 0; i < DirectionalLightCount; ++i)
-    {
-        float3 surfaceToLightDirectionViewSpace = -DirectionalLights[i].DirectionViewSpace;
-        totalColor += CalculateLighting(surfaceToLightDirectionViewSpace, surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, DirectionalLights[i].Radiance, baseColor, roughness, metallic);
-    }
-    
-    // Point lights.
-    for (int i = 0; i < PointLightCount; ++i)
-    {
-        float3 surfaceToLightVectorViewSpace = PointLights[i].PositionViewSpace - input.PositionViewSpace;
-        float attenuation = Attenuation(length(surfaceToLightVectorViewSpace));
-        float3 radiance = attenuation * PointLights[i].Radiance;
-        totalColor += CalculateLighting(normalize(surfaceToLightVectorViewSpace), surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
-    }
-    
-    // Spot lights.
-    for (int i = 0; i < SpotLightCount; ++i)
-    {
-        float3 surfaceToLightVectorViewSpace = SpotLights[i].PositionViewSpace - input.PositionViewSpace;
-        float3 surfaceToLightDirectionViewSpace = normalize(surfaceToLightVectorViewSpace);
-        float theta = saturate(dot(-surfaceToLightDirectionViewSpace, SpotLights[i].DirectionViewSpace));
-        float epsilon = SpotLights[i].CosineInnerConeAngle - SpotLights[i].CosineOuterConeAngle;
-        float intensity = smoothstep(0.0f, 1.0f, saturate((theta - SpotLights[i].CosineOuterConeAngle) / epsilon));
-        float attenuation = Attenuation(length(surfaceToLightVectorViewSpace));
-        float3 radiance = attenuation * intensity * SpotLights[i].Radiance;
-        totalColor += CalculateLighting(surfaceToLightDirectionViewSpace, surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
-    }
-    
     // HDR tone mapping.
-    totalColor = totalColor / (totalColor + float3(1.0f, 1.0f, 1.0f));
+    textureColor = textureColor / (textureColor + float3(1.0f, 1.0f, 1.0f));
 
     // Gamma correction.
     float gammaExponent = 1.0f / 2.2f;
-    float4 finalColor = float4(pow(totalColor, float3(gammaExponent, gammaExponent, gammaExponent)), 1.0f);
+    float4 finalColor = float4(pow(textureColor, float3(gammaExponent, gammaExponent, gammaExponent)), 1.0f);
 
     return finalColor;
 }
@@ -704,7 +659,7 @@ float4 main(PixelInput input) : SV_TARGET
 
 				D3D11_INPUT_ELEMENT_DESC
 				{
-					.SemanticName = "TEXTURE_COORD",
+					.SemanticName = "UV",
 					.SemanticIndex = 0,
 					.Format = DXGI_FORMAT_R32G32_FLOAT,
 					.InputSlot = 0,
@@ -724,23 +679,35 @@ float4 main(PixelInput input) : SV_TARGET
 			ConstantBufferTypes::ObjectConstantBuffer initialObjectBufferData = {};
 			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::ObjectConstantBuffer), &initialObjectBufferData, &gObjectBuffer);
 			if (!success) { return false; }
-			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 
 			// Pixel shader.
 			// Scene constant buffer.
 			ConstantBufferTypes::SceneConstantBuffer initialSceneBufferData = {};
 			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::SceneConstantBuffer), &initialSceneBufferData, &gSceneBuffer);
 			if (!success) { return false; }
-			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gSceneBuffer.GetAddressOf());
 
 			// Material constant buffer.
 			ConstantBufferTypes::MaterialConstantBuffer initialMaterialBufferData = {};
 			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::MaterialConstantBuffer), static_cast<const void*>(&initialMaterialBufferData), &gMaterialBuffer);
 			if (!success) { return false; }
-			gD3D11DeviceContext->PSSetConstantBuffers(1, 1, gMaterialBuffer.GetAddressOf());
 
 			// Set pipeline primitive topology.
 			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			// Create samplers.
+			D3D11_SAMPLER_DESC samplerDesc = {};
+			samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+			samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+			samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+			samplerDesc.MipLODBias = 0.0f;
+			samplerDesc.MaxAnisotropy = 1;
+			samplerDesc.MinLOD = 0.0f;
+			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+			hr = gD3D11Device->CreateSamplerState(&samplerDesc, gSamplerState.GetAddressOf());
+			if (FAILED(hr)) { return false; };
 
 			return success;
 		}
@@ -870,6 +837,52 @@ float4 main(PixelInput input) : SV_TARGET
 			resourceID = RendererResourceID::InvalidID;
 		}
 
+		bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, RendererResourceID::IDType& outID)
+		{
+			HRESULT hr = {};
+
+			// Create texture 2D resource.
+			D3D11_TEXTURE2D_DESC texture2DDesc;
+			texture2DDesc.Width = width;
+			texture2DDesc.Height = height;
+			texture2DDesc.MipLevels = 1;
+			texture2DDesc.ArraySize = 1;
+			texture2DDesc.Format = ((sRGB) ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM);
+			texture2DDesc.SampleDesc.Count = 1;
+			texture2DDesc.SampleDesc.Quality = 0;
+			texture2DDesc.Usage = D3D11_USAGE_DEFAULT;
+			texture2DDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			texture2DDesc.CPUAccessFlags = 0;
+			texture2DDesc.MiscFlags = 0;
+
+			D3D11_SUBRESOURCE_DATA initData;
+			initData.pSysMem = data;
+			initData.SysMemPitch = static_cast<UINT>(rowPitchBytes);
+
+			Microsoft::WRL::ComPtr<ID3D11Texture2D> tex = nullptr;
+			hr = gD3D11Device->CreateTexture2D(&texture2DDesc, &initData, &tex);
+			if (FAILED(hr)) { return false; }
+			
+			// TODO: Generate mip levels.
+
+			// Create shader resource view of texture 2D resource.
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+			srvDesc.Format = texture2DDesc.Format;
+			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			srvDesc.Texture2D.MipLevels = 1;
+
+			outID = RendererResourceID::GetAvailableID();
+			gShaderResourceViews.emplace(outID, nullptr);
+
+			return SUCCEEDED(gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews[outID].GetAddressOf()));
+		}
+
+		void DestroyTexture(RendererResourceID::IDType& resourceID)
+		{
+			gShaderResourceViews.erase(resourceID);
+			resourceID = RendererResourceID::InvalidID;
+		}
+
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
 		{
 			gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
@@ -884,6 +897,14 @@ float4 main(PixelInput input) : SV_TARGET
 
 			gD3D11DeviceContext->VSSetShader(gVertexShader.Get(), nullptr, 0);
 			gD3D11DeviceContext->PSSetShader(gPixelShader.Get(), nullptr, 0);
+
+			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
+			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gSceneBuffer.GetAddressOf());
+			gD3D11DeviceContext->PSSetConstantBuffers(1, 1, gMaterialBuffer.GetAddressOf());
+
+			// TODO: Implement bindless texture strategy.
+			gD3D11DeviceContext->PSSetShaderResources(0, 1, gShaderResourceViews.at(3).GetAddressOf());
+			gD3D11DeviceContext->PSSetSamplers(0, 1, gSamplerState.GetAddressOf());
 		}
 
 		void Present()
@@ -895,8 +916,8 @@ float4 main(PixelInput input) : SV_TARGET
 		{
 			UINT stride = static_cast<UINT>(singleVertexStrideBytes);
 			UINT offset = 0;
-			gD3D11DeviceContext->IASetVertexBuffers(0, 1, gVertexBuffers[static_cast<size_t>(vertexBufferId)].GetAddressOf(), &stride, &offset);
-			gD3D11DeviceContext->IASetIndexBuffer(gIndexBuffers[static_cast<size_t>(indexBufferId)].Get(), DXGI_FORMAT_R32_UINT, 0);
+			gD3D11DeviceContext->IASetVertexBuffers(0, 1, gVertexBuffers.at(static_cast<size_t>(vertexBufferId)).GetAddressOf(), &stride, &offset);
+			gD3D11DeviceContext->IASetIndexBuffer(gIndexBuffers.at(static_cast<size_t>(indexBufferId)).Get(), DXGI_FORMAT_R32_UINT, 0);
 
 			gD3D11DeviceContext->DrawIndexed(indexCount, 0, 0);
 		}

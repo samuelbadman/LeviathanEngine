@@ -550,9 +550,23 @@ namespace TestTitle
 		LeviathanAssets::AssetTypes::Texture texture = {};
 		if (!LeviathanAssets::TextureImporter::LoadTexture("Cat.png", texture))
 		{
-			LEVIATHAN_LOG("Failed to load texture.");
+			LEVIATHAN_LOG("Failed to load texture from disk.");
 		}
 		LEVIATHAN_LOG("Loaded texture. Width: %d, Height: %d, NumComponents: %d", texture.Width, texture.Height, texture.NumComponents);
+
+		// Create textures.
+		LeviathanRenderer::Texture2DDescription textureDesc = {};
+		textureDesc.Width = texture.Width;
+		textureDesc.Height = texture.Height;
+		textureDesc.Data = texture.Data;
+		textureDesc.RowSizeBytes = 4 * texture.Width;
+		textureDesc.sRGB = true;
+
+		LeviathanRenderer::RendererResourceID::IDType textureID = 0;
+		if (!LeviathanRenderer::CreateTexture2D(textureDesc, textureID))
+		{
+			LEVIATHAN_LOG("Failed to create texture with the renderer.");
+		}
 
 		// Load quad geometry.
 		//std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
@@ -608,6 +622,7 @@ namespace TestTitle
 		gSceneSpotLights[0].OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(17.5f);
 
 		// ECS module prototype code region.
+		/*
 #pragma region 
 		// Prototype code for Leviathan Entities ECS module.
 		[[maybe_unused]] size_t maxEntities = 512;
@@ -668,7 +683,7 @@ namespace TestTitle
 		[[maybe_unused]] const LeviathanCore::DataStructures::SparseArray<Component>::DenseValue& value = components.GetValue(entity2);
 		LEVIATHAN_LOG("Retrieved value: data: %d", value.Value.Number);
 #pragma endregion
-
+*/
 		return true;
 	}
 }

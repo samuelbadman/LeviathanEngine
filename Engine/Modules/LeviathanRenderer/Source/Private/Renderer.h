@@ -16,8 +16,6 @@ namespace LeviathanRenderer
 		struct MaterialConstantBuffer;
 	}
 
-	enum class DataBufferType : uint8_t;
-
 	namespace Renderer
 	{
 		[[nodiscard]] bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount);
@@ -27,6 +25,8 @@ namespace LeviathanRenderer
 		[[nodiscard]] bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId);
 		void DestroyVertexBuffer(RendererResourceID::IDType& resourceID);
 		void DestroyIndexBuffer(RendererResourceID::IDType& resourceID);
+		[[nodiscard]] bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, RendererResourceID::IDType& outID);
+		void DestroyTexture(RendererResourceID::IDType& resourceID);
 
 		// Render commands.
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil);
