@@ -547,26 +547,50 @@ namespace TestTitle
 		}
 
 		// Import textures.
-		LeviathanAssets::AssetTypes::Texture texture = {};
-		if (!LeviathanAssets::TextureImporter::LoadTexture("Cat.png", texture))
+		LeviathanAssets::AssetTypes::Texture texture1 = {};
+		if (!LeviathanAssets::TextureImporter::LoadTexture("Cat.png", texture1))
 		{
-			LEVIATHAN_LOG("Failed to load texture from disk.");
+			LEVIATHAN_LOG("Failed to load texture 1 from disk.");
 		}
-		LEVIATHAN_LOG("Loaded texture. Width: %d, Height: %d, NumComponents: %d", texture.Width, texture.Height, texture.NumComponents);
 
-		// Create textures.
-		LeviathanRenderer::Texture2DDescription textureDesc = {};
-		textureDesc.Width = texture.Width;
-		textureDesc.Height = texture.Height;
-		textureDesc.Data = texture.Data;
-		textureDesc.RowSizeBytes = 4 * texture.Width;
-		textureDesc.sRGB = true;
-
-		LeviathanRenderer::RendererResourceID::IDType textureID = 0;
-		if (!LeviathanRenderer::CreateTexture2D(textureDesc, textureID))
+		LeviathanAssets::AssetTypes::Texture texture2 = {};
+		if (!LeviathanAssets::TextureImporter::LoadTexture("Cat2.png", texture2))
 		{
-			LEVIATHAN_LOG("Failed to create texture with the renderer.");
+			LEVIATHAN_LOG("Failed to load texture 2 from disk.");
 		}
+
+		// Create texture resources.
+		static constexpr uint32_t bytesPerPixel = 4;
+
+		LeviathanRenderer::Texture2DDescription texture1Desc = {};
+		texture1Desc.Width = texture1.Width;
+		texture1Desc.Height = texture1.Height;
+		texture1Desc.Data = texture1.Data;
+		texture1Desc.RowSizeBytes = bytesPerPixel * texture1.Width;
+		texture1Desc.sRGB = true;
+
+		LeviathanRenderer::RendererResourceID::IDType texture1ID = 0;
+		if (!LeviathanRenderer::CreateTexture2D(texture1Desc, texture1ID))
+		{
+			LEVIATHAN_LOG("Failed to create texture 1 with the renderer.");
+		}
+
+		LeviathanRenderer::Texture2DDescription texture2Desc = {};
+		texture2Desc.Width = texture2.Width;
+		texture2Desc.Height = texture2.Height;
+		texture2Desc.Data = texture2.Data;
+		texture2Desc.RowSizeBytes = bytesPerPixel * texture2.Width;
+		texture2Desc.sRGB = true;
+
+		LeviathanRenderer::RendererResourceID::IDType texture2ID = 0;
+		if (!LeviathanRenderer::CreateTexture2D(texture2Desc, texture2ID))
+		{
+			LEVIATHAN_LOG("Failed to create texture 2 with the renderer.");
+		}
+
+		// Add textures to resource table.
+		[[maybe_unused]] size_t texture1TableIndex = LeviathanRenderer::AddTexture2DToResourceTable(texture1ID);
+		[[maybe_unused]] size_t texture2TableIndex = LeviathanRenderer::AddTexture2DToResourceTable(texture2ID);
 
 		// Load quad geometry.
 		//std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =

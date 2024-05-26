@@ -5,6 +5,7 @@
 #include "Serialize.h"
 #include "LeviathanRenderer.h"
 #include "ConstantBufferTypes.h"
+#include "Bits.h"
 
 namespace LeviathanRenderer
 {
@@ -67,6 +68,9 @@ namespace LeviathanRenderer
 		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
 		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> gShaderResourceViews = {};
 
+		static int8_t gAvailableTexture2DSRVTableIndices = 0;
+		static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gTexture2DSRVTable[RendererConstants::Texture2DTableLength] = {};
+
 		// Samplers.
 		static Microsoft::WRL::ComPtr<ID3D11SamplerState> gSamplerState = {};
 
@@ -117,6 +121,7 @@ VertexOutput main(VertexInput input)
 #define MAX_DIRECTIONAL_LIGHT_COUNT 10
 #define MAX_POINT_LIGHT_COUNT 10
 #define MAX_SPOT_LIGHT_COUNT 10
+#define TEXTURE2D_TABLE_LENGTH 8
 
 // Shader definitions.
 #define PI 3.14159265359
@@ -167,7 +172,7 @@ cbuffer MaterialBuffer : register(b1)
     float Metallic;
 };
 
-Texture2D Texture : register(t0);
+Texture2D Texture2DTable[TEXTURE2D_TABLE_LENGTH] : register(t0);
 SamplerState XSamplerState : register(s0);
 
 float Square(float x)
@@ -237,7 +242,7 @@ float3 CalculateLighting(float3 surfaceToLightDirection, float3 surfaceToViewDir
 
 float4 main(PixelInput input) : SV_TARGET
 {
-    float3 textureColor = Texture.Sample(XSamplerState, input.TexCoord);
+    float3 textureColor = Texture2DTable[0].Sample(XSamplerState, input.TexCoord.xy);
 
     // HDR tone mapping.
     textureColor = textureColor / (textureColor + float3(1.0f, 1.0f, 1.0f));
@@ -247,6 +252,71 @@ float4 main(PixelInput input) : SV_TARGET
     float4 finalColor = float4(pow(textureColor, float3(gammaExponent, gammaExponent, gammaExponent)), 1.0f);
 
     return finalColor;
+
+    
+    
+    
+    
+    // Final color = Cook Torrance BRDF * Light intensity * nDotL
+
+    // Cook Torrance BRDF = (kD * fLambert) + (kS * fCookTorrance)
+    // kD + kS = 1
+    // fLambert = base color / pi
+    // fCookTorrance = d * f * g / 4 * dot(surface normal, surface to light direction) * dot(surface normal, surface to view direction)
+    // d (Normal distribution function): GGX by Trowbridge & Reitz.
+    // g (Geometry function): Schlick-GGX by Schlick & Beckmann using Smith's method.
+    // f (Fresnel function): Schlick approximation.
+    
+    // Light intensity = light radiance
+    // nDotL = dot(surface normal, surface to light direction)
+    
+    //float3 baseColor = Color.rgb;
+    //float roughness = Roughness;
+    //float metallic = Metallic;
+    //float3 surfaceNormal = input.InterpolatedNormalViewSpace;
+    
+    //float3 totalColor = float3(0.0f, 0.0f, 0.0f);
+
+    //float3 surfaceToViewDirectionViewSpace = normalize(-input.PositionViewSpace);
+    //float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionViewSpace));
+
+    //// Directional lights.
+    //for (int i = 0; i < DirectionalLightCount; ++i)
+    //{
+    //    float3 surfaceToLightDirectionViewSpace = -DirectionalLights[i].DirectionViewSpace;
+    //    totalColor += CalculateLighting(surfaceToLightDirectionViewSpace, surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, DirectionalLights[i].Radiance, baseColor, roughness, metallic);
+    //}
+    
+    //// Point lights.
+    //for (int i = 0; i < PointLightCount; ++i)
+    //{
+    //    float3 surfaceToLightVectorViewSpace = PointLights[i].PositionViewSpace - input.PositionViewSpace;
+    //    float attenuation = Attenuation(length(surfaceToLightVectorViewSpace));
+    //    float3 radiance = attenuation * PointLights[i].Radiance;
+    //    totalColor += CalculateLighting(normalize(surfaceToLightVectorViewSpace), surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
+    //}
+    
+    //// Spot lights.
+    //for (int i = 0; i < SpotLightCount; ++i)
+    //{
+    //    float3 surfaceToLightVectorViewSpace = SpotLights[i].PositionViewSpace - input.PositionViewSpace;
+    //    float3 surfaceToLightDirectionViewSpace = normalize(surfaceToLightVectorViewSpace);
+    //    float theta = saturate(dot(-surfaceToLightDirectionViewSpace, SpotLights[i].DirectionViewSpace));
+    //    float epsilon = SpotLights[i].CosineInnerConeAngle - SpotLights[i].CosineOuterConeAngle;
+    //    float intensity = smoothstep(0.0f, 1.0f, saturate((theta - SpotLights[i].CosineOuterConeAngle) / epsilon));
+    //    float attenuation = Attenuation(length(surfaceToLightVectorViewSpace));
+    //    float3 radiance = attenuation * intensity * SpotLights[i].Radiance;
+    //    totalColor += CalculateLighting(surfaceToLightDirectionViewSpace, surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
+    //}
+    
+    //// HDR tone mapping.
+    //totalColor = totalColor / (totalColor + float3(1.0f, 1.0f, 1.0f));
+
+    //// Gamma correction.
+    //float gammaExponent = 1.0f / 2.2f;
+    //float4 finalColor = float4(pow(totalColor, float3(gammaExponent, gammaExponent, gammaExponent)), 1.0f);
+
+    //return finalColor;
 }
 		)";
 
@@ -883,6 +953,47 @@ float4 main(PixelInput input) : SV_TARGET
 			resourceID = RendererResourceID::InvalidID;
 		}
 
+		size_t AddTexture2DToResourceTable(RendererResourceID::IDType id)
+		{
+			static constexpr size_t invalidTableIndex = RendererConstants::Texture2DTableLength;
+
+			// Find available index in the table.
+			// Linear search O(n). n is the table length.
+			size_t availableTableIndex = invalidTableIndex;
+			for (size_t i = 0; i < RendererConstants::Texture2DTableLength; ++i)
+			{
+				if (CHECK_BIT(gAvailableTexture2DSRVTableIndices, i))
+				{
+					continue;
+				}
+
+				availableTableIndex = i;
+				break;
+			}
+
+			if (availableTableIndex == invalidTableIndex)
+			{
+				return 0; // TODO: Create invalid table index value.
+			}
+
+			gTexture2DSRVTable[availableTableIndex] = gShaderResourceViews.at(id);
+			SET_BIT(gAvailableTexture2DSRVTableIndices, availableTableIndex);
+
+			// Return the index of the resource in the table to be used as a shader parameter.
+			return availableTableIndex;
+		}
+
+		void RemoveTexture2DFromResourceTable(size_t tableIndex)
+		{
+			if (!CHECK_BIT(gAvailableTexture2DSRVTableIndices, tableIndex))
+			{
+				return;
+			}
+
+			gTexture2DSRVTable[tableIndex] = nullptr;
+			CLEAR_BIT(gAvailableTexture2DSRVTableIndices, tableIndex);
+		}
+
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
 		{
 			gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
@@ -902,8 +1013,10 @@ float4 main(PixelInput input) : SV_TARGET
 			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gSceneBuffer.GetAddressOf());
 			gD3D11DeviceContext->PSSetConstantBuffers(1, 1, gMaterialBuffer.GetAddressOf());
 
-			// TODO: Implement bindless texture strategy.
-			gD3D11DeviceContext->PSSetShaderResources(0, 1, gShaderResourceViews.at(3).GetAddressOf());
+			// Set resource tables.
+			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DTableLength, gTexture2DSRVTable[0].GetAddressOf());
+
+			// TODO: Implement resource table as done with texture2D resources.
 			gD3D11DeviceContext->PSSetSamplers(0, 1, gSamplerState.GetAddressOf());
 		}
 

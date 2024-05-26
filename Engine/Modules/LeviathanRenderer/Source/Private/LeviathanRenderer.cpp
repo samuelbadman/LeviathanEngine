@@ -132,6 +132,16 @@ namespace LeviathanRenderer
 		Renderer::DestroyTexture(outID);
 	}
 
+	size_t AddTexture2DToResourceTable(RendererResourceID::IDType id)
+	{
+		return Renderer::AddTexture2DToResourceTable(id);
+	}
+
+	void RemoveTexture2DFromResourceTable(size_t tableIndex)
+	{
+		Renderer::RemoveTexture2DFromResourceTable(tableIndex);
+	}
+
 	void BeginFrame()
 	{
 		static constexpr float clearColor[] = { 0.f, 0.15f, 0.275f, 1.f };

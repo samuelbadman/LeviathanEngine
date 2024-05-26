@@ -20,7 +20,7 @@ namespace LeviathanCore
 
 		private:
 			// Dense array implemented with dynamic array to save memory. O(n) space where n is the number of values stored.
-			// Can use a fixed allocation to improved insertion time to O(1) without requiring an allocation and copy constructing.
+			// Can use a fixed allocation to improve insertion time to O(1) without requiring an allocation and copy constructing.
 			std::vector<DenseValue> Dense = {}; 
 			std::vector<size_t> Sparse = {};
 			size_t DenseSize = 0;

@@ -27,6 +27,8 @@ namespace LeviathanRenderer
 		void DestroyIndexBuffer(RendererResourceID::IDType& resourceID);
 		[[nodiscard]] bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, RendererResourceID::IDType& outID);
 		void DestroyTexture(RendererResourceID::IDType& resourceID);
+		size_t AddTexture2DToResourceTable(RendererResourceID::IDType id);
+		void RemoveTexture2DFromResourceTable(size_t tableIndex);
 
 		// Render commands.
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil);

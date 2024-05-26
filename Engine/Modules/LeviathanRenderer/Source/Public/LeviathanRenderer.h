@@ -35,6 +35,8 @@ namespace LeviathanRenderer
 	void DestroyIndexBuffer(RendererResourceID::IDType& id);
 	[[nodiscard]] bool CreateTexture2D(const Texture2DDescription& description, RendererResourceID::IDType& outID);
 	void DestroyTexture2D(RendererResourceID::IDType& outID);
+	size_t AddTexture2DToResourceTable(RendererResourceID::IDType id);
+	void RemoveTexture2DFromResourceTable(size_t tableIndex);
 
 	void BeginFrame();
 	void EndFrame();
