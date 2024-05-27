@@ -233,21 +233,6 @@ float3 CalculateLighting(float3 surfaceToLightDirection, float3 surfaceToViewDir
 
 float4 main(PixelInput input) : SV_TARGET
 {
-    //float3 textureColor = Texture2DTable[0].Sample(XSamplerState, input.TexCoord.xy);
-
-    //// HDR tone mapping.
-    //textureColor = textureColor / (textureColor + float3(1.0f, 1.0f, 1.0f));
-
-    //// Gamma correction.
-    //float gammaExponent = 1.0f / 2.2f;
-    //float4 finalColor = float4(pow(textureColor, float3(gammaExponent, gammaExponent, gammaExponent)), 1.0f);
-
-    //return finalColor;
-
-    
-    
-    
-    
      //Final color = Cook Torrance BRDF * Light intensity * nDotL
 
      //Cook Torrance BRDF = (kD * fLambert) + (kS * fCookTorrance)
