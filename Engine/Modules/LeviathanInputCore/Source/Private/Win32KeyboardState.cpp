@@ -103,11 +103,11 @@ namespace LeviathanInputCore
 				{
 					if (IsState1(bit))
 					{
-						SET_BIT(State1, bit);
+						LEVIATHAN_SET_BIT(State1, bit);
 					}
 					else
 					{
-						SET_BIT(State2, bit);
+						LEVIATHAN_SET_BIT(State2, bit);
 					}
 				}
 			}
@@ -122,11 +122,11 @@ namespace LeviathanInputCore
 				{
 					if (IsState1(bit))
 					{
-						CLEAR_BIT(State1, bit);
+						LEVIATHAN_CLEAR_BIT(State1, bit);
 					}
 					else
 					{
-						CLEAR_BIT(State2, bit);
+						LEVIATHAN_CLEAR_BIT(State2, bit);
 					}
 				}
 			}
@@ -157,11 +157,11 @@ namespace LeviathanInputCore
 			{
 				if (IsState1(bit))
 				{
-					return CHECK_BIT(State1, bit);
+					return LEVIATHAN_CHECK_BIT(State1, bit);
 				}
 				else
 				{
-					return CHECK_BIT(State2, bit);
+					return LEVIATHAN_CHECK_BIT(State2, bit);
 				}
 			}
 
@@ -176,11 +176,11 @@ namespace LeviathanInputCore
 			{
 				if (IsState1(bit))
 				{
-					return CHECK_BIT(State1, bit);
+					return LEVIATHAN_CHECK_BIT(State1, bit);
 				}
 				else
 				{
-					return CHECK_BIT(State2, bit);
+					return LEVIATHAN_CHECK_BIT(State2, bit);
 				}
 			}
 

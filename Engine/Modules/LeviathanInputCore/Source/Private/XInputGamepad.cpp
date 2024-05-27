@@ -48,7 +48,7 @@ namespace LeviathanInputCore
 				{
 					return false;
 				}
-				return (CHECK_BIT(ConnectedGamepadBits, userIndex) == 1);
+				return (LEVIATHAN_CHECK_BIT(ConnectedGamepadBits, userIndex) == 1);
 			}
 
 			// Sends messages for the current state of a button on the game controller connected at userIndex. The button messages are generated for is specified by key.
@@ -302,7 +302,7 @@ namespace LeviathanInputCore
 						// Gamepad is connected. Set corresponding bit in flag integer if corresponding flag bit is cleared.
 						if (!IsGamepadConnected(i))
 						{
-							SET_BIT(ConnectedGamepadBits, i);
+							LEVIATHAN_SET_BIT(ConnectedGamepadBits, i);
 							GetXInputGamepadConnectedCallback().Call(static_cast<unsigned int>(i));
 						}
 						break;
@@ -311,7 +311,7 @@ namespace LeviathanInputCore
 						// Gamepad is not connected. Clear corresponding bit in flag integer if corresponding flag bit is set.
 						if (IsGamepadConnected(i))
 						{
-							CLEAR_BIT(ConnectedGamepadBits, i);
+							LEVIATHAN_CLEAR_BIT(ConnectedGamepadBits, i);
 							GetXInputGamepadDisconnectedCallback().Call(static_cast<unsigned int>(i));
 						}
 						break;

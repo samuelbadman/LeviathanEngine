@@ -93,6 +93,9 @@ namespace TestTitle
 
 	static LeviathanRenderer::RendererResourceID::IDType gColorTexture1Id = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gColorTexture2Id = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceID::IDType gColorTexture3Id = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceID::IDType gRoughnessTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceID::IDType gMetallicTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
@@ -323,8 +326,8 @@ namespace TestTitle
 
 		// Update scene data.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
-		sceneData.DirectionalLightCount = gSceneDirectionalLightCount;
-		sceneData.PointLightCount = 0;
+		sceneData.DirectionalLightCount = 0;
+		sceneData.PointLightCount = gScenePointLightCount;
 		sceneData.SpotLightCount = 0;
 
 		// For each directional light.
@@ -379,7 +382,9 @@ namespace TestTitle
 		if (gIndexCount > 0)
 		{
 			// Update material data.
-			LeviathanRenderer::SetColorTexture2D(gColorTexture1Id);
+			LeviathanRenderer::SetColorTexture2D(gColorTexture3Id);
+			LeviathanRenderer::SetRoughnessTexture2D(gRoughnessTextureId);
+			LeviathanRenderer::SetMetallicTexture2D(gMetallicTextureId);
 
 			// Calculate world matrix.
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
@@ -581,6 +586,46 @@ namespace TestTitle
 		if (!LeviathanRenderer::CreateTexture2D(texture2Desc, gColorTexture2Id))
 		{
 			LEVIATHAN_LOG("Failed to create texture 2 resource.");
+		}
+
+		static constexpr uint32_t texture3Color = 0x0cff00;
+
+		LeviathanRenderer::Texture2DDescription texture3Desc = {};
+		texture3Desc.Width = 1;
+		texture3Desc.Height = 1;
+		texture3Desc.Data = static_cast<const void*>(&texture3Color);
+		texture3Desc.RowSizeBytes = bytesPerPixel * 1;
+		texture3Desc.sRGB = true;
+
+		if (!LeviathanRenderer::CreateTexture2D(texture3Desc, gColorTexture3Id))
+		{
+			LEVIATHAN_LOG("Failed to create texture 3 resource.");
+		}
+
+		LeviathanRenderer::Texture2DDescription roughnessTextureDesc = {};
+		roughnessTextureDesc.Width = 1;
+		roughnessTextureDesc.Height = 1;
+		uint32_t roughness = 0xfefefe;
+		roughnessTextureDesc.Data = static_cast<const void*>(&roughness);
+		roughnessTextureDesc.RowSizeBytes = bytesPerPixel * 1;
+		roughnessTextureDesc.sRGB = false;
+
+		if (!LeviathanRenderer::CreateTexture2D(roughnessTextureDesc, gRoughnessTextureId))
+		{
+			LEVIATHAN_LOG("Failed to create roughness texture resource.");
+		}
+
+		LeviathanRenderer::Texture2DDescription metallicTextureDesc = {};
+		metallicTextureDesc.Width = 1;
+		metallicTextureDesc.Height = 1;
+		uint32_t metallic = 0x010101;
+		metallicTextureDesc.Data = static_cast<const void*>(&metallic);
+		metallicTextureDesc.RowSizeBytes = bytesPerPixel * 1;
+		metallicTextureDesc.sRGB = false;
+
+		if (!LeviathanRenderer::CreateTexture2D(metallicTextureDesc, gMetallicTextureId))
+		{
+			LEVIATHAN_LOG("Failed to create metallic texture resource.");
 		}
 
 		// Load quad geometry.

@@ -35,11 +35,11 @@ namespace LeviathanInputCore
 
 			if (setBit)
 			{
-				SET_BIT(buttonState, wheelBit);
+				LEVIATHAN_SET_BIT(buttonState, wheelBit);
 			}
 			else
 			{
-				CLEAR_BIT(buttonState, wheelBit);
+				LEVIATHAN_CLEAR_BIT(buttonState, wheelBit);
 			}
 		}
 
@@ -77,7 +77,7 @@ namespace LeviathanInputCore
 			const unsigned char buttonKeyBit = GetMouseButtonKeyBit(key);
 			if (IsValidBit(buttonKeyBit))
 			{
-				return CHECK_BIT(buttonState, buttonKeyBit);
+				return LEVIATHAN_CHECK_BIT(buttonState, buttonKeyBit);
 			}
 			return false;
 		}
@@ -92,7 +92,7 @@ namespace LeviathanInputCore
 			const unsigned char wheelBit = GetMouseButtonKeyBit(wheelKey);
 			if (IsValidBit(wheelBit))
 			{
-				return CHECK_BIT(buttonState, wheelBit);
+				return LEVIATHAN_CHECK_BIT(buttonState, wheelBit);
 			}
 			return false;
 		}
@@ -120,7 +120,7 @@ namespace LeviathanInputCore
 			const unsigned char buttonKeyBit = GetMouseButtonKeyBit(key);
 			if (IsValidBit(buttonKeyBit))
 			{
-				SET_BIT(buttonState, buttonKeyBit);
+				LEVIATHAN_SET_BIT(buttonState, buttonKeyBit);
 			}
 		}
 
@@ -129,7 +129,7 @@ namespace LeviathanInputCore
 			const unsigned char buttonKeyBit = GetMouseButtonKeyBit(key);
 			if (IsValidBit(buttonKeyBit))
 			{
-				CLEAR_BIT(buttonState, buttonKeyBit);
+				LEVIATHAN_CLEAR_BIT(buttonState, buttonKeyBit);
 			}
 		}
 	}
