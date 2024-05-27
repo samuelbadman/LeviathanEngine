@@ -132,16 +132,6 @@ namespace LeviathanRenderer
 		Renderer::DestroyTexture(outID);
 	}
 
-	size_t AddTexture2DToResourceTable(RendererResourceID::IDType id)
-	{
-		return Renderer::AddTexture2DToResourceTable(id);
-	}
-
-	void RemoveTexture2DFromResourceTable(size_t tableIndex)
-	{
-		Renderer::RemoveTexture2DFromResourceTable(tableIndex);
-	}
-
 	void BeginFrame()
 	{
 		static constexpr float clearColor[] = { 0.f, 0.15f, 0.275f, 1.f };
@@ -171,9 +161,19 @@ namespace LeviathanRenderer
 		return Renderer::UpdateSceneBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
-	bool UpdateMaterialData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+	void SetColorTexture2D(RendererResourceID::IDType texture2DId)
 	{
-		return Renderer::UpdateMaterialBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
+		Renderer::SetColorTexture2DResource(texture2DId);
+	}
+
+	void SetRoughnessTexture2D(RendererResourceID::IDType texture2DId)
+	{
+		Renderer::SetRoughnessTexture2DResource(texture2DId);
+	}
+
+	void SetMetallicTexture2D(RendererResourceID::IDType texture2DId)
+	{
+		Renderer::SetMetallicTexture2DResource(texture2DId);
 	}
 
 	void Present()

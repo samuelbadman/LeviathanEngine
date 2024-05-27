@@ -80,14 +80,5 @@ namespace LeviathanRenderer
 			LightTypes::PointLight PointLights[RendererConstants::MaxPointLightCount] = {};
 			LightTypes::SpotLight SpotLights[RendererConstants::MaxSpotLightCount] = {};
 		};
-
-		struct MaterialConstantBuffer
-		{
-			float Color[3] = { 0.0f, 0.0f, 0.0f };
-			float Roughness = 0.5f;
-
-			float Metallic = 0.0f;
-			char Padding[4 * 3] = { 0 };
-		};
 	}
 }

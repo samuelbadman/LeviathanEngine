@@ -35,14 +35,16 @@ namespace LeviathanRenderer
 	void DestroyIndexBuffer(RendererResourceID::IDType& id);
 	[[nodiscard]] bool CreateTexture2D(const Texture2DDescription& description, RendererResourceID::IDType& outID);
 	void DestroyTexture2D(RendererResourceID::IDType& outID);
-	size_t AddTexture2DToResourceTable(RendererResourceID::IDType id);
-	void RemoveTexture2DFromResourceTable(size_t tableIndex);
 
 	void BeginFrame();
 	void EndFrame();
 	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId);
 	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 	bool UpdateSceneData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
-	bool UpdateMaterialData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+
+	void SetColorTexture2D(RendererResourceID::IDType texture2DId);
+	void SetRoughnessTexture2D(RendererResourceID::IDType texture2DId);
+	void SetMetallicTexture2D(RendererResourceID::IDType texture2DId);
+
 	void Present();
 }

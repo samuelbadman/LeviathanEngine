@@ -13,7 +13,6 @@ namespace LeviathanRenderer
 	{
 		struct SceneConstantBuffer;
 		struct ObjectConstantBuffer;
-		struct MaterialConstantBuffer;
 	}
 
 	namespace Renderer
@@ -27,8 +26,6 @@ namespace LeviathanRenderer
 		void DestroyIndexBuffer(RendererResourceID::IDType& resourceID);
 		[[nodiscard]] bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, RendererResourceID::IDType& outID);
 		void DestroyTexture(RendererResourceID::IDType& resourceID);
-		size_t AddTexture2DToResourceTable(RendererResourceID::IDType id);
-		void RemoveTexture2DFromResourceTable(size_t tableIndex);
 
 		// Render commands.
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil);
@@ -37,7 +34,10 @@ namespace LeviathanRenderer
 		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId);
 		[[nodiscard]] bool UpdateObjectBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		[[nodiscard]] bool UpdateSceneBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
-		[[nodiscard]] bool UpdateMaterialBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+
+		void SetColorTexture2DResource(RendererResourceID::IDType texture2DId);
+		void SetRoughnessTexture2DResource(RendererResourceID::IDType texture2DId);
+		void SetMetallicTexture2DResource(RendererResourceID::IDType texture2DId);
 
 #ifdef LEVIATHAN_WITH_TOOLS
 		bool ImGuiRendererInitialize();

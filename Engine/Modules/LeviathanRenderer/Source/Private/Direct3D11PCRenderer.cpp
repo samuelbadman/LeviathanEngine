@@ -5,7 +5,6 @@
 #include "Serialize.h"
 #include "LeviathanRenderer.h"
 #include "ConstantBufferTypes.h"
-#include "Bits.h"
 
 namespace LeviathanRenderer
 {
@@ -58,7 +57,6 @@ namespace LeviathanRenderer
 
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gSceneBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gObjectBuffer = {};
-		static Microsoft::WRL::ComPtr<ID3D11Buffer> gMaterialBuffer = {};
 
 		// Renderer state.
 		static bool gVSync = false;
@@ -68,7 +66,7 @@ namespace LeviathanRenderer
 		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
 		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> gShaderResourceViews = {};
 
-		static int8_t gAvailableTexture2DSRVTableIndices = 0;
+		// Shader resource view tables.
 		static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gTexture2DSRVTable[RendererConstants::Texture2DTableLength] = {};
 
 		// Samplers.
@@ -756,11 +754,6 @@ float4 main(PixelInput input) : SV_TARGET
 			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::SceneConstantBuffer), &initialSceneBufferData, &gSceneBuffer);
 			if (!success) { return false; }
 
-			// Material constant buffer.
-			ConstantBufferTypes::MaterialConstantBuffer initialMaterialBufferData = {};
-			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::MaterialConstantBuffer), static_cast<const void*>(&initialMaterialBufferData), &gMaterialBuffer);
-			if (!success) { return false; }
-
 			// Set pipeline primitive topology.
 			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -814,10 +807,10 @@ float4 main(PixelInput input) : SV_TARGET
 
 			gSceneBuffer.Reset();
 			gObjectBuffer.Reset();
-			gMaterialBuffer.Reset();
 
 			gVertexBuffers.clear();
 			gIndexBuffers.clear();
+			gShaderResourceViews.clear();
 
 			return true;
 		}
@@ -953,47 +946,6 @@ float4 main(PixelInput input) : SV_TARGET
 			resourceID = RendererResourceID::InvalidID;
 		}
 
-		size_t AddTexture2DToResourceTable(RendererResourceID::IDType id)
-		{
-			static constexpr size_t invalidTableIndex = RendererConstants::Texture2DTableLength;
-
-			// Find available index in the table.
-			// Linear search O(n). n is the table length.
-			size_t availableTableIndex = invalidTableIndex;
-			for (size_t i = 0; i < RendererConstants::Texture2DTableLength; ++i)
-			{
-				if (CHECK_BIT(gAvailableTexture2DSRVTableIndices, i))
-				{
-					continue;
-				}
-
-				availableTableIndex = i;
-				break;
-			}
-
-			if (availableTableIndex == invalidTableIndex)
-			{
-				return 0; // TODO: Create invalid table index value.
-			}
-
-			gTexture2DSRVTable[availableTableIndex] = gShaderResourceViews.at(id);
-			SET_BIT(gAvailableTexture2DSRVTableIndices, availableTableIndex);
-
-			// Return the index of the resource in the table to be used as a shader parameter.
-			return availableTableIndex;
-		}
-
-		void RemoveTexture2DFromResourceTable(size_t tableIndex)
-		{
-			if (!CHECK_BIT(gAvailableTexture2DSRVTableIndices, tableIndex))
-			{
-				return;
-			}
-
-			gTexture2DSRVTable[tableIndex] = nullptr;
-			CLEAR_BIT(gAvailableTexture2DSRVTableIndices, tableIndex);
-		}
-
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
 		{
 			gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
@@ -1011,7 +963,6 @@ float4 main(PixelInput input) : SV_TARGET
 
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gSceneBuffer.GetAddressOf());
-			gD3D11DeviceContext->PSSetConstantBuffers(1, 1, gMaterialBuffer.GetAddressOf());
 
 			// Set resource tables.
 			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DTableLength, gTexture2DSRVTable[0].GetAddressOf());
@@ -1045,9 +996,22 @@ float4 main(PixelInput input) : SV_TARGET
 			return UpdateConstantBuffer(gSceneBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
-		bool UpdateMaterialBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+		void SetColorTexture2DResource(RendererResourceID::IDType texture2DId)
 		{
-			return UpdateConstantBuffer(gMaterialBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
+			static constexpr size_t colorTexture2DResourceIndex = 0;
+			gTexture2DSRVTable[colorTexture2DResourceIndex] = gShaderResourceViews[texture2DId];
+		}
+
+		void SetRoughnessTexture2DResource(RendererResourceID::IDType texture2DId)
+		{
+			static constexpr size_t roughnessTexture2DResourceIndex = 1;
+			gTexture2DSRVTable[roughnessTexture2DResourceIndex] = gShaderResourceViews[texture2DId];
+		}
+
+		void SetMetallicTexture2DResource(RendererResourceID::IDType texture2DId)
+		{
+			static constexpr size_t metallicTexture2DResourceIndex = 2;
+			gTexture2DSRVTable[metallicTexture2DResourceIndex] = gShaderResourceViews[texture2DId];
 		}
 
 #ifdef LEVIATHAN_WITH_TOOLS

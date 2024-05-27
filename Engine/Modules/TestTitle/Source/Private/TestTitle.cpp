@@ -91,6 +91,9 @@ namespace TestTitle
 	static constexpr size_t gSceneSpotLightCount = 1;
 	static SpotLight gSceneSpotLights[gSceneSpotLightCount];
 
+	static LeviathanRenderer::RendererResourceID::IDType gColorTexture1Id = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceID::IDType gColorTexture2Id = LeviathanRenderer::RendererResourceID::InvalidID;
+
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
 		gSceneCamera.UpdateProjectionMatrix(renderAreaWidth, renderAreaHeight);
@@ -376,13 +379,7 @@ namespace TestTitle
 		if (gIndexCount > 0)
 		{
 			// Update material data.
-			LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer materialData =
-			{
-				.Color = { 0.0f, 1.0f, 0.0f },
-				.Roughness = 0.5f,
-				.Metallic = 0.0f
-			};
-			LeviathanRenderer::UpdateMaterialData(0, &materialData, sizeof(LeviathanRenderer::ConstantBufferTypes::MaterialConstantBuffer));
+			LeviathanRenderer::SetColorTexture2D(gColorTexture1Id);
 
 			// Calculate world matrix.
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
@@ -569,10 +566,9 @@ namespace TestTitle
 		texture1Desc.RowSizeBytes = bytesPerPixel * texture1.Width;
 		texture1Desc.sRGB = true;
 
-		LeviathanRenderer::RendererResourceID::IDType texture1ID = 0;
-		if (!LeviathanRenderer::CreateTexture2D(texture1Desc, texture1ID))
+		if (!LeviathanRenderer::CreateTexture2D(texture1Desc, gColorTexture1Id))
 		{
-			LEVIATHAN_LOG("Failed to create texture 1 with the renderer.");
+			LEVIATHAN_LOG("Failed to create texture 1 resource.");
 		}
 
 		LeviathanRenderer::Texture2DDescription texture2Desc = {};
@@ -582,15 +578,10 @@ namespace TestTitle
 		texture2Desc.RowSizeBytes = bytesPerPixel * texture2.Width;
 		texture2Desc.sRGB = true;
 
-		LeviathanRenderer::RendererResourceID::IDType texture2ID = 0;
-		if (!LeviathanRenderer::CreateTexture2D(texture2Desc, texture2ID))
+		if (!LeviathanRenderer::CreateTexture2D(texture2Desc, gColorTexture2Id))
 		{
-			LEVIATHAN_LOG("Failed to create texture 2 with the renderer.");
+			LEVIATHAN_LOG("Failed to create texture 2 resource.");
 		}
-
-		// Add textures to resource table.
-		[[maybe_unused]] size_t texture1TableIndex = LeviathanRenderer::AddTexture2DToResourceTable(texture1ID);
-		[[maybe_unused]] size_t texture2TableIndex = LeviathanRenderer::AddTexture2DToResourceTable(texture2ID);
 
 		// Load quad geometry.
 		//std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
