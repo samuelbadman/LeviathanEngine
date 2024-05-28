@@ -12,6 +12,22 @@ namespace LeviathanRenderer
 		struct MaterialConstantBuffer;
 	}
 
+	enum class TextureSamplerFilter : uint8_t
+	{
+		Linear,
+		Point,
+		FilterMax
+	};
+
+	enum class TextureSamplerBorderMode : uint8_t
+	{
+		Wrap,
+		Clamp,
+		SolidColor,
+		Mirror,
+		BorderModeMax
+	};
+
 	struct Texture2DDescription
 	{
 		uint32_t Width = 0;
@@ -19,6 +35,14 @@ namespace LeviathanRenderer
 		const void* Data = 0;
 		uint32_t RowSizeBytes = 0;
 		bool sRGB = false;
+	};
+
+	struct TextureSamplerDescription
+	{
+		TextureSamplerFilter filter = TextureSamplerFilter::FilterMax;
+		TextureSamplerBorderMode borderMode = TextureSamplerBorderMode::BorderModeMax;
+		// Pointer to a 4 element float array containing the color to use when border mode is set to solid color. float a[4] = {r, g, b, a}.
+		const float* borderColor = nullptr;
 	};
 
 	[[nodiscard]] bool Initialize();
@@ -34,7 +58,9 @@ namespace LeviathanRenderer
 	void DestroyVertexBuffer(RendererResourceID::IDType& id);
 	void DestroyIndexBuffer(RendererResourceID::IDType& id);
 	[[nodiscard]] bool CreateTexture2D(const Texture2DDescription& description, RendererResourceID::IDType& outID);
-	void DestroyTexture2D(RendererResourceID::IDType& outID);
+	void DestroyTexture2D(RendererResourceID::IDType& id);
+	[[nodiscard]] bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceID::IDType& outID);
+	void DestroyTextureSampler(RendererResourceID::IDType& id);
 
 	void BeginFrame();
 	void EndFrame();
@@ -42,9 +68,13 @@ namespace LeviathanRenderer
 	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 	bool UpdateSceneData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
+	// TODO: Move into render pass.
 	void SetColorTexture2D(RendererResourceID::IDType texture2DId);
 	void SetRoughnessTexture2D(RendererResourceID::IDType texture2DId);
 	void SetMetallicTexture2D(RendererResourceID::IDType texture2DId);
+	void SetColorTextureSampler(RendererResourceID::IDType samplerId);
+	void SetRoughnessTextureSampler(RendererResourceID::IDType samplerId);
+	void SetMetallicTextureSampler(RendererResourceID::IDType samplerId);
 
 	void Present();
 }

@@ -65,12 +65,11 @@ namespace LeviathanRenderer
 		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gVertexBuffers = {};
 		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
 		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> gShaderResourceViews = {};
+		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11SamplerState>> gSamplerStates = {};
 
-		// Shader resource view tables.
-		static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gTexture2DSRVTable[RendererConstants::Texture2DTableLength] = {};
-
-		// Samplers.
-		static Microsoft::WRL::ComPtr<ID3D11SamplerState> gSamplerState = {};
+		// Shader resource tables.
+		static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gTexture2DSRVTable[RendererConstants::Texture2DSRVTableLength] = { nullptr };
+		static Microsoft::WRL::ComPtr<ID3D11SamplerState> gTextureSamplerTable[RendererConstants::TextureSamplerTableLength] = { nullptr };
 
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
@@ -119,7 +118,9 @@ VertexOutput main(VertexInput input)
 #define MAX_DIRECTIONAL_LIGHT_COUNT 10
 #define MAX_POINT_LIGHT_COUNT 10
 #define MAX_SPOT_LIGHT_COUNT 10
-#define TEXTURE2D_TABLE_LENGTH 8
+
+#define TEXTURE2D_SRV_TABLE_LENGTH 3
+#define TEXTURE_SAMPLER_TABLE_LENGTH 3
 
 // Shader definitions.
 #define PI 3.14159265359
@@ -163,8 +164,8 @@ cbuffer SceneBuffer : register(b0)
     SpotLight SpotLights[MAX_SPOT_LIGHT_COUNT];
 }
 
-Texture2D Texture2DTable[TEXTURE2D_TABLE_LENGTH] : register(t0);
-SamplerState XSamplerState : register(s0);
+Texture2D Texture2DSRVTable[TEXTURE2D_SRV_TABLE_LENGTH] : register(t0);
+SamplerState TextureSamplerTable[TEXTURE_SAMPLER_TABLE_LENGTH] : register(s0);
 
 float Square(float x)
 {
@@ -233,22 +234,22 @@ float3 CalculateLighting(float3 surfaceToLightDirection, float3 surfaceToViewDir
 
 float4 main(PixelInput input) : SV_TARGET
 {
-     //Final color = Cook Torrance BRDF * Light intensity * nDotL
-
-     //Cook Torrance BRDF = (kD * fLambert) + (kS * fCookTorrance)
-     //kD + kS = 1
-     //fLambert = base color / pi
-     //fCookTorrance = d * f * g / 4 * dot(surface normal, surface to light direction) * dot(surface normal, surface to view direction)
-     //d (Normal distribution function): GGX by Trowbridge & Reitz.
-     //g (Geometry function): Schlick-GGX by Schlick & Beckmann using Smith's method.
-     //f (Fresnel function): Schlick approximation.
+     // Final color = Cook Torrance BRDF * Light intensity * nDotL
+        
+     // Cook Torrance BRDF = (kD * fLambert) + (kS * fCookTorrance)
+     // kD + kS = 1
+     // fLambert = base color / pi
+     // fCookTorrance = d * f * g / 4 * dot(surface normal, surface to light direction) * dot(surface normal, surface to view direction)
+     // d (Normal distribution function): GGX by Trowbridge & Reitz.
+     // g (Geometry function): Schlick-GGX by Schlick & Beckmann using Smith's method.
+     // f (Fresnel function): Schlick approximation.
+        
+     // Light intensity = light radiance
+     // nDotL = dot(surface normal, surface to light direction)
     
-     //Light intensity = light radiance
-     //nDotL = dot(surface normal, surface to light direction)
-    
-    float3 baseColor = Texture2DTable[0].Sample(XSamplerState, input.TexCoord.xy).rgb;
-    float roughness = Texture2DTable[1].Sample(XSamplerState, input.TexCoord.xy).r;
-    float metallic = Texture2DTable[2].Sample(XSamplerState, input.TexCoord.xy).r;
+    float3 baseColor = Texture2DSRVTable[0].Sample(TextureSamplerTable[0], input.TexCoord.xy).rgb;
+    float roughness = Texture2DSRVTable[1].Sample(TextureSamplerTable[1], input.TexCoord.xy).r;
+    float metallic = Texture2DSRVTable[2].Sample(TextureSamplerTable[2], input.TexCoord.xy).r;
     float3 surfaceNormal = input.InterpolatedNormalViewSpace;
     
     float3 totalColor = float3(0.0f, 0.0f, 0.0f);
@@ -549,6 +550,28 @@ float4 main(PixelInput input) : SV_TARGET
 			return true;
 		}
 
+		static D3D11_FILTER TranslateTextureSamplerFilter(const TextureSamplerFilter filter)
+		{
+			switch (filter)
+			{
+			case TextureSamplerFilter::Linear: return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			case TextureSamplerFilter::Point: return D3D11_FILTER_MIN_MAG_MIP_POINT;
+			default:return D3D11_FILTER();
+			}
+		}
+
+		static D3D11_TEXTURE_ADDRESS_MODE TranslateTextureSamplerBorderMode(const TextureSamplerBorderMode mode)
+		{
+			switch (mode)
+			{
+			case TextureSamplerBorderMode::Wrap: return D3D11_TEXTURE_ADDRESS_WRAP;
+			case TextureSamplerBorderMode::Clamp: return D3D11_TEXTURE_ADDRESS_CLAMP;
+			case TextureSamplerBorderMode::SolidColor: return D3D11_TEXTURE_ADDRESS_BORDER;
+			case TextureSamplerBorderMode::Mirror: return D3D11_TEXTURE_ADDRESS_MIRROR;
+			default: return D3D11_TEXTURE_ADDRESS_MODE();
+			}
+		}
+
 		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
 			gVSync = vsync;
@@ -735,21 +758,6 @@ float4 main(PixelInput input) : SV_TARGET
 			// Set pipeline primitive topology.
 			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			// Create samplers.
-			D3D11_SAMPLER_DESC samplerDesc = {};
-			samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-			samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-			samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-			samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-			samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-			samplerDesc.MipLODBias = 0.0f;
-			samplerDesc.MaxAnisotropy = 1;
-			samplerDesc.MinLOD = 0.0f;
-			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-			hr = gD3D11Device->CreateSamplerState(&samplerDesc, gSamplerState.GetAddressOf());
-			if (FAILED(hr)) { return false; };
-
 			return success;
 		}
 
@@ -843,7 +851,7 @@ float4 main(PixelInput input) : SV_TARGET
 			outId = RendererResourceID::GetAvailableID();
 			gVertexBuffers.emplace(outId, nullptr);
 
-			return SUCCEEDED(gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &gVertexBuffers[outId]));
+			return SUCCEEDED(gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &gVertexBuffers.at(outId)));
 		}
 
 		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId)
@@ -863,7 +871,7 @@ float4 main(PixelInput input) : SV_TARGET
 			outId = RendererResourceID::GetAvailableID();
 			gIndexBuffers.emplace(outId, nullptr);
 
-			return SUCCEEDED(gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &gIndexBuffers[outId]));
+			return SUCCEEDED(gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &gIndexBuffers.at(outId)));
 		}
 
 		void DestroyVertexBuffer(RendererResourceID::IDType& resourceID)
@@ -903,7 +911,7 @@ float4 main(PixelInput input) : SV_TARGET
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> tex = nullptr;
 			hr = gD3D11Device->CreateTexture2D(&texture2DDesc, &initData, &tex);
 			if (FAILED(hr)) { return false; }
-			
+
 			// TODO: Generate mip levels.
 
 			// Create shader resource view of texture 2D resource.
@@ -915,12 +923,44 @@ float4 main(PixelInput input) : SV_TARGET
 			outID = RendererResourceID::GetAvailableID();
 			gShaderResourceViews.emplace(outID, nullptr);
 
-			return SUCCEEDED(gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews[outID].GetAddressOf()));
+			return SUCCEEDED(gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews.at(outID).GetAddressOf()));
 		}
 
 		void DestroyTexture(RendererResourceID::IDType& resourceID)
 		{
 			gShaderResourceViews.erase(resourceID);
+			resourceID = RendererResourceID::InvalidID;
+		}
+
+		bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, RendererResourceID::IDType& outID)
+		{
+			D3D11_SAMPLER_DESC samplerDesc = {};
+			samplerDesc.Filter = TranslateTextureSamplerFilter(filter);
+			samplerDesc.AddressU = TranslateTextureSamplerBorderMode(borderMode);
+			samplerDesc.AddressV = TranslateTextureSamplerBorderMode(borderMode);
+			samplerDesc.AddressW = TranslateTextureSamplerBorderMode(borderMode);
+			samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+			if (borderColor)
+			{
+				samplerDesc.BorderColor[0] = borderColor[0];
+				samplerDesc.BorderColor[1] = borderColor[1];
+				samplerDesc.BorderColor[2] = borderColor[2];
+				samplerDesc.BorderColor[3] = borderColor[3];
+			}
+			samplerDesc.MipLODBias = 0.0f;
+			samplerDesc.MaxAnisotropy = 1;
+			samplerDesc.MinLOD = 0.0f;
+			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+			outID = RendererResourceID::GetAvailableID();
+			gSamplerStates.emplace(outID, nullptr);
+
+			return SUCCEEDED(gD3D11Device->CreateSamplerState(&samplerDesc, gSamplerStates.at(outID).GetAddressOf()));
+		}
+
+		void DestroySampler(RendererResourceID::IDType& resourceID)
+		{
+			gSamplerStates.erase(resourceID);
 			resourceID = RendererResourceID::InvalidID;
 		}
 
@@ -943,10 +983,8 @@ float4 main(PixelInput input) : SV_TARGET
 			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gSceneBuffer.GetAddressOf());
 
 			// Set resource tables.
-			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DTableLength, gTexture2DSRVTable[0].GetAddressOf());
-
-			// TODO: Implement resource table as done with texture2D resources.
-			gD3D11DeviceContext->PSSetSamplers(0, 1, gSamplerState.GetAddressOf());
+			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DSRVTableLength, gTexture2DSRVTable[0].GetAddressOf());
+			gD3D11DeviceContext->PSSetSamplers(0, RendererConstants::TextureSamplerTableLength, gTextureSamplerTable[0].GetAddressOf());
 		}
 
 		void Present()
@@ -977,19 +1015,37 @@ float4 main(PixelInput input) : SV_TARGET
 		void SetColorTexture2DResource(RendererResourceID::IDType texture2DId)
 		{
 			static constexpr size_t colorTexture2DResourceIndex = 0;
-			gTexture2DSRVTable[colorTexture2DResourceIndex] = gShaderResourceViews[texture2DId];
+			gTexture2DSRVTable[colorTexture2DResourceIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
 		void SetRoughnessTexture2DResource(RendererResourceID::IDType texture2DId)
 		{
 			static constexpr size_t roughnessTexture2DResourceIndex = 1;
-			gTexture2DSRVTable[roughnessTexture2DResourceIndex] = gShaderResourceViews[texture2DId];
+			gTexture2DSRVTable[roughnessTexture2DResourceIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
 		void SetMetallicTexture2DResource(RendererResourceID::IDType texture2DId)
 		{
 			static constexpr size_t metallicTexture2DResourceIndex = 2;
-			gTexture2DSRVTable[metallicTexture2DResourceIndex] = gShaderResourceViews[texture2DId];
+			gTexture2DSRVTable[metallicTexture2DResourceIndex] = gShaderResourceViews.at(texture2DId);
+		}
+
+		void SetColorTextureSampler(RendererResourceID::IDType samplerId)
+		{
+			static constexpr size_t colorTextureSamplerIndex = 0;
+			gTextureSamplerTable[colorTextureSamplerIndex] = gSamplerStates.at(samplerId);
+		}
+
+		void SetRoughnessTextureSampler(RendererResourceID::IDType samplerId)
+		{
+			static constexpr size_t roughnessTextureSamplerIndex = 1;
+			gTextureSamplerTable[roughnessTextureSamplerIndex] = gSamplerStates.at(samplerId);
+		}
+
+		void SetMetallicTextureSampler(RendererResourceID::IDType samplerId)
+		{
+			static constexpr size_t metallicTextureSamplerIndex = 2;
+			gTextureSamplerTable[metallicTextureSamplerIndex] = gSamplerStates.at(samplerId);
 		}
 
 #ifdef LEVIATHAN_WITH_TOOLS

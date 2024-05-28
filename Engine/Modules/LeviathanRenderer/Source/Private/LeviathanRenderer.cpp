@@ -127,9 +127,19 @@ namespace LeviathanRenderer
 		return Renderer::CreateTexture2D(description.Width, description.Height, description.Data, description.RowSizeBytes, description.sRGB, outID);
 	}
 
-	void DestroyTexture2D(RendererResourceID::IDType& outID)
+	void DestroyTexture2D(RendererResourceID::IDType& id)
 	{
-		Renderer::DestroyTexture(outID);
+		Renderer::DestroyTexture(id);
+	}
+
+	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceID::IDType& outID)
+	{
+		return Renderer::CreateSampler(description.filter, description.borderMode, description.borderColor, outID);
+	}
+
+	void DestroyTextureSampler(RendererResourceID::IDType& id)
+	{
+		Renderer::DestroySampler(id);
 	}
 
 	void BeginFrame()
@@ -174,6 +184,21 @@ namespace LeviathanRenderer
 	void SetMetallicTexture2D(RendererResourceID::IDType texture2DId)
 	{
 		Renderer::SetMetallicTexture2DResource(texture2DId);
+	}
+
+	void SetColorTextureSampler(RendererResourceID::IDType samplerId)
+	{
+		Renderer::SetColorTextureSampler(samplerId);
+	}
+
+	void SetRoughnessTextureSampler(RendererResourceID::IDType samplerId)
+	{
+		Renderer::SetRoughnessTextureSampler(samplerId);
+	}
+
+	void SetMetallicTextureSampler(RendererResourceID::IDType samplerId)
+	{
+		Renderer::SetMetallicTextureSampler(samplerId);
 	}
 
 	void Present()

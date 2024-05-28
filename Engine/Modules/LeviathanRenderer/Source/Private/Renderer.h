@@ -15,6 +15,9 @@ namespace LeviathanRenderer
 		struct ObjectConstantBuffer;
 	}
 
+	enum class TextureSamplerFilter : uint8_t;
+	enum class TextureSamplerBorderMode : uint8_t;
+
 	namespace Renderer
 	{
 		[[nodiscard]] bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount);
@@ -26,6 +29,8 @@ namespace LeviathanRenderer
 		void DestroyIndexBuffer(RendererResourceID::IDType& resourceID);
 		[[nodiscard]] bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, RendererResourceID::IDType& outID);
 		void DestroyTexture(RendererResourceID::IDType& resourceID);
+		[[nodiscard]] bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, RendererResourceID::IDType& outID);
+		void DestroySampler(RendererResourceID::IDType& resourceID);
 
 		// Render commands.
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil);
@@ -35,9 +40,13 @@ namespace LeviathanRenderer
 		[[nodiscard]] bool UpdateObjectBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		[[nodiscard]] bool UpdateSceneBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
+		// TODO: These are pipeline specific. Should be set for a specific render pass during begin render pass.
 		void SetColorTexture2DResource(RendererResourceID::IDType texture2DId);
 		void SetRoughnessTexture2DResource(RendererResourceID::IDType texture2DId);
 		void SetMetallicTexture2DResource(RendererResourceID::IDType texture2DId);
+		void SetColorTextureSampler(RendererResourceID::IDType samplerId);
+		void SetRoughnessTextureSampler(RendererResourceID::IDType samplerId);
+		void SetMetallicTextureSampler(RendererResourceID::IDType samplerId);
 
 #ifdef LEVIATHAN_WITH_TOOLS
 		bool ImGuiRendererInitialize();
