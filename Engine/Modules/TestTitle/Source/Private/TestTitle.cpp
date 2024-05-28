@@ -97,7 +97,7 @@ namespace TestTitle
 	static LeviathanRenderer::RendererResourceID::IDType gRoughnessTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gMetallicTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
 
-	static LeviathanRenderer::RendererResourceID::IDType gLinearTextureSmaplerId = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceID::IDType gLinearTextureSamplerId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gPointTextureSmaplerId = LeviathanRenderer::RendererResourceID::InvalidID;
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
@@ -389,9 +389,9 @@ namespace TestTitle
 			LeviathanRenderer::SetRoughnessTexture2D(gRoughnessTextureId);
 			LeviathanRenderer::SetMetallicTexture2D(gMetallicTextureId);
 
-			LeviathanRenderer::SetColorTextureSampler(gLinearTextureSmaplerId);
-			LeviathanRenderer::SetRoughnessTextureSampler(gLinearTextureSmaplerId);
-			LeviathanRenderer::SetMetallicTextureSampler(gLinearTextureSmaplerId);
+			LeviathanRenderer::SetColorTextureSampler(gLinearTextureSamplerId);
+			LeviathanRenderer::SetRoughnessTextureSampler(gLinearTextureSamplerId);
+			LeviathanRenderer::SetMetallicTextureSampler(gLinearTextureSamplerId);
 
 			// Calculate world matrix.
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
@@ -640,7 +640,7 @@ namespace TestTitle
 		linearSamplerDesc.filter = LeviathanRenderer::TextureSamplerFilter::Linear;
 		linearSamplerDesc.borderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
 
-		if (!LeviathanRenderer::CreateTextureSampler(linearSamplerDesc, gLinearTextureSmaplerId))
+		if (!LeviathanRenderer::CreateTextureSampler(linearSamplerDesc, gLinearTextureSamplerId))
 		{
 			LEVIATHAN_LOG("Failed to create linear texture sampler.");
 		}
