@@ -122,6 +122,14 @@ VertexOutput main(VertexInput input)
 #define TEXTURE2D_SRV_TABLE_LENGTH 3
 #define TEXTURE_SAMPLER_TABLE_LENGTH 3
 
+#define COLOR_TEXTURE2D_SRV_TABLE_INDEX 0
+#define ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX 1
+#define METALLIC_TEXTURE2D_SRV_TABLE_INDEX 2
+
+#define COLOR_TEXTURE_SAMPLER_TABLE_INDEX 0
+#define ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX 1
+#define METALLIC_TEXTURE_SAMPLER_TABLE_INDEX 2
+
 // Shader definitions.
 #define PI 3.14159265359
 
@@ -247,9 +255,9 @@ float4 main(PixelInput input) : SV_TARGET
      // Light intensity = light radiance
      // nDotL = dot(surface normal, surface to light direction)
     
-    float3 baseColor = Texture2DSRVTable[0].Sample(TextureSamplerTable[0], input.TexCoord.xy).rgb;
-    float roughness = Texture2DSRVTable[1].Sample(TextureSamplerTable[1], input.TexCoord.xy).r;
-    float metallic = Texture2DSRVTable[2].Sample(TextureSamplerTable[2], input.TexCoord.xy).r;
+    float3 baseColor = Texture2DSRVTable[COLOR_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[COLOR_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).rgb;
+    float roughness = Texture2DSRVTable[ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
+    float metallic = Texture2DSRVTable[METALLIC_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[METALLIC_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
     float3 surfaceNormal = input.InterpolatedNormalViewSpace;
     
     float3 totalColor = float3(0.0f, 0.0f, 0.0f);
@@ -1014,38 +1022,32 @@ float4 main(PixelInput input) : SV_TARGET
 
 		void SetColorTexture2DResource(RendererResourceID::IDType texture2DId)
 		{
-			static constexpr size_t colorTexture2DResourceIndex = 0;
-			gTexture2DSRVTable[colorTexture2DResourceIndex] = gShaderResourceViews.at(texture2DId);
+			gTexture2DSRVTable[RendererConstants::ColorTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
 		void SetRoughnessTexture2DResource(RendererResourceID::IDType texture2DId)
 		{
-			static constexpr size_t roughnessTexture2DResourceIndex = 1;
-			gTexture2DSRVTable[roughnessTexture2DResourceIndex] = gShaderResourceViews.at(texture2DId);
+			gTexture2DSRVTable[RendererConstants::RoughnessTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
 		void SetMetallicTexture2DResource(RendererResourceID::IDType texture2DId)
 		{
-			static constexpr size_t metallicTexture2DResourceIndex = 2;
-			gTexture2DSRVTable[metallicTexture2DResourceIndex] = gShaderResourceViews.at(texture2DId);
+			gTexture2DSRVTable[RendererConstants::MetallicTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
 		void SetColorTextureSampler(RendererResourceID::IDType samplerId)
 		{
-			static constexpr size_t colorTextureSamplerIndex = 0;
-			gTextureSamplerTable[colorTextureSamplerIndex] = gSamplerStates.at(samplerId);
+			gTextureSamplerTable[RendererConstants::ColorTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
 		}
 
 		void SetRoughnessTextureSampler(RendererResourceID::IDType samplerId)
 		{
-			static constexpr size_t roughnessTextureSamplerIndex = 1;
-			gTextureSamplerTable[roughnessTextureSamplerIndex] = gSamplerStates.at(samplerId);
+			gTextureSamplerTable[RendererConstants::RoughnessTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
 		}
 
 		void SetMetallicTextureSampler(RendererResourceID::IDType samplerId)
 		{
-			static constexpr size_t metallicTextureSamplerIndex = 2;
-			gTextureSamplerTable[metallicTextureSamplerIndex] = gSamplerStates.at(samplerId);
+			gTextureSamplerTable[RendererConstants::MetallicTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
 		}
 
 #ifdef LEVIATHAN_WITH_TOOLS
