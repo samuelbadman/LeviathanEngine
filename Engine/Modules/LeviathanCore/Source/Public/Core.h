@@ -59,5 +59,7 @@ namespace LeviathanCore
 		bool RuntimeWindowExitFullscreen();
 		bool SetCursorPosInRuntimeWindow(int x, int y);
 		float GetDeltaSeconds();
+		unsigned int GetPerfFPS();
+		float GetPerfMs();
 	}
 }

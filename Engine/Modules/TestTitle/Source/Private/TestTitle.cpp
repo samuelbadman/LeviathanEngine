@@ -17,6 +17,7 @@
 
 #ifdef LEVIATHAN_WITH_TOOLS
 #include "DemoTool.h"
+#include "PerfStatsDisplay.h"
 #endif // LEVIATHAN_WITH_TOOLS.
 
 namespace TestTitle
@@ -72,6 +73,11 @@ namespace TestTitle
 		float InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f);
 		float OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(17.5f);
 	};
+
+#ifdef LEVIATHAN_WITH_TOOLS
+	static LeviathanTools::DemoTool gDemoTool = {};
+	static LeviathanTools::PerfStatsDisplay gPerfStatsDisplay = {};
+#endif // LEVIATHAN_WITH_TOOLS
 
 	static size_t gSingleVertexStrideBytes = 0;
 	static unsigned int gIndexCount = 0;
@@ -423,7 +429,8 @@ namespace TestTitle
 #ifdef LEVIATHAN_WITH_TOOLS
 	static void OnRenderImGui()
 	{
-		//LeviathanTools::DemoTool::Render();
+		//gDemoTool.Render();
+		gPerfStatsDisplay.Render(LeviathanCore::Core::GetPerfFPS(), LeviathanCore::Core::GetPerfMs());
 	}
 #endif // LEVIATHAN_WITH_TOOLS.
 

@@ -382,5 +382,15 @@ namespace LeviathanCore
 		{
 			return DeltaSeconds;
 		}
+
+		unsigned int GetPerfFPS()
+		{
+			return Fps;
+		}
+
+		float GetPerfMs()
+		{
+			return Ms;
+		}
 	}
 }

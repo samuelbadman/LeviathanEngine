@@ -2,8 +2,9 @@
 
 namespace LeviathanTools
 {
-	namespace DemoTool
+	class DemoTool
 	{
+	public:
 		void Render();
-	}
+	};
 }
