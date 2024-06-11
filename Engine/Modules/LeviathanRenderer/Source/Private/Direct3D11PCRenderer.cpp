@@ -98,7 +98,7 @@ struct VertexOutput
 {
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
-    float3 InterpolatedNormalViewSpace : INTERPOLATED_NORMAL_VIEW_SPACE;
+    float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
 };
 
@@ -107,7 +107,7 @@ VertexOutput main(VertexInput input)
     VertexOutput output;
     output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position, 1.0f));
     output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
-    output.InterpolatedNormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
+    output.VertexNormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
     output.TexCoord = input.UV;
     return output;
 }
@@ -119,16 +119,18 @@ VertexOutput main(VertexInput input)
 #define MAX_POINT_LIGHT_COUNT 10
 #define MAX_SPOT_LIGHT_COUNT 10
 
-#define TEXTURE2D_SRV_TABLE_LENGTH 3
-#define TEXTURE_SAMPLER_TABLE_LENGTH 3
+#define TEXTURE2D_SRV_TABLE_LENGTH 4
+#define TEXTURE_SAMPLER_TABLE_LENGTH 4
 
 #define COLOR_TEXTURE2D_SRV_TABLE_INDEX 0
 #define ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX 1
 #define METALLIC_TEXTURE2D_SRV_TABLE_INDEX 2
+#define NORMAL_TEXTURE2D_SRV_TABLE_INDEX 3
 
 #define COLOR_TEXTURE_SAMPLER_TABLE_INDEX 0
 #define ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX 1
 #define METALLIC_TEXTURE_SAMPLER_TABLE_INDEX 2
+#define NORMAL_TEXTURE_SAMPLER_TABLE_INDEX 3
 
 // Shader definitions.
 #define PI 3.14159265359
@@ -158,7 +160,7 @@ struct PixelInput
 {
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
-    float3 InterpolatedNormalViewSpace : INTERPOLATED_NORMAL_VIEW_SPACE;
+    float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
 };
 
@@ -258,7 +260,7 @@ float4 main(PixelInput input) : SV_TARGET
     float3 baseColor = Texture2DSRVTable[COLOR_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[COLOR_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).rgb;
     float roughness = Texture2DSRVTable[ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
     float metallic = Texture2DSRVTable[METALLIC_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[METALLIC_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
-    float3 surfaceNormal = input.InterpolatedNormalViewSpace;
+    float3 surfaceNormal = input.VertexNormalViewSpace;
     
     float3 totalColor = float3(0.0f, 0.0f, 0.0f);
 
@@ -1035,6 +1037,11 @@ float4 main(PixelInput input) : SV_TARGET
 			gTexture2DSRVTable[RendererConstants::MetallicTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
+		void SetNormalTexture2DResource(RendererResourceID::IDType texture2DId)
+		{
+			gTexture2DSRVTable[RendererConstants::NormalTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
+		}
+
 		void SetColorTextureSampler(RendererResourceID::IDType samplerId)
 		{
 			gTextureSamplerTable[RendererConstants::ColorTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
@@ -1048,6 +1055,11 @@ float4 main(PixelInput input) : SV_TARGET
 		void SetMetallicTextureSampler(RendererResourceID::IDType samplerId)
 		{
 			gTextureSamplerTable[RendererConstants::MetallicTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
+		}
+
+		void SetNormalTextureSampler(RendererResourceID::IDType samplerId)
+		{
+			gTextureSamplerTable[RendererConstants::NormalTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
 		}
 
 #ifdef LEVIATHAN_WITH_TOOLS

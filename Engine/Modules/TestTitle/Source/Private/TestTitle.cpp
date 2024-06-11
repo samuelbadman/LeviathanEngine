@@ -97,14 +97,13 @@ namespace TestTitle
 	static constexpr size_t gSceneSpotLightCount = 1;
 	static SpotLight gSceneSpotLights[gSceneSpotLightCount];
 
-	static LeviathanRenderer::RendererResourceID::IDType gColorTexture1Id = LeviathanRenderer::RendererResourceID::InvalidID;
-	static LeviathanRenderer::RendererResourceID::IDType gColorTexture2Id = LeviathanRenderer::RendererResourceID::InvalidID;
-	static LeviathanRenderer::RendererResourceID::IDType gColorTexture3Id = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceID::IDType gColorTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gRoughnessTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
 	static LeviathanRenderer::RendererResourceID::IDType gMetallicTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceID::IDType gNormalTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
 
 	static LeviathanRenderer::RendererResourceID::IDType gLinearTextureSamplerId = LeviathanRenderer::RendererResourceID::InvalidID;
-	static LeviathanRenderer::RendererResourceID::IDType gPointTextureSmaplerId = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceID::IDType gPointTextureSamplerId = LeviathanRenderer::RendererResourceID::InvalidID;
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
@@ -391,13 +390,15 @@ namespace TestTitle
 		if (gIndexCount > 0)
 		{
 			// Update material data.
-			LeviathanRenderer::SetColorTexture2D(gColorTexture3Id);
+			LeviathanRenderer::SetColorTexture2D(gColorTextureId);
 			LeviathanRenderer::SetRoughnessTexture2D(gRoughnessTextureId);
 			LeviathanRenderer::SetMetallicTexture2D(gMetallicTextureId);
+			LeviathanRenderer::SetNormalTexture2D(gNormalTextureId);
 
 			LeviathanRenderer::SetColorTextureSampler(gLinearTextureSamplerId);
 			LeviathanRenderer::SetRoughnessTextureSampler(gLinearTextureSamplerId);
 			LeviathanRenderer::SetMetallicTextureSampler(gLinearTextureSamplerId);
+			LeviathanRenderer::SetNormalTextureSampler(gLinearTextureSamplerId);
 
 			// Calculate world matrix.
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
@@ -563,76 +564,55 @@ namespace TestTitle
 		}
 
 		// Import textures.
-		LeviathanAssets::AssetTypes::Texture texture1 = {};
-		if (!LeviathanAssets::TextureImporter::LoadTexture("Cat.png", texture1))
+		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};
+		if (!LeviathanAssets::TextureImporter::LoadTexture("red_bricks_04_diff_1k.png", brickDiffuseTexture))
 		{
-			LEVIATHAN_LOG("Failed to load texture 1 from disk.");
+			LEVIATHAN_LOG("Failed to load brick diffuse texture from disk.");
 		}
 
-		LeviathanAssets::AssetTypes::Texture texture2 = {};
-		if (!LeviathanAssets::TextureImporter::LoadTexture("Cat2.png", texture2))
+		LeviathanAssets::AssetTypes::Texture brickRoughnessTexture = {};
+		if (!LeviathanAssets::TextureImporter::LoadTexture("red_bricks_04_rough_1k.png", brickRoughnessTexture))
 		{
-			LEVIATHAN_LOG("Failed to load texture 2 from disk.");
+			LEVIATHAN_LOG("Failed to load brick roughness texture from disk.");
+		}
+
+		LeviathanAssets::AssetTypes::Texture brickNormalTexture = {};
+		if (!LeviathanAssets::TextureImporter::LoadTexture("red_bricks_04_nor_dx_1k.png", brickNormalTexture))
+		{
+			LEVIATHAN_LOG("Failed to load brick normal texture from disk.");
 		}
 
 		// Create texture resources.
 		static constexpr uint32_t bytesPerPixel = 4;
 
-		LeviathanRenderer::Texture2DDescription texture1Desc = {};
-		texture1Desc.Width = texture1.Width;
-		texture1Desc.Height = texture1.Height;
-		texture1Desc.Data = texture1.Data;
-		texture1Desc.RowSizeBytes = bytesPerPixel * texture1.Width;
-		texture1Desc.sRGB = true;
+		LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
+		brickDiffuseTextureDesc.Width = brickDiffuseTexture.Width;
+		brickDiffuseTextureDesc.Height = brickDiffuseTexture.Height;
+		brickDiffuseTextureDesc.Data = brickDiffuseTexture.Data;
+		brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
+		brickDiffuseTextureDesc.sRGB = true;
 
-		if (!LeviathanRenderer::CreateTexture2D(texture1Desc, gColorTexture1Id))
+		if (!LeviathanRenderer::CreateTexture2D(brickDiffuseTextureDesc, gColorTextureId))
 		{
-			LEVIATHAN_LOG("Failed to create texture 1 resource.");
+			LEVIATHAN_LOG("Failed to create brick diffuse texture resource.");
 		}
 
-		LeviathanRenderer::Texture2DDescription texture2Desc = {};
-		texture2Desc.Width = texture2.Width;
-		texture2Desc.Height = texture2.Height;
-		texture2Desc.Data = texture2.Data;
-		texture2Desc.RowSizeBytes = bytesPerPixel * texture2.Width;
-		texture2Desc.sRGB = true;
+		LeviathanRenderer::Texture2DDescription brickRoughnessTextureDesc = {};
+		brickRoughnessTextureDesc.Width = brickRoughnessTexture.Width;
+		brickRoughnessTextureDesc.Height = brickRoughnessTexture.Height;
+		brickRoughnessTextureDesc.Data = brickRoughnessTexture.Data;
+		brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * brickRoughnessTexture.Width;
+		brickRoughnessTextureDesc.sRGB = false;
 
-		if (!LeviathanRenderer::CreateTexture2D(texture2Desc, gColorTexture2Id))
+		if (!LeviathanRenderer::CreateTexture2D(brickRoughnessTextureDesc, gRoughnessTextureId))
 		{
-			LEVIATHAN_LOG("Failed to create texture 2 resource.");
-		}
-
-		static constexpr uint32_t texture3Color = 0x0cff00;
-
-		LeviathanRenderer::Texture2DDescription texture3Desc = {};
-		texture3Desc.Width = 1;
-		texture3Desc.Height = 1;
-		texture3Desc.Data = static_cast<const void*>(&texture3Color);
-		texture3Desc.RowSizeBytes = bytesPerPixel * 1;
-		texture3Desc.sRGB = true;
-
-		if (!LeviathanRenderer::CreateTexture2D(texture3Desc, gColorTexture3Id))
-		{
-			LEVIATHAN_LOG("Failed to create texture 3 resource.");
-		}
-
-		LeviathanRenderer::Texture2DDescription roughnessTextureDesc = {};
-		roughnessTextureDesc.Width = 1;
-		roughnessTextureDesc.Height = 1;
-		uint32_t roughness = 0xfefefe;
-		roughnessTextureDesc.Data = static_cast<const void*>(&roughness);
-		roughnessTextureDesc.RowSizeBytes = bytesPerPixel * 1;
-		roughnessTextureDesc.sRGB = false;
-
-		if (!LeviathanRenderer::CreateTexture2D(roughnessTextureDesc, gRoughnessTextureId))
-		{
-			LEVIATHAN_LOG("Failed to create roughness texture resource.");
+			LEVIATHAN_LOG("Failed to create brick roughness texture resource.");
 		}
 
 		LeviathanRenderer::Texture2DDescription metallicTextureDesc = {};
 		metallicTextureDesc.Width = 1;
 		metallicTextureDesc.Height = 1;
-		uint32_t metallic = 0x010101;
+		const uint32_t metallic = 0x010101;
 		metallicTextureDesc.Data = static_cast<const void*>(&metallic);
 		metallicTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 		metallicTextureDesc.sRGB = false;
@@ -640,6 +620,18 @@ namespace TestTitle
 		if (!LeviathanRenderer::CreateTexture2D(metallicTextureDesc, gMetallicTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create metallic texture resource.");
+		}
+
+		LeviathanRenderer::Texture2DDescription brickNormalTextureDesc = {};
+		brickNormalTextureDesc.Width = brickNormalTexture.Width;
+		brickNormalTextureDesc.Height = brickNormalTexture.Height;
+		brickNormalTextureDesc.Data = brickNormalTexture.Data;
+		brickNormalTextureDesc.RowSizeBytes = bytesPerPixel * brickNormalTexture.Width;
+		brickNormalTextureDesc.sRGB = false;
+
+		if (!LeviathanRenderer::CreateTexture2D(brickNormalTextureDesc, gNormalTextureId))
+		{
+			LEVIATHAN_LOG("Failed to create brick normal texture resource.");
 		}
 
 		// Create texture samplers.
@@ -656,7 +648,7 @@ namespace TestTitle
 		pointSamplerDesc.filter = LeviathanRenderer::TextureSamplerFilter::Point;
 		pointSamplerDesc.borderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
 
-		if (!LeviathanRenderer::CreateTextureSampler(pointSamplerDesc, gPointTextureSmaplerId))
+		if (!LeviathanRenderer::CreateTextureSampler(pointSamplerDesc, gPointTextureSamplerId))
 		{
 			LEVIATHAN_LOG("Failed to create point texture sampler.");
 		}
@@ -705,7 +697,7 @@ namespace TestTitle
 
 		gScenePointLights[0].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gScenePointLights[0].Brightness = 1.0f;
-		gScenePointLights[0].Position = LeviathanCore::MathTypes::Vector3{ 0.6f, 1.0f, -1.0f };
+		gScenePointLights[0].Position = LeviathanCore::MathTypes::Vector3{ 0.2f, 0.5f, -1.0f };
 
 		gSceneSpotLights[0].Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gSceneSpotLights[0].Brightness = 1.0f;

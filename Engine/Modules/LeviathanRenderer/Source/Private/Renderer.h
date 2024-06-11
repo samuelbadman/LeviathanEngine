@@ -44,9 +44,11 @@ namespace LeviathanRenderer
 		void SetColorTexture2DResource(RendererResourceID::IDType texture2DId);
 		void SetRoughnessTexture2DResource(RendererResourceID::IDType texture2DId);
 		void SetMetallicTexture2DResource(RendererResourceID::IDType texture2DId);
+		void SetNormalTexture2DResource(RendererResourceID::IDType texture2DId);
 		void SetColorTextureSampler(RendererResourceID::IDType samplerId);
 		void SetRoughnessTextureSampler(RendererResourceID::IDType samplerId);
 		void SetMetallicTextureSampler(RendererResourceID::IDType samplerId);
+		void SetNormalTextureSampler(RendererResourceID::IDType samplerId);
 
 #ifdef LEVIATHAN_WITH_TOOLS
 		bool ImGuiRendererInitialize();

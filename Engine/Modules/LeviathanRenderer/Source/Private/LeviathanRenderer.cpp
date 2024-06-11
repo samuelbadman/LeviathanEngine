@@ -186,6 +186,11 @@ namespace LeviathanRenderer
 		Renderer::SetMetallicTexture2DResource(texture2DId);
 	}
 
+	void SetNormalTexture2D(RendererResourceID::IDType texture2DId)
+	{
+		Renderer::SetNormalTexture2DResource(texture2DId);
+	}
+
 	void SetColorTextureSampler(RendererResourceID::IDType samplerId)
 	{
 		Renderer::SetColorTextureSampler(samplerId);
@@ -199,6 +204,11 @@ namespace LeviathanRenderer
 	void SetMetallicTextureSampler(RendererResourceID::IDType samplerId)
 	{
 		Renderer::SetMetallicTextureSampler(samplerId);
+	}
+
+	void SetNormalTextureSampler(RendererResourceID::IDType samplerId)
+	{
+		Renderer::SetNormalTextureSampler(samplerId);
 	}
 
 	void Present()
