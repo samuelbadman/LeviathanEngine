@@ -4,6 +4,29 @@
 #include "MathLibrary.h"
 #include "Logging.h"
 
+// Returns the tangent vector for the triangle.
+static LeviathanCore::MathTypes::Vector3 CalculateTangent(const LeviathanCore::MathTypes::Vector3& Position0,
+	const LeviathanCore::MathTypes::Vector3& Position1,
+	const LeviathanCore::MathTypes::Vector3& Position2,
+	const LeviathanCore::MathTypes::Vector2& TextureCoordinate0,
+	const LeviathanCore::MathTypes::Vector2& TextureCoordinate1,
+	const LeviathanCore::MathTypes::Vector2& TextureCoordinate2)
+{
+	// Calculate tangent vector. Bitangent is calculated in the shader by taking the cross product between the tangent and the surface normal.
+	const LeviathanCore::MathTypes::Vector3 edge1 = Position1 - Position0;
+	const LeviathanCore::MathTypes::Vector3 edge2 = Position2 - Position0;
+	const LeviathanCore::MathTypes::Vector2 deltaUV1 = TextureCoordinate1 - TextureCoordinate0;
+	const LeviathanCore::MathTypes::Vector2 deltaUV2 = TextureCoordinate2 - TextureCoordinate0;
+
+	const float f = 1.0f / (deltaUV1.GetX() * deltaUV2.GetY() - deltaUV2.GetX() * deltaUV1.GetY());
+	return LeviathanCore::MathTypes::Vector3
+	(
+		f * (deltaUV2.GetY() * edge1.GetX() - deltaUV1.GetY() * edge2.GetX()),
+		f * (deltaUV2.GetY() * edge1.GetY() - deltaUV1.GetY() * edge2.GetY()),
+		f * (deltaUV2.GetY() * edge1.GetZ() - deltaUV1.GetY() * edge2.GetZ())
+	);
+}
+
 // Mesh attributes are appended onto the end of the vectors passed to out parameters.
 static LeviathanAssets::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unused]] const aiScene* scene)
 {
@@ -16,17 +39,21 @@ static LeviathanAssets::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unuse
 	result.Positions.reserve(static_cast<size_t>(numVertices));
 	result.Normals.reserve(static_cast<size_t>(numVertices));
 	result.TextureCoordinates.reserve(static_cast<size_t>(numVertices));
+	result.Tangents.reserve(static_cast<size_t>(numVertices));
 	result.Indices.reserve(static_cast<size_t>(3 * numFaces));
 
 	// Process mesh vertices.
 	for (size_t i = 0; i < static_cast<size_t>(numVertices); ++i)
 	{
+		// Positions.
 		const aiVector3D& position = mesh->mVertices[i];
 		result.Positions.emplace_back(position.x, position.y, position.z);
 
+		// Normals.
 		const aiVector3D& normal = mesh->mNormals[i];
 		result.Normals.emplace_back(normal.x, normal.y, normal.z);
 
+		// Texture coordinates.
 		// Check if the mesh has a uv set at index 0.
 		// TODO: Only supporting a single uv set (the one at index 0). Support multiple texture uv sets.
 		if (mesh->mTextureCoords[0])
@@ -34,6 +61,10 @@ static LeviathanAssets::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unuse
 			const aiVector3D& textureCoordinate = mesh->mTextureCoords[0][i];
 			result.TextureCoordinates.emplace_back(textureCoordinate.x, textureCoordinate.y);
 		}
+
+		// Tangents.
+		const aiVector3D& tangent = mesh->mTangents[i];
+		result.Tangents.emplace_back(tangent.x, tangent.y, tangent.z);
 	}
 
 	// Process mesh indices.
@@ -75,7 +106,7 @@ bool LeviathanAssets::ModelImporter::LoadModel(std::string_view file, std::vecto
 	outMeshes.clear();
 
 	Assimp::Importer importer = {};
-	const aiScene* scene = importer.ReadFile(file.data(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+	const aiScene* scene = importer.ReadFile(file.data(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace);
 
 	if ((!scene) || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || (!scene->mRootNode))
 	{
@@ -84,8 +115,6 @@ bool LeviathanAssets::ModelImporter::LoadModel(std::string_view file, std::vecto
 	}
 
 	ProcessNode(scene->mRootNode, scene, outMeshes);
-
-	LEVIATHAN_LOG("Imported model: %s", file.data());
 
 	return true;
 }
@@ -99,7 +128,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(
 
 	AssetTypes::Mesh result = {};
 
-	// Count total number of vertices and indices in the model and .
+	// Count total number of vertices and indices in the model.
 	size_t vertexCount = 0;
 	size_t indexCount = 0;
 	for (size_t i = 0; i < count; ++i)
@@ -112,6 +141,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(
 	result.Positions.reserve(vertexCount);
 	result.Normals.reserve(vertexCount);
 	result.TextureCoordinates.reserve(vertexCount);
+	result.Tangents.reserve(vertexCount);
 	result.Indices.reserve(indexCount);
 
 	// Build combined mesh.
@@ -126,13 +156,14 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(
 			result.Positions.push_back(meshes[i].Positions[j]);
 			result.Normals.push_back(meshes[i].Normals[j]);
 			result.TextureCoordinates.push_back(meshes[i].TextureCoordinates[j]);
+			result.Tangents.push_back(meshes[i].Tangents[j]);
 		}
 
 		for (size_t j = 0; j < meshes[i].Indices.size(); ++j)
 		{
 			// For each index in the mesh.
 
-			// Offset indices into the vertex buffer as vertices from multiple meshes are being combin
+			// Offset indices into the vertex buffer as vertices from multiple meshes are being combined.
 			result.Indices.push_back(static_cast<unsigned int>(indexOffset) + meshes[i].Indices[j]);
 		}
 	}
@@ -142,7 +173,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(
 
 LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GeneratePlanePrimitive(float halfWidth)
 {
-	return AssetTypes::Mesh
+	AssetTypes::Mesh result =
 	{
 		.Positions =
 		{
@@ -173,6 +204,26 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GeneratePlaneP
 			0, 1, 2, 2, 3, 0
 		}
 	};
+
+	// Calculate tangents
+	result.Tangents.resize(result.Positions.size(), {});
+
+	const size_t indexCount = result.Indices.size();
+	for (size_t i = 0; i < indexCount; i += 3)
+	{
+		const LeviathanCore::MathTypes::Vector3 tangent = CalculateTangent(result.Positions[result.Indices[i]], 
+			result.Positions[result.Indices[i + 1]], 
+			result.Positions[result.Indices[i + 2]],
+			result.TextureCoordinates[result.Indices[i]], 
+			result.TextureCoordinates[result.Indices[i + 1]], 
+			result.TextureCoordinates[result.Indices[i + 2]]);
+
+		result.Tangents[result.Indices[i]] = tangent;
+		result.Tangents[result.Indices[i + 1]] = tangent;
+		result.Tangents[result.Indices[i + 2]] = tangent;
+	}
+
+	return result;
 }
 
 LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCubePrimitive(float halfWidth)

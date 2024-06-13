@@ -6,6 +6,11 @@ namespace LeviathanCore
 	// TODO: Replace GLM math with custom math implementations.
 	namespace MathTypes
 	{
+		Vector2 Vector2::operator-(const Vector2& rhs) const
+		{
+			return Vector2(GetX() - rhs.GetX(), GetY() - rhs.GetY());
+		}
+
 		float Vector3::DotProduct(const Vector3& a, const Vector3& b)
 		{
 			return (a.GetX() * b.GetX()) + (a.GetY() * b.GetY()) + (a.GetZ() * b.GetZ());

@@ -11,6 +11,7 @@ namespace LeviathanAssets
 			std::vector<LeviathanCore::MathTypes::Vector3> Positions = {};
 			std::vector<LeviathanCore::MathTypes::Vector3> Normals = {};
 			std::vector<LeviathanCore::MathTypes::Vector2> TextureCoordinates = {};
+			std::vector<LeviathanCore::MathTypes::Vector3> Tangents = {};
 			std::vector<uint32_t> Indices = {};
 		};
 

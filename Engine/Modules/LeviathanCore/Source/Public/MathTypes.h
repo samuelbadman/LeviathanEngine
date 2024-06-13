@@ -27,6 +27,8 @@ namespace LeviathanCore
 
 			inline const float* Data() const { return Components; }
 			inline float* Data() { return Components; }
+
+			Vector2 operator-(const Vector2& rhs) const;
 		};
 
 		class Vector3

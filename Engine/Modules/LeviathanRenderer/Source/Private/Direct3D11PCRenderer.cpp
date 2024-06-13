@@ -92,6 +92,7 @@ struct VertexInput
     float3 Position : POSITION;
     float3 Normal : NORMAL;
     float2 UV : UV;
+    float3 Tangent : TANGENT;
 };
 
 struct VertexOutput
@@ -109,6 +110,11 @@ VertexOutput main(VertexInput input)
     output.PositionViewSpace = mul(WorldViewMatrix, float4(input.Position, 1.0f)).xyz;
     output.VertexNormalViewSpace = normalize(mul(NormalMatrix, float4(input.Normal, 0.0f)).xyz);
     output.TexCoord = input.UV;
+
+    float3 tangentViewSpace = normalize(mul(WorldViewMatrix, float4(input.Tangent, 0.0f)).xyz);
+    float3 bitangentViewSpace = normalize(cross(output.VertexNormalViewSpace, tangentViewSpace));
+    float3x3 inverseTBNMatrix = transpose(float3x3(tangentViewSpace, bitangentViewSpace, output.VertexNormalViewSpace));
+
     return output;
 }
 		)";
@@ -712,7 +718,7 @@ float4 main(PixelInput input) : SV_TARGET
 
 			// Create pipelines.
 			// Create input layout.
-			std::array<D3D11_INPUT_ELEMENT_DESC, 3> inputLayoutDesc =
+			std::array<D3D11_INPUT_ELEMENT_DESC, 4> inputLayoutDesc =
 			{
 				D3D11_INPUT_ELEMENT_DESC
 				{
@@ -741,6 +747,17 @@ float4 main(PixelInput input) : SV_TARGET
 					.SemanticName = "UV",
 					.SemanticIndex = 0,
 					.Format = DXGI_FORMAT_R32G32_FLOAT,
+					.InputSlot = 0,
+					.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT,
+					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+					.InstanceDataStepRate = 0
+				},
+
+				D3D11_INPUT_ELEMENT_DESC
+				{
+					.SemanticName = "TANGENT",
+					.SemanticIndex = 0,
+					.Format = DXGI_FORMAT_R32G32B32_FLOAT,
 					.InputSlot = 0,
 					.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT,
 					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
