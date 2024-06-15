@@ -40,7 +40,7 @@ namespace LeviathanRenderer
 	bool Initialize()
 	{
 		static constexpr unsigned int bufferCount = 3;
-		static constexpr bool vsync = false;
+		static constexpr bool vsync = true;
 
 #ifdef LEVIATHAN_WITH_TOOLS
 		// Clear render ImGui callback.

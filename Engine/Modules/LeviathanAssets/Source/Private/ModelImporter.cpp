@@ -206,6 +206,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GeneratePlaneP
 	};
 
 	// Calculate tangents
+	// TODO: Make tangent calculation a function and apply to other primitive generation functions.
 	result.Tangents.resize(result.Positions.size(), {});
 
 	const size_t indexCount = result.Indices.size();

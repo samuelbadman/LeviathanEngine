@@ -518,7 +518,7 @@ namespace TestTitle
 		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCylinderPrimitive(0.5f, 0.5f, 1.0f, 64, 64);
 		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateConePrimitive(0.5f, 1.0f, 64, 64);
 		//std::vector<LeviathanAssets::AssetTypes::Mesh> model = {};
-		//if (LeviathanAssets::ModelImporter::LoadModel("Model.fbx", model))
+		//if (LeviathanAssets::ModelImporter::LoadModel("Cube.fbx", model))
 		{
 			// Combine model meshes into a single mesh buffer.
 			LeviathanAssets::AssetTypes::Mesh combinedModel = model;

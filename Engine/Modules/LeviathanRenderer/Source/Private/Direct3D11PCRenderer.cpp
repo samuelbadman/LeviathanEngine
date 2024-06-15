@@ -101,6 +101,7 @@ struct VertexOutput
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
+    float3x3 TBNMatrix : TBN_MATRIX;
 };
 
 VertexOutput main(VertexInput input)
@@ -113,7 +114,10 @@ VertexOutput main(VertexInput input)
 
     float3 tangentViewSpace = normalize(mul(WorldViewMatrix, float4(input.Tangent, 0.0f)).xyz);
     float3 bitangentViewSpace = normalize(cross(output.VertexNormalViewSpace, tangentViewSpace));
-    float3x3 inverseTBNMatrix = transpose(float3x3(tangentViewSpace, bitangentViewSpace, output.VertexNormalViewSpace));
+    float3x3 tbnMatrix = float3x3(tangentViewSpace, bitangentViewSpace, output.VertexNormalViewSpace);
+    float3x3 inverseTBNMatrix = transpose(tbnMatrix);
+    
+    output.TBNMatrix = tbnMatrix;
 
     return output;
 }
@@ -168,6 +172,7 @@ struct PixelInput
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
+    float3x3 TBNMatrix : TBN_MATRIX;
 };
 
 cbuffer SceneBuffer : register(b0)
@@ -266,7 +271,10 @@ float4 main(PixelInput input) : SV_TARGET
     float3 baseColor = Texture2DSRVTable[COLOR_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[COLOR_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).rgb;
     float roughness = Texture2DSRVTable[ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
     float metallic = Texture2DSRVTable[METALLIC_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[METALLIC_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
-    float3 surfaceNormal = input.VertexNormalViewSpace;
+    float3 surfaceNormal = normalize(mul(
+		normalize(Texture2DSRVTable[NORMAL_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[NORMAL_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).xyz * 2.0f - 1.0f), 
+		input.TBNMatrix)
+	);
     
     float3 totalColor = float3(0.0f, 0.0f, 0.0f);
 
