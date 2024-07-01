@@ -134,7 +134,7 @@ namespace LeviathanRenderer
 
 	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceID::IDType& outID)
 	{
-		return Renderer::CreateSampler(description.filter, description.borderMode, description.borderColor, outID);
+		return Renderer::CreateSampler(description.Filter, description.BorderMode, description.BorderColor, outID);
 	}
 
 	void DestroyTextureSampler(RendererResourceID::IDType& id)

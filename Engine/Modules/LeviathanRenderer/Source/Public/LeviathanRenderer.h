@@ -39,10 +39,10 @@ namespace LeviathanRenderer
 
 	struct TextureSamplerDescription
 	{
-		TextureSamplerFilter filter = TextureSamplerFilter::FilterMax;
-		TextureSamplerBorderMode borderMode = TextureSamplerBorderMode::BorderModeMax;
+		TextureSamplerFilter Filter = TextureSamplerFilter::FilterMax;
+		TextureSamplerBorderMode BorderMode = TextureSamplerBorderMode::BorderModeMax;
 		// Pointer to a 4 element float array containing the color to use when border mode is set to solid color. float a[4] = {r, g, b, a}.
-		const float* borderColor = nullptr;
+		const float* BorderColor = nullptr;
 	};
 
 	[[nodiscard]] bool Initialize();
@@ -53,13 +53,13 @@ namespace LeviathanRenderer
 	LeviathanCore::Callback<RenderImGuiCallbackType>& GetRenderImGuiCallback();
 #endif // LEVIATHAN_WITH_TOOLS.
 
-	[[nodiscard]] bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceID::IDType& outId);
-	[[nodiscard]] bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId);
+	bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceID::IDType& outId);
 	void DestroyVertexBuffer(RendererResourceID::IDType& id);
+	bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId);
 	void DestroyIndexBuffer(RendererResourceID::IDType& id);
-	[[nodiscard]] bool CreateTexture2D(const Texture2DDescription& description, RendererResourceID::IDType& outID);
+	bool CreateTexture2D(const Texture2DDescription& description, RendererResourceID::IDType& outID);
 	void DestroyTexture2D(RendererResourceID::IDType& id);
-	[[nodiscard]] bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceID::IDType& outID);
+	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceID::IDType& outID);
 	void DestroyTextureSampler(RendererResourceID::IDType& id);
 
 	void BeginFrame();

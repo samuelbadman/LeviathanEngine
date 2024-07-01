@@ -655,8 +655,8 @@ namespace TestTitle
 
 		// Create texture samplers.
 		LeviathanRenderer::TextureSamplerDescription linearSamplerDesc = {};
-		linearSamplerDesc.filter = LeviathanRenderer::TextureSamplerFilter::Linear;
-		linearSamplerDesc.borderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
+		linearSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Linear;
+		linearSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
 
 		if (!LeviathanRenderer::CreateTextureSampler(linearSamplerDesc, gLinearTextureSamplerId))
 		{
@@ -664,8 +664,8 @@ namespace TestTitle
 		}
 
 		LeviathanRenderer::TextureSamplerDescription pointSamplerDesc = {};
-		pointSamplerDesc.filter = LeviathanRenderer::TextureSamplerFilter::Point;
-		pointSamplerDesc.borderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
+		pointSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Point;
+		pointSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
 
 		if (!LeviathanRenderer::CreateTextureSampler(pointSamplerDesc, gPointTextureSamplerId))
 		{
