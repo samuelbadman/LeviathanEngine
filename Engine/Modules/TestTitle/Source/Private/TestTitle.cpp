@@ -207,8 +207,8 @@ namespace TestTitle
 		static constexpr LeviathanCore::MathTypes::Vector3 right(1.0f, 0.0f, 0.0f);
 		static constexpr LeviathanCore::MathTypes::Vector3 up(0.0f, 1.0f, 0.0f);
 
-		static auto wasKeyPressed = [](float inData, bool inIsRepeatKey) { return ((inData == 1.0f) && (!inIsRepeatKey)); };
-		static auto wasKeyReleased = [](float inData) { return (inData == 0.0f); };
+		static constexpr auto wasKeyPressed = [](float inData, bool inIsRepeatKey) { return ((inData == 1.0f) && (!inIsRepeatKey)); };
+		static constexpr auto wasKeyReleased = [](float inData) { return (inData == 0.0f); };
 
 		const float deltaSeconds = LeviathanCore::Core::GetDeltaSeconds();
 
@@ -312,7 +312,8 @@ namespace TestTitle
 		gSceneCamera.UpdateViewProjectionMatrix();
 	}
 
-	static void OnGameControllerInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, [[maybe_unused]] float data, [[maybe_unused]] unsigned int gameControllerId)
+	static void OnGameControllerInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, 
+		[[maybe_unused]] float data, [[maybe_unused]] unsigned int gameControllerId)
 	{
 
 	}
