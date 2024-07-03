@@ -11,6 +11,7 @@
 #include <array>
 #include <fstream>
 #include <filesystem>
+#include <string>
 
 #ifdef LEVIATHAN_BUILD_PLATFORM_WIN32
 // Win32.

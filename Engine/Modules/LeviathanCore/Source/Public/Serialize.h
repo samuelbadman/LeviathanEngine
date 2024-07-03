@@ -21,8 +21,9 @@ namespace LeviathanCore
 		// Writes the contents of the byte buffer to disk in the file location specified. Returns true if successful otherwise, returns false if the function fails.
 		bool WriteBytesToFile(std::string_view file, const std::vector<uint8_t>& buffer);
 
-		// Reads the contents of the file location specified into the out byte buffer. Returns true if succesful otherwise, returns false if the function fails.
-		bool ReadBytesFromFile(std::string_view file, std::vector<uint8_t>& outBuffer);
+		// Reads the contents of the file at the location specified, optionally as bytes, into the out buffer. Returns true if succesful otherwise, returns false if
+		// the function fails.
+		bool ReadFile(std::string_view file, bool binary, std::vector<uint8_t>& outBuffer);
 
 		// Checks if the file or directory exists. Returns true if it does otherwise false.
 		bool FileExists(std::string_view file);

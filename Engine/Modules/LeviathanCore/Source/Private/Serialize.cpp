@@ -85,10 +85,10 @@ namespace LeviathanCore
 			return true;
 		}
 
-		bool ReadBytesFromFile(std::string_view file, std::vector<uint8_t>& outBuffer)
+		bool ReadFile(std::string_view file, bool binary, std::vector<uint8_t>& outBuffer)
 		{
 			std::ifstream ifStream;
-			ifStream.open(file, std::ifstream::in | std::ifstream::binary);
+			ifStream.open(file, ((binary) ? std::ifstream::in | std::ifstream::binary : std::ifstream::in));
 
 			if (!ifStream.good())
 			{
