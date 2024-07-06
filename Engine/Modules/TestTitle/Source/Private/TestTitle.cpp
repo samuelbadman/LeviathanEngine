@@ -607,7 +607,6 @@ namespace TestTitle
 
 		// Create texture resources.
 		static constexpr uint32_t bytesPerPixel = 4;
-
 		//LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
 		//brickDiffuseTextureDesc.Width = brickDiffuseTexture.Width;
 		//brickDiffuseTextureDesc.Height = brickDiffuseTexture.Height;
@@ -653,8 +652,7 @@ namespace TestTitle
 		LeviathanRenderer::Texture2DDescription defaultNormalTextureDesc = {};
 		defaultNormalTextureDesc.Width = 1;
 		defaultNormalTextureDesc.Height = 1;
-		// TODO: Need to invert the green channel of normal map textures. 255 - texture channel color
-		// TODO: Understand how to convert vector to color value.
+		// TODO: Fix default normal color.
 		const LeviathanCore::MathTypes::Vector3 defaultNormal(0.0f * 0.5f + 0.5f, 0.0f * 0.5f + 0.5f, -1.0f * 0.5f + 0.5f);
 		//const LeviathanCore::MathTypes::Vector3 defaultNormal(0.0f, 0.0f, 1.0f);
 		uint8_t defaultNormalTextureData[4] = { 0 }; // ABGR.

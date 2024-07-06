@@ -19,8 +19,10 @@ namespace LeviathanAssets
 		{
 			int Width = 0;
 			int Height = 0;
-			int NumComponents = 0;
+			int Num8BitComponentsPerPixel = 0;
 			unsigned char* Data = nullptr;
+
+			void FlipGreenChannel();
 		};
 	}
 }

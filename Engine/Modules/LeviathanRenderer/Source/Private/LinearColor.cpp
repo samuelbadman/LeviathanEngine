@@ -2,6 +2,7 @@
 
 LeviathanRenderer::LinearColor::LinearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
+	// Color value is stored in ABGR (alpha, blue, green, red) format by default.
 	ColorValue =
 		((a & 0xff) << 24) |
 		((b & 0xff) << 16) |

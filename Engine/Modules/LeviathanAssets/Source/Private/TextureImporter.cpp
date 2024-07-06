@@ -12,6 +12,13 @@ bool LeviathanAssets::TextureImporter::LoadTexture(std::string_view filename, As
 	stbi_set_flip_vertically_on_load(1);
 	// Use STBI_rgb_alpha as the fifth parameter to load any image padded to 4 channel rgba.
 	// TODO: Investigate texture compression formats (BC5/BC7) to reduce unnecessary texture memory.
-	outTexture.Data = stbi_load(filename.data(), &outTexture.Width, &outTexture.Height, &outTexture.NumComponents, STBI_rgb_alpha);
+	outTexture.Data = stbi_load(filename.data(), &outTexture.Width, &outTexture.Height, &outTexture.Num8BitComponentsPerPixel, STBI_rgb_alpha);
 	return (outTexture.Data != nullptr);
 }
+
+void LeviathanAssets::TextureImporter::FreeTexture(unsigned char* data)
+{
+	stbi_image_free(static_cast<void*>(data));
+}
+
+// TODO: Free texture data with stbi_image_free().
