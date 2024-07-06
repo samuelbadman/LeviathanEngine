@@ -14,6 +14,7 @@
 #include "DataStructures.h"
 #include "ConstantBufferTypes.h"
 #include "VertexTypes.h"
+#include "LinearColor.h"
 
 #ifdef LEVIATHAN_WITH_TOOLS
 #include "DemoTool.h"
@@ -72,12 +73,6 @@ namespace TestTitle
 		LeviathanCore::MathTypes::Vector3 Direction{ 0.0f, -1.0f, 0.0f };
 		float InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f);
 		float OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(17.5f);
-	};
-
-	struct LinearColor
-	{
-		// 4 8 bit integers packed into a single 32 bit integer value. Each 8 bits stores a 0-255 color value for a color channel. ABGR/RGBA depending on device endianness.
-		uint32_t ColorValue = 0xffffffff;
 	};
 
 #ifdef LEVIATHAN_WITH_TOOLS
@@ -620,27 +615,10 @@ namespace TestTitle
 		//brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
 		//brickDiffuseTextureDesc.sRGB = true;
 
-#define D3DCOLOR_ARGB(a,r,g,b) ((D3DCOLOR)((((a)&0xff)<<24)|(((r)&0xff)<<16)|(((g)&0xff)<<8)|((b)&0xff))) 
-		//(x & 0xffff0fff) | (0x2 << 12)
-
-
-
 		LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
 		brickDiffuseTextureDesc.Width = 1;
 		brickDiffuseTextureDesc.Height = 1;
-		//static constexpr uint32_t baseColor = 0x1E46FF;
-		// Linear color.
-		uint32_t baseColor = 0xffffffff;
-		baseColor = (baseColor & 0x00ffffff) | ((255 & 0xff) << 24);
-		baseColor = (baseColor & 0xff00ffff) | ((255 & 0xff) << 16);
-		baseColor = (baseColor & 0xffff00ff) | ((0 & 0xff) << 8);
-		baseColor = (baseColor & 0xffffff00) | ((0 & 0xff));
-
-		// Swap red and blue channels for endianness.
-		uint8_t temp = static_cast<uint8_t>((baseColor & 0x00ff0000) >> 16); // Copy red channel.
-		baseColor = (baseColor & 0xff00ffff) | ((static_cast<uint8_t>(baseColor & 0x000000ff) & 0xff) << 16); // Set red channel to blue channel.
-		baseColor = (baseColor & 0xffffff00) | ((temp & 0xff)); // Set blue channel to red channel.
-
+		const LeviathanRenderer::LinearColor baseColor(255, 0, 0, 255);
 		brickDiffuseTextureDesc.Data = &baseColor;
 		brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 		brickDiffuseTextureDesc.sRGB = false;
