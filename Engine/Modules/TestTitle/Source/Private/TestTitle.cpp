@@ -74,6 +74,12 @@ namespace TestTitle
 		float OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(17.5f);
 	};
 
+	struct LinearColor
+	{
+		// 4 8 bit integers packed into a single 32 bit integer value. Each 8 bits stores a 0-255 color value for a color channel. ABGR/RGBA depending on device endianness.
+		uint32_t ColorValue = 0xffffffff;
+	};
+
 #ifdef LEVIATHAN_WITH_TOOLS
 	static LeviathanTools::DemoTool gDemoTool = {};
 	static LeviathanTools::PerfStatsDisplay gPerfStatsDisplay = {};
@@ -607,12 +613,39 @@ namespace TestTitle
 		// Create texture resources.
 		static constexpr uint32_t bytesPerPixel = 4;
 
+		//LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
+		//brickDiffuseTextureDesc.Width = brickDiffuseTexture.Width;
+		//brickDiffuseTextureDesc.Height = brickDiffuseTexture.Height;
+		//brickDiffuseTextureDesc.Data = brickDiffuseTexture.Data;
+		//brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
+		//brickDiffuseTextureDesc.sRGB = true;
+
+#define D3DCOLOR_ARGB(a,r,g,b) ((D3DCOLOR)((((a)&0xff)<<24)|(((r)&0xff)<<16)|(((g)&0xff)<<8)|((b)&0xff))) 
+		//(x & 0xffff0fff) | (0x2 << 12)
+
+
+
 		LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
-		brickDiffuseTextureDesc.Width = brickDiffuseTexture.Width;
-		brickDiffuseTextureDesc.Height = brickDiffuseTexture.Height;
-		brickDiffuseTextureDesc.Data = brickDiffuseTexture.Data;
-		brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
-		brickDiffuseTextureDesc.sRGB = true;
+		brickDiffuseTextureDesc.Width = 1;
+		brickDiffuseTextureDesc.Height = 1;
+		//static constexpr uint32_t baseColor = 0x1E46FF;
+		// Linear color.
+		uint32_t baseColor = 0xffffffff;
+		baseColor = (baseColor & 0x00ffffff) | ((255 & 0xff) << 24);
+		baseColor = (baseColor & 0xff00ffff) | ((255 & 0xff) << 16);
+		baseColor = (baseColor & 0xffff00ff) | ((0 & 0xff) << 8);
+		baseColor = (baseColor & 0xffffff00) | ((0 & 0xff));
+
+		// Swap endianness for 32 bit value.
+		baseColor = 
+			((baseColor >> 24) & 0xff) | // move byte 3 to byte 0
+			((baseColor << 8) & 0xff0000) | // move byte 1 to byte 2
+			((baseColor >> 8) & 0xff00) | // move byte 2 to byte 1
+			((baseColor << 24) & 0xff000000); // byte 0 to byte 3
+
+		brickDiffuseTextureDesc.Data = &baseColor;
+		brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * 1;
+		brickDiffuseTextureDesc.sRGB = false;
 		if (!LeviathanRenderer::CreateTexture2D(brickDiffuseTextureDesc, gColorTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create brick diffuse texture resource.");
