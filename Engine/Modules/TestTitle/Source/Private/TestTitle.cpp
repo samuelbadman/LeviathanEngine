@@ -636,12 +636,10 @@ namespace TestTitle
 		baseColor = (baseColor & 0xffff00ff) | ((0 & 0xff) << 8);
 		baseColor = (baseColor & 0xffffff00) | ((0 & 0xff));
 
-		// Swap endianness for 32 bit value.
-		baseColor = 
-			((baseColor >> 24) & 0xff) | // move byte 3 to byte 0
-			((baseColor << 8) & 0xff0000) | // move byte 1 to byte 2
-			((baseColor >> 8) & 0xff00) | // move byte 2 to byte 1
-			((baseColor << 24) & 0xff000000); // byte 0 to byte 3
+		// Swap red and blue channels for endianness.
+		uint8_t temp = static_cast<uint8_t>((baseColor & 0x00ff0000) >> 16); // Copy red channel.
+		baseColor = (baseColor & 0xff00ffff) | ((static_cast<uint8_t>(baseColor & 0x000000ff) & 0xff) << 16); // Set red channel to blue channel.
+		baseColor = (baseColor & 0xffffff00) | ((temp & 0xff)); // Set blue channel to red channel.
 
 		brickDiffuseTextureDesc.Data = &baseColor;
 		brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * 1;
