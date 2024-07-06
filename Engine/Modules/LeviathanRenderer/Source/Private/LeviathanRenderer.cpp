@@ -102,42 +102,42 @@ namespace LeviathanRenderer
 		return true;
 	}
 
-	bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceID::IDType& outId)
+	bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceId::IdType& outId)
 	{
 		return Renderer::CreateVertexBuffer(vertexData, vertexCount, singleVertexStrideBytes, outId);
 	}
 
-	bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId)
+	bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceId::IdType& outId)
 	{
 		return Renderer::CreateIndexBuffer(indexData, indexCount, outId);
 	}
 
-	void DestroyVertexBuffer(RendererResourceID::IDType& id)
+	void DestroyVertexBuffer(RendererResourceId::IdType& id)
 	{
 		Renderer::DestroyVertexBuffer(id);
 	}
 
-	void DestroyIndexBuffer(RendererResourceID::IDType& id)
+	void DestroyIndexBuffer(RendererResourceId::IdType& id)
 	{
 		Renderer::DestroyIndexBuffer(id);
 	}
 
-	bool CreateTexture2D(const Texture2DDescription& description, RendererResourceID::IDType& outID)
+	bool CreateTexture2D(const Texture2DDescription& description, RendererResourceId::IdType& outID)
 	{
 		return Renderer::CreateTexture2D(description.Width, description.Height, description.Data, description.RowSizeBytes, description.sRGB, outID);
 	}
 
-	void DestroyTexture2D(RendererResourceID::IDType& id)
+	void DestroyTexture2D(RendererResourceId::IdType& id)
 	{
 		Renderer::DestroyTexture(id);
 	}
 
-	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceID::IDType& outID)
+	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceId::IdType& outId)
 	{
-		return Renderer::CreateSampler(description.Filter, description.BorderMode, description.BorderColor, outID);
+		return Renderer::CreateSampler(description.Filter, description.BorderMode, description.BorderColor, outId);
 	}
 
-	void DestroyTextureSampler(RendererResourceID::IDType& id)
+	void DestroyTextureSampler(RendererResourceId::IdType& id)
 	{
 		Renderer::DestroySampler(id);
 	}
@@ -156,7 +156,7 @@ namespace LeviathanRenderer
 	{
 	}
 
-	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId)
+	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId)
 	{
 		Renderer::DrawIndexed(indexCount, singleVertexStrideBytes, vertexBufferId, indexBufferId);
 	}
@@ -171,42 +171,42 @@ namespace LeviathanRenderer
 		return Renderer::UpdateSceneBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
-	void SetColorTexture2D(RendererResourceID::IDType texture2DId)
+	void SetColorTexture2D(RendererResourceId::IdType texture2DId)
 	{
 		Renderer::SetColorTexture2DResource(texture2DId);
 	}
 
-	void SetRoughnessTexture2D(RendererResourceID::IDType texture2DId)
+	void SetRoughnessTexture2D(RendererResourceId::IdType texture2DId)
 	{
 		Renderer::SetRoughnessTexture2DResource(texture2DId);
 	}
 
-	void SetMetallicTexture2D(RendererResourceID::IDType texture2DId)
+	void SetMetallicTexture2D(RendererResourceId::IdType texture2DId)
 	{
 		Renderer::SetMetallicTexture2DResource(texture2DId);
 	}
 
-	void SetNormalTexture2D(RendererResourceID::IDType texture2DId)
+	void SetNormalTexture2D(RendererResourceId::IdType texture2DId)
 	{
 		Renderer::SetNormalTexture2DResource(texture2DId);
 	}
 
-	void SetColorTextureSampler(RendererResourceID::IDType samplerId)
+	void SetColorTextureSampler(RendererResourceId::IdType samplerId)
 	{
 		Renderer::SetColorTextureSampler(samplerId);
 	}
 
-	void SetRoughnessTextureSampler(RendererResourceID::IDType samplerId)
+	void SetRoughnessTextureSampler(RendererResourceId::IdType samplerId)
 	{
 		Renderer::SetRoughnessTextureSampler(samplerId);
 	}
 
-	void SetMetallicTextureSampler(RendererResourceID::IDType samplerId)
+	void SetMetallicTextureSampler(RendererResourceId::IdType samplerId)
 	{
 		Renderer::SetMetallicTextureSampler(samplerId);
 	}
 
-	void SetNormalTextureSampler(RendererResourceID::IDType samplerId)
+	void SetNormalTextureSampler(RendererResourceId::IdType samplerId)
 	{
 		Renderer::SetNormalTextureSampler(samplerId);
 	}

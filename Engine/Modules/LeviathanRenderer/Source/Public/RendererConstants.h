@@ -8,7 +8,7 @@ namespace LeviathanRenderer
 		static constexpr size_t MaxPointLightCount = 10;
 		static constexpr size_t MaxSpotLightCount = 10;
 
-		static constexpr size_t Texture2DSRVTableLength = 4;
+		static constexpr size_t Texture2DSRVTableLength = 5;
 		static constexpr size_t TextureSamplerTableLength = 4;
 
 		static constexpr size_t ColorTexture2DSRVTableIndex = 0;

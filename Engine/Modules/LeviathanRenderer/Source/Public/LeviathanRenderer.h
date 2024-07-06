@@ -53,31 +53,31 @@ namespace LeviathanRenderer
 	LeviathanCore::Callback<RenderImGuiCallbackType>& GetRenderImGuiCallback();
 #endif // LEVIATHAN_WITH_TOOLS.
 
-	bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceID::IDType& outId);
-	void DestroyVertexBuffer(RendererResourceID::IDType& id);
-	bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId);
-	void DestroyIndexBuffer(RendererResourceID::IDType& id);
-	bool CreateTexture2D(const Texture2DDescription& description, RendererResourceID::IDType& outID);
-	void DestroyTexture2D(RendererResourceID::IDType& id);
-	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceID::IDType& outID);
-	void DestroyTextureSampler(RendererResourceID::IDType& id);
+	bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceId::IdType& outId);
+	void DestroyVertexBuffer(RendererResourceId::IdType& id);
+	bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceId::IdType& outId);
+	void DestroyIndexBuffer(RendererResourceId::IdType& id);
+	bool CreateTexture2D(const Texture2DDescription& description, RendererResourceId::IdType& outID);
+	void DestroyTexture2D(RendererResourceId::IdType& id);
+	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceId::IdType& outID);
+	void DestroyTextureSampler(RendererResourceId::IdType& id);
 
 	void BeginFrame();
 	void EndFrame();
-	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId);
+	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId);
 	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 	bool UpdateSceneData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
 	// TODO: Move into render pass.
-	void SetColorTexture2D(RendererResourceID::IDType texture2DId);
-	void SetRoughnessTexture2D(RendererResourceID::IDType texture2DId);
-	void SetMetallicTexture2D(RendererResourceID::IDType texture2DId);
-	void SetNormalTexture2D(RendererResourceID::IDType texture2DId);
+	void SetColorTexture2D(RendererResourceId::IdType texture2DId);
+	void SetRoughnessTexture2D(RendererResourceId::IdType texture2DId);
+	void SetMetallicTexture2D(RendererResourceId::IdType texture2DId);
+	void SetNormalTexture2D(RendererResourceId::IdType texture2DId);
 
-	void SetColorTextureSampler(RendererResourceID::IDType samplerId);
-	void SetRoughnessTextureSampler(RendererResourceID::IDType samplerId);
-	void SetMetallicTextureSampler(RendererResourceID::IDType samplerId);
-	void SetNormalTextureSampler(RendererResourceID::IDType samplerId);
+	void SetColorTextureSampler(RendererResourceId::IdType samplerId);
+	void SetRoughnessTextureSampler(RendererResourceId::IdType samplerId);
+	void SetMetallicTextureSampler(RendererResourceId::IdType samplerId);
+	void SetNormalTextureSampler(RendererResourceId::IdType samplerId);
 
 	void Present();
 }

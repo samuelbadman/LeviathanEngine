@@ -2,11 +2,11 @@
 
 namespace LeviathanRenderer
 {
-	namespace RendererResourceID
+	namespace RendererResourceId
 	{
-		static IDType CurrentID = 1;
+		static IdType CurrentID = 1;
 
-		IDType GetAvailableID()
+		IdType GetAvailableId()
 		{
 			return CurrentID++;
 		}

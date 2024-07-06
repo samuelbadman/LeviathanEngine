@@ -62,10 +62,10 @@ namespace LeviathanRenderer
 		static bool gVSync = false;
 
 		// Scene resources.
-		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gVertexBuffers = {};
-		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
-		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> gShaderResourceViews = {};
-		static std::unordered_map<RendererResourceID::IDType, Microsoft::WRL::ComPtr<ID3D11SamplerState>> gSamplerStates = {};
+		static std::unordered_map<RendererResourceId::IdType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gVertexBuffers = {};
+		static std::unordered_map<RendererResourceId::IdType, Microsoft::WRL::ComPtr<ID3D11Buffer>> gIndexBuffers = {};
+		static std::unordered_map<RendererResourceId::IdType, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> gShaderResourceViews = {};
+		static std::unordered_map<RendererResourceId::IdType, Microsoft::WRL::ComPtr<ID3D11SamplerState>> gSamplerStates = {};
 
 		// Shader resource tables.
 		static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gTexture2DSRVTable[RendererConstants::Texture2DSRVTableLength] = { nullptr };
@@ -649,9 +649,9 @@ namespace LeviathanRenderer
 			return success;
 		}
 
-		bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceID::IDType& outId)
+		bool CreateVertexBuffer(const void* vertexData, unsigned int vertexCount, size_t singleVertexStrideBytes, RendererResourceId::IdType& outId)
 		{
-			outId = RendererResourceID::InvalidID;
+			outId = RendererResourceId::InvalidId;
 
 			D3D11_BUFFER_DESC vertexBufferDesc = {};
 			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -663,15 +663,15 @@ namespace LeviathanRenderer
 			D3D11_SUBRESOURCE_DATA vertexBufferData = {};
 			vertexBufferData.pSysMem = vertexData;
 
-			outId = RendererResourceID::GetAvailableID();
+			outId = RendererResourceId::GetAvailableId();
 			gVertexBuffers.emplace(outId, nullptr);
 
 			return SUCCEEDED(gD3D11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &gVertexBuffers.at(outId)));
 		}
 
-		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceID::IDType& outId)
+		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceId::IdType& outId)
 		{
-			outId = RendererResourceID::InvalidID;
+			outId = RendererResourceId::InvalidId;
 
 			D3D11_BUFFER_DESC indexBufferDesc = {};
 			indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -683,25 +683,25 @@ namespace LeviathanRenderer
 			D3D11_SUBRESOURCE_DATA indexBufferData = {};
 			indexBufferData.pSysMem = indexData;
 
-			outId = RendererResourceID::GetAvailableID();
+			outId = RendererResourceId::GetAvailableId();
 			gIndexBuffers.emplace(outId, nullptr);
 
 			return SUCCEEDED(gD3D11Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &gIndexBuffers.at(outId)));
 		}
 
-		void DestroyVertexBuffer(RendererResourceID::IDType& resourceID)
+		void DestroyVertexBuffer(RendererResourceId::IdType& resourceID)
 		{
 			gVertexBuffers.erase(resourceID);
-			resourceID = RendererResourceID::InvalidID;
+			resourceID = RendererResourceId::InvalidId;
 		}
 
-		void DestroyIndexBuffer(RendererResourceID::IDType& resourceID)
+		void DestroyIndexBuffer(RendererResourceId::IdType& resourceID)
 		{
 			gIndexBuffers.erase(resourceID);
-			resourceID = RendererResourceID::InvalidID;
+			resourceID = RendererResourceId::InvalidId;
 		}
 
-		bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, RendererResourceID::IDType& outID)
+		bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, RendererResourceId::IdType& outID)
 		{
 			HRESULT hr = {};
 
@@ -735,19 +735,19 @@ namespace LeviathanRenderer
 			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 			srvDesc.Texture2D.MipLevels = 1;
 
-			outID = RendererResourceID::GetAvailableID();
+			outID = RendererResourceId::GetAvailableId();
 			gShaderResourceViews.emplace(outID, nullptr);
 
 			return SUCCEEDED(gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews.at(outID).GetAddressOf()));
 		}
 
-		void DestroyTexture(RendererResourceID::IDType& resourceID)
+		void DestroyTexture(RendererResourceId::IdType& resourceID)
 		{
 			gShaderResourceViews.erase(resourceID);
-			resourceID = RendererResourceID::InvalidID;
+			resourceID = RendererResourceId::InvalidId;
 		}
 
-		bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, RendererResourceID::IDType& outID)
+		bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, RendererResourceId::IdType& outId)
 		{
 			D3D11_SAMPLER_DESC samplerDesc = {};
 			samplerDesc.Filter = TranslateTextureSamplerFilter(filter);
@@ -767,16 +767,16 @@ namespace LeviathanRenderer
 			samplerDesc.MinLOD = 0.0f;
 			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-			outID = RendererResourceID::GetAvailableID();
-			gSamplerStates.emplace(outID, nullptr);
+			outId = RendererResourceId::GetAvailableId();
+			gSamplerStates.emplace(outId, nullptr);
 
-			return SUCCEEDED(gD3D11Device->CreateSamplerState(&samplerDesc, gSamplerStates.at(outID).GetAddressOf()));
+			return SUCCEEDED(gD3D11Device->CreateSamplerState(&samplerDesc, gSamplerStates.at(outId).GetAddressOf()));
 		}
 
-		void DestroySampler(RendererResourceID::IDType& resourceID)
+		void DestroySampler(RendererResourceId::IdType& resourceID)
 		{
 			gSamplerStates.erase(resourceID);
-			resourceID = RendererResourceID::InvalidID;
+			resourceID = RendererResourceId::InvalidId;
 		}
 
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
@@ -807,7 +807,7 @@ namespace LeviathanRenderer
 			gSwapChain->Present(((gVSync) ? 1 : 0), 0);
 		}
 
-		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceID::IDType vertexBufferId, const RendererResourceID::IDType indexBufferId)
+		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId)
 		{
 			UINT stride = static_cast<UINT>(singleVertexStrideBytes);
 			UINT offset = 0;
@@ -827,42 +827,42 @@ namespace LeviathanRenderer
 			return UpdateConstantBuffer(gSceneBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
-		void SetColorTexture2DResource(RendererResourceID::IDType texture2DId)
+		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId)
 		{
 			gTexture2DSRVTable[RendererConstants::ColorTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
-		void SetRoughnessTexture2DResource(RendererResourceID::IDType texture2DId)
+		void SetRoughnessTexture2DResource(RendererResourceId::IdType texture2DId)
 		{
 			gTexture2DSRVTable[RendererConstants::RoughnessTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
-		void SetMetallicTexture2DResource(RendererResourceID::IDType texture2DId)
+		void SetMetallicTexture2DResource(RendererResourceId::IdType texture2DId)
 		{
 			gTexture2DSRVTable[RendererConstants::MetallicTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
-		void SetNormalTexture2DResource(RendererResourceID::IDType texture2DId)
+		void SetNormalTexture2DResource(RendererResourceId::IdType texture2DId)
 		{
 			gTexture2DSRVTable[RendererConstants::NormalTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
 		}
 
-		void SetColorTextureSampler(RendererResourceID::IDType samplerId)
+		void SetColorTextureSampler(RendererResourceId::IdType samplerId)
 		{
 			gTextureSamplerTable[RendererConstants::ColorTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
 		}
 
-		void SetRoughnessTextureSampler(RendererResourceID::IDType samplerId)
+		void SetRoughnessTextureSampler(RendererResourceId::IdType samplerId)
 		{
 			gTextureSamplerTable[RendererConstants::RoughnessTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
 		}
 
-		void SetMetallicTextureSampler(RendererResourceID::IDType samplerId)
+		void SetMetallicTextureSampler(RendererResourceId::IdType samplerId)
 		{
 			gTextureSamplerTable[RendererConstants::MetallicTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
 		}
 
-		void SetNormalTextureSampler(RendererResourceID::IDType samplerId)
+		void SetNormalTextureSampler(RendererResourceId::IdType samplerId)
 		{
 			gTextureSamplerTable[RendererConstants::NormalTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
 		}

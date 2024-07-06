@@ -3,7 +3,7 @@
 #define MAX_POINT_LIGHT_COUNT 10
 #define MAX_SPOT_LIGHT_COUNT 10
 
-#define TEXTURE2D_SRV_TABLE_LENGTH 4
+#define TEXTURE2D_SRV_TABLE_LENGTH 5
 #define TEXTURE_SAMPLER_TABLE_LENGTH 4
 
 #define COLOR_TEXTURE2D_SRV_TABLE_INDEX 0
@@ -19,6 +19,7 @@
 // Shader definitions.
 #define PI 3.14159265359
 
+// Light types.
 struct DirectionalLight
 {
     float3 Radiance;
@@ -40,15 +41,19 @@ struct SpotLight
     float CosineOuterConeAngle;
 };
 
+// Pixel shader input.
 struct PixelInput
 {
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
+    
+    // TODO: Compute correct normal in vertex shader.
     float3x3 TBNMatrix : TBN_MATRIX;
 };
 
+// Constants.
 cbuffer SceneBuffer : register(b0)
 {
     uint DirectionalLightCount;
@@ -59,7 +64,10 @@ cbuffer SceneBuffer : register(b0)
     SpotLight SpotLights[MAX_SPOT_LIGHT_COUNT];
 }
 
+// Texture2D SRV table.
 Texture2D Texture2DSRVTable[TEXTURE2D_SRV_TABLE_LENGTH] : register(t0);
+
+// Sampler state table.
 SamplerState TextureSamplerTable[TEXTURE_SAMPLER_TABLE_LENGTH] : register(s0);
 
 float Square(float x)
@@ -142,12 +150,16 @@ float4 main(PixelInput input) : SV_TARGET
      // Light intensity = light radiance
      // nDotL = dot(surface normal, surface to light direction)
     
-    float3 baseColor = Texture2DSRVTable[COLOR_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[COLOR_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).rgb;
+    //float3 baseColor = Texture2DSRVTable[COLOR_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[COLOR_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).rgb;
+    float3 baseColor = normalize(Texture2DSRVTable[NORMAL_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[NORMAL_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).xyz * 2.0f - 1.0f);
+    return float4(baseColor.rgb, 1.0f);
+
     float roughness = Texture2DSRVTable[ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
     float metallic = Texture2DSRVTable[METALLIC_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[METALLIC_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
     float3 surfaceNormal = normalize(mul(
         normalize(Texture2DSRVTable[NORMAL_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[NORMAL_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).xyz * 2.0f - 1.0f),
-        input.TBNMatrix)
+        input.TBNMatrix
+        ) 
     );
     
     float3 totalColor = float3(0.0f, 0.0f, 0.0f);

@@ -81,8 +81,8 @@ namespace TestTitle
 
 	static size_t gSingleVertexStrideBytes = 0;
 	static unsigned int gIndexCount = 0;
-	static LeviathanRenderer::RendererResourceID::IDType gVertexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
-	static LeviathanRenderer::RendererResourceID::IDType gIndexBufferId = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceId::IdType gVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
 
 	static Transform gObjectTransform = {};
 
@@ -92,18 +92,19 @@ namespace TestTitle
 	static DirectionalLight gSceneDirectionalLights[gSceneDirectionalLightCount] = {};
 
 	static constexpr size_t gScenePointLightCount = 1;
-	static PointLight gScenePointLights[gScenePointLightCount];
+	static PointLight gScenePointLights[gScenePointLightCount] = {};
 
 	static constexpr size_t gSceneSpotLightCount = 1;
-	static SpotLight gSceneSpotLights[gSceneSpotLightCount];
+	static SpotLight gSceneSpotLights[gSceneSpotLightCount] = {};
 
-	static LeviathanRenderer::RendererResourceID::IDType gColorTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
-	static LeviathanRenderer::RendererResourceID::IDType gRoughnessTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
-	static LeviathanRenderer::RendererResourceID::IDType gMetallicTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
-	static LeviathanRenderer::RendererResourceID::IDType gNormalTextureId = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gMetallicTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gDefaultNormalTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gNormalTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 
-	static LeviathanRenderer::RendererResourceID::IDType gLinearTextureSamplerId = LeviathanRenderer::RendererResourceID::InvalidID;
-	static LeviathanRenderer::RendererResourceID::IDType gPointTextureSamplerId = LeviathanRenderer::RendererResourceID::InvalidID;
+	static LeviathanRenderer::RendererResourceId::IdType gLinearTextureSamplerId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gPointTextureSamplerId = LeviathanRenderer::RendererResourceId::InvalidId;
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
@@ -312,7 +313,7 @@ namespace TestTitle
 		gSceneCamera.UpdateViewProjectionMatrix();
 	}
 
-	static void OnGameControllerInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey, 
+	static void OnGameControllerInput([[maybe_unused]] LeviathanCore::InputKey key, [[maybe_unused]] bool isRepeatKey,
 		[[maybe_unused]] float data, [[maybe_unused]] unsigned int gameControllerId)
 	{
 
@@ -335,8 +336,8 @@ namespace TestTitle
 
 		// Update scene data.
 		LeviathanRenderer::ConstantBufferTypes::SceneConstantBuffer sceneData = {};
-		sceneData.DirectionalLightCount = 0;
-		sceneData.PointLightCount = gScenePointLightCount;
+		sceneData.DirectionalLightCount = 1;
+		sceneData.PointLightCount = 0;
 		sceneData.SpotLightCount = 0;
 
 		// For each directional light.
@@ -395,6 +396,7 @@ namespace TestTitle
 			LeviathanRenderer::SetRoughnessTexture2D(gRoughnessTextureId);
 			LeviathanRenderer::SetMetallicTexture2D(gMetallicTextureId);
 			LeviathanRenderer::SetNormalTexture2D(gNormalTextureId);
+			//LeviathanRenderer::SetNormalTexture2D(gDefaultNormalTextureId);
 
 			LeviathanRenderer::SetColorTextureSampler(gLinearTextureSamplerId);
 			LeviathanRenderer::SetRoughnessTextureSampler(gLinearTextureSamplerId);
@@ -611,7 +613,6 @@ namespace TestTitle
 		brickDiffuseTextureDesc.Data = brickDiffuseTexture.Data;
 		brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
 		brickDiffuseTextureDesc.sRGB = true;
-
 		if (!LeviathanRenderer::CreateTexture2D(brickDiffuseTextureDesc, gColorTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create brick diffuse texture resource.");
@@ -623,7 +624,6 @@ namespace TestTitle
 		brickRoughnessTextureDesc.Data = brickRoughnessTexture.Data;
 		brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * brickRoughnessTexture.Width;
 		brickRoughnessTextureDesc.sRGB = false;
-
 		if (!LeviathanRenderer::CreateTexture2D(brickRoughnessTextureDesc, gRoughnessTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create brick roughness texture resource.");
@@ -632,14 +632,33 @@ namespace TestTitle
 		LeviathanRenderer::Texture2DDescription metallicTextureDesc = {};
 		metallicTextureDesc.Width = 1;
 		metallicTextureDesc.Height = 1;
-		const uint32_t metallic = 0x010101;
+		const uint32_t metallic = 0x000000;
 		metallicTextureDesc.Data = static_cast<const void*>(&metallic);
 		metallicTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 		metallicTextureDesc.sRGB = false;
-
 		if (!LeviathanRenderer::CreateTexture2D(metallicTextureDesc, gMetallicTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create metallic texture resource.");
+		}
+
+		LeviathanRenderer::Texture2DDescription defaultNormalTextureDesc = {};
+		defaultNormalTextureDesc.Width = 1;
+		defaultNormalTextureDesc.Height = 1;
+		// TODO: Need to invert the green channel of normal map textures. 255 - texture channel color
+		// TODO: Understand how to convert vector to color value.
+		const LeviathanCore::MathTypes::Vector3 defaultNormal(0.0f * 0.5f + 0.5f, 0.0f * 0.5f + 0.5f, -1.0f * 0.5f + 0.5f);
+		//const LeviathanCore::MathTypes::Vector3 defaultNormal(0.0f, 0.0f, 1.0f);
+		uint8_t defaultNormalTextureData[4] = { 0 }; // ABGR.
+		defaultNormalTextureData[0] = 1; // A.
+		defaultNormalTextureData[1] = 255 - static_cast<uint8_t>((defaultNormal.GetZ() / 20.0f) * 255.0f); // B.
+		defaultNormalTextureData[2] = 255 - static_cast<uint8_t>((fabsf(defaultNormal.GetY() - 20.0f) / 90.0f) * 255.0f); // G.
+		defaultNormalTextureData[3] = static_cast<uint8_t>(((defaultNormal.GetX() - 15.0f) / 25.0f) * 255.0f); // R.
+		defaultNormalTextureDesc.Data = static_cast<const void*>(&defaultNormalTextureData[0]);
+		defaultNormalTextureDesc.RowSizeBytes = bytesPerPixel * 1;
+		defaultNormalTextureDesc.sRGB = false;
+		if (!LeviathanRenderer::CreateTexture2D(defaultNormalTextureDesc, gDefaultNormalTextureId))
+		{
+			LEVIATHAN_LOG("Failed to create default normal texture resource.");
 		}
 
 		LeviathanRenderer::Texture2DDescription brickNormalTextureDesc = {};
@@ -648,7 +667,6 @@ namespace TestTitle
 		brickNormalTextureDesc.Data = brickNormalTexture.Data;
 		brickNormalTextureDesc.RowSizeBytes = bytesPerPixel * brickNormalTexture.Width;
 		brickNormalTextureDesc.sRGB = false;
-
 		if (!LeviathanRenderer::CreateTexture2D(brickNormalTextureDesc, gNormalTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create brick normal texture resource.");
@@ -658,7 +676,6 @@ namespace TestTitle
 		LeviathanRenderer::TextureSamplerDescription linearSamplerDesc = {};
 		linearSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Linear;
 		linearSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
-
 		if (!LeviathanRenderer::CreateTextureSampler(linearSamplerDesc, gLinearTextureSamplerId))
 		{
 			LEVIATHAN_LOG("Failed to create linear texture sampler.");
@@ -667,7 +684,6 @@ namespace TestTitle
 		LeviathanRenderer::TextureSamplerDescription pointSamplerDesc = {};
 		pointSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Point;
 		pointSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
-
 		if (!LeviathanRenderer::CreateTextureSampler(pointSamplerDesc, gPointTextureSamplerId))
 		{
 			LEVIATHAN_LOG("Failed to create point texture sampler.");
@@ -678,7 +694,6 @@ namespace TestTitle
 
 		// Define scene camera.
 		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.5f));
-
 		gSceneCamera.UpdateViewMatrix();
 
 		int windowWidth = 0;
