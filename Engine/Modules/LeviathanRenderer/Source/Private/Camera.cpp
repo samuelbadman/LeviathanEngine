@@ -6,12 +6,12 @@ namespace LeviathanRenderer
 {
     void Camera::AddYawRotation(const float yawDeltaRadians)
     {
-        Orientation.SetYawRadians(Orientation.GetYawRadians() + yawDeltaRadians);
+        Orientation.SetYawRadians(Orientation.YawRadians() + yawDeltaRadians);
     }
 
     void Camera::AddPitchRotation(const float pitchDeltaRadians)
     {
-        float newPitchRadians = Orientation.GetPitchRadians() + pitchDeltaRadians;
+        float newPitchRadians = Orientation.PitchRadians() + pitchDeltaRadians;
 
         if (newPitchRadians < MinPitchRadians)
         {

@@ -20,8 +20,8 @@ namespace LeviathanCore
 			{
 			}
 
-			inline float GetX() const { return Components[XComponent]; }
-			inline float GetY() const { return Components[YComponent]; }
+			inline float X() const { return Components[XComponent]; }
+			inline float Y() const { return Components[YComponent]; }
 			void SetX(const float x) { Components[XComponent] = x; }
 			void SetY(const float y) { Components[YComponent] = y; }
 
@@ -60,9 +60,9 @@ namespace LeviathanCore
 			void NormalizeSafe();
 
 			// Getter/setters.
-			inline float GetX() const { return Components[XComponent]; }
-			inline float GetY() const { return Components[YComponent]; }
-			inline float GetZ() const { return Components[ZComponent]; }
+			inline float X() const { return Components[XComponent]; }
+			inline float Y() const { return Components[YComponent]; }
+			inline float Z() const { return Components[ZComponent]; }
 			inline void SetX(const float x) { Components[XComponent] = x; }
 			inline void SetY(const float y) { Components[YComponent] = y; }
 			inline void SetZ(const float z) { Components[ZComponent] = z; }
@@ -100,10 +100,10 @@ namespace LeviathanCore
 			Vector4(float x, float y, float z, float w);
 			Vector4(const Vector3& xyz, float w);
 
-			inline float GetX() const { return Components[XComponent]; }
-			inline float GetY() const { return Components[YComponent]; }
-			inline float GetZ() const { return Components[ZComponent]; }
-			inline float GetW() const { return Components[WComponent]; }
+			inline float X() const { return Components[XComponent]; }
+			inline float Y() const { return Components[YComponent]; }
+			inline float Z() const { return Components[ZComponent]; }
+			inline float W() const { return Components[WComponent]; }
 			inline float SetX(float x) { Components[XComponent] = x; }
 			inline float SetY(float y) { Components[YComponent] = y; }
 			inline float SetZ(float z) { Components[ZComponent] = z; }
@@ -223,9 +223,9 @@ namespace LeviathanCore
 			Euler(float pitchRadians, float yawRadians, float rollRadians);
 
 			// Getters/setters.
-			inline float GetPitchRadians() const { return RotationRadians[PitchComponent]; }
-			inline float GetYawRadians() const { return RotationRadians[YawComponent]; }
-			inline float GetRollRadians() const { return RotationRadians[RollComponent]; }
+			inline float PitchRadians() const { return RotationRadians[PitchComponent]; }
+			inline float YawRadians() const { return RotationRadians[YawComponent]; }
+			inline float RollRadians() const { return RotationRadians[RollComponent]; }
 			inline void SetPitchRadians(const float pitchRadians) { RotationRadians[PitchComponent] = pitchRadians; }
 			inline void SetYawRadians(const float yawRadians) { RotationRadians[YawComponent] = yawRadians; }
 			inline void SetRollRadians(const float rollRadians) { RotationRadians[RollComponent] = rollRadians; }
@@ -255,10 +255,10 @@ namespace LeviathanCore
 			static Quaternion MakeFromEuler(const Euler& euler);
 
 			// Getters/setters.
-			inline float GetX() const { return Components[XComponent]; }
-			inline float GetY() const { return Components[YComponent]; }
-			inline float GetZ() const { return Components[ZComponent]; }
-			inline float GetW() const { return Components[WComponent]; }
+			inline float X() const { return Components[XComponent]; }
+			inline float Y() const { return Components[YComponent]; }
+			inline float Z() const { return Components[ZComponent]; }
+			inline float W() const { return Components[WComponent]; }
 			inline void SetX(const float x) { Components[XComponent] = x; }
 			inline void SetY(const float y) { Components[YComponent] = y; }
 			inline void SetZ(const float z) { Components[ZComponent] = z; }

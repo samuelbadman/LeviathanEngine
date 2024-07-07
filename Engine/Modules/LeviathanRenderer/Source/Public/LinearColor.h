@@ -10,6 +10,10 @@ namespace LeviathanRenderer
 		LinearColor() = default;
 		LinearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
+		// Returns an RGB value in the range 0 - 255. Expects an RGB value in the range 0 - 1.
+		static float ConvertUnitRGBToRGB(const float unitRGB);
+		// Returns an RGB value in the range 0 - 1. Expects an RGB value in the range 0 - 255.
+		static float ConvertRGBToUnitRGB(const float RGB);
 		void SwapRedBlueChannels();
 	};
 }

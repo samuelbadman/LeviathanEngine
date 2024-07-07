@@ -1,4 +1,5 @@
 #include "LinearColor.h"
+#include "MathLibrary.h"
 
 LeviathanRenderer::LinearColor::LinearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
@@ -8,6 +9,16 @@ LeviathanRenderer::LinearColor::LinearColor(uint8_t r, uint8_t g, uint8_t b, uin
 		((b & 0xff) << 16) |
 		((g & 0xff) << 8) |
 		((r & 0xff));
+}
+
+float LeviathanRenderer::LinearColor::ConvertUnitRGBToRGB(const float unitRGB)
+{
+	return LeviathanCore::MathLibrary::Clamp(unitRGB * 255.0f, 0.0f, 255.0f);
+}
+
+float LeviathanRenderer::LinearColor::ConvertRGBToUnitRGB(const float RGB)
+{
+	return LeviathanCore::MathLibrary::Clamp(RGB / 255.0f, 0.0f, 1.0f);
 }
 
 void LeviathanRenderer::LinearColor::SwapRedBlueChannels()

@@ -346,7 +346,7 @@ namespace TestTitle
 		{
 			LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLights[i].Color * gSceneDirectionalLights[i].Brightness;
 			LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLights[i].Direction, 0.0f);
-			LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.GetX(), lightDirectionViewSpace4.GetY(), lightDirectionViewSpace4.GetZ() };
+			LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.X(), lightDirectionViewSpace4.Y(), lightDirectionViewSpace4.Z() };
 			lightDirectionViewSpace.NormalizeSafe();
 
 			LeviathanRenderer::ConstantBufferTypes::LightTypes::DirectionalLight& directionalLightData = *(sceneData.DirectionalLights + (i * 4));
@@ -360,7 +360,7 @@ namespace TestTitle
 		{
 			LeviathanCore::MathTypes::Vector3 pointLightRadiance = gScenePointLights[i].Color * gScenePointLights[i].Brightness;
 			LeviathanCore::MathTypes::Vector4 pointLightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gScenePointLights[i].Position, 1.0f };
-			LeviathanCore::MathTypes::Vector3 pointLightPositionViewSpace{ pointLightPositionViewSpace4.GetX(), pointLightPositionViewSpace4.GetY(), pointLightPositionViewSpace4.GetZ() };
+			LeviathanCore::MathTypes::Vector3 pointLightPositionViewSpace{ pointLightPositionViewSpace4.X(), pointLightPositionViewSpace4.Y(), pointLightPositionViewSpace4.Z() };
 
 			LeviathanRenderer::ConstantBufferTypes::LightTypes::PointLight& pointLightData = *(sceneData.PointLights + (i * 4));
 
@@ -373,9 +373,9 @@ namespace TestTitle
 		{
 			LeviathanCore::MathTypes::Vector3 spotLightRadiance = gSceneSpotLights[i].Color * gSceneSpotLights[i].Brightness;
 			LeviathanCore::MathTypes::Vector4 spotLightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gSceneSpotLights[i].Position, 1.0f };
-			LeviathanCore::MathTypes::Vector3 spotLightPositionViewSpace{ spotLightPositionViewSpace4.GetX(), spotLightPositionViewSpace4.GetY(), spotLightPositionViewSpace4.GetZ() };
+			LeviathanCore::MathTypes::Vector3 spotLightPositionViewSpace{ spotLightPositionViewSpace4.X(), spotLightPositionViewSpace4.Y(), spotLightPositionViewSpace4.Z() };
 			LeviathanCore::MathTypes::Vector4 spotLightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gSceneSpotLights[i].Direction, 0.0f };
-			LeviathanCore::MathTypes::Vector3 spotLightDirectionViewSpace{ spotLightDirectionViewSpace4.GetX(), spotLightDirectionViewSpace4.GetY(), spotLightDirectionViewSpace4.GetZ() };
+			LeviathanCore::MathTypes::Vector3 spotLightDirectionViewSpace{ spotLightDirectionViewSpace4.X(), spotLightDirectionViewSpace4.Y(), spotLightDirectionViewSpace4.Z() };
 			spotLightDirectionViewSpace.NormalizeSafe();
 
 			LeviathanRenderer::ConstantBufferTypes::LightTypes::SpotLight& spotLightData = *(sceneData.SpotLights + (i * 4));
@@ -542,10 +542,10 @@ namespace TestTitle
 			{
 				vertices.emplace_back(LeviathanRenderer::VertexTypes::VertexPosNormUVTang
 					{
-						.Position = { combinedModel.Positions[i].GetX(), combinedModel.Positions[i].GetY(), combinedModel.Positions[i].GetZ() },
-						.Normal = { combinedModel.Normals[i].GetX(), combinedModel.Normals[i].GetY(), combinedModel.Normals[i].GetZ() },
-						.UV = { combinedModel.TextureCoordinates[i].GetX(), combinedModel.TextureCoordinates[i].GetY() },
-						.Tangent = { combinedModel.Tangents[i].GetX(), combinedModel.Tangents[i].GetY(), combinedModel.Tangents[i].GetZ() }
+						.Position = { combinedModel.Positions[i].X(), combinedModel.Positions[i].Y(), combinedModel.Positions[i].Z() },
+						.Normal = { combinedModel.Normals[i].X(), combinedModel.Normals[i].Y(), combinedModel.Normals[i].Z() },
+						.UV = { combinedModel.TextureCoordinates[i].X(), combinedModel.TextureCoordinates[i].Y() },
+						.Tangent = { combinedModel.Tangents[i].X(), combinedModel.Tangents[i].Y(), combinedModel.Tangents[i].Z() }
 					});
 			}
 
@@ -607,20 +607,13 @@ namespace TestTitle
 
 		// Create texture resources.
 		static constexpr uint32_t bytesPerPixel = 4;
-		//LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
-		//brickDiffuseTextureDesc.Width = brickDiffuseTexture.Width;
-		//brickDiffuseTextureDesc.Height = brickDiffuseTexture.Height;
-		//brickDiffuseTextureDesc.Data = brickDiffuseTexture.Data;
-		//brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
-		//brickDiffuseTextureDesc.sRGB = true;
 
 		LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
-		brickDiffuseTextureDesc.Width = 1;
-		brickDiffuseTextureDesc.Height = 1;
-		const LeviathanRenderer::LinearColor baseColor(255, 0, 0, 255);
-		brickDiffuseTextureDesc.Data = &baseColor;
-		brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * 1;
-		brickDiffuseTextureDesc.sRGB = false;
+		brickDiffuseTextureDesc.Width = brickDiffuseTexture.Width;
+		brickDiffuseTextureDesc.Height = brickDiffuseTexture.Height;
+		brickDiffuseTextureDesc.Data = brickDiffuseTexture.Data;
+		brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
+		brickDiffuseTextureDesc.sRGB = true;
 		if (!LeviathanRenderer::CreateTexture2D(brickDiffuseTextureDesc, gColorTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create brick diffuse texture resource.");
@@ -640,7 +633,7 @@ namespace TestTitle
 		LeviathanRenderer::Texture2DDescription metallicTextureDesc = {};
 		metallicTextureDesc.Width = 1;
 		metallicTextureDesc.Height = 1;
-		const uint32_t metallic = 0x000000;
+		const uint32_t metallic = 0xff000000;
 		metallicTextureDesc.Data = static_cast<const void*>(&metallic);
 		metallicTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 		metallicTextureDesc.sRGB = false;
@@ -652,15 +645,8 @@ namespace TestTitle
 		LeviathanRenderer::Texture2DDescription defaultNormalTextureDesc = {};
 		defaultNormalTextureDesc.Width = 1;
 		defaultNormalTextureDesc.Height = 1;
-		// TODO: Fix default normal color.
-		const LeviathanCore::MathTypes::Vector3 defaultNormal(0.0f * 0.5f + 0.5f, 0.0f * 0.5f + 0.5f, -1.0f * 0.5f + 0.5f);
-		//const LeviathanCore::MathTypes::Vector3 defaultNormal(0.0f, 0.0f, 1.0f);
-		uint8_t defaultNormalTextureData[4] = { 0 }; // ABGR.
-		defaultNormalTextureData[0] = 1; // A.
-		defaultNormalTextureData[1] = 255 - static_cast<uint8_t>((defaultNormal.GetZ() / 20.0f) * 255.0f); // B.
-		defaultNormalTextureData[2] = 255 - static_cast<uint8_t>((fabsf(defaultNormal.GetY() - 20.0f) / 90.0f) * 255.0f); // G.
-		defaultNormalTextureData[3] = static_cast<uint8_t>(((defaultNormal.GetX() - 15.0f) / 25.0f) * 255.0f); // R.
-		defaultNormalTextureDesc.Data = static_cast<const void*>(&defaultNormalTextureData[0]);
+		const LeviathanRenderer::LinearColor defaultNormalColor(128, 128, 255, 255);
+		defaultNormalTextureDesc.Data = static_cast<const void*>(&defaultNormalColor);
 		defaultNormalTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 		defaultNormalTextureDesc.sRGB = false;
 		if (!LeviathanRenderer::CreateTexture2D(defaultNormalTextureDesc, gDefaultNormalTextureId))
@@ -698,6 +684,7 @@ namespace TestTitle
 
 		// Define object transform.
 		gObjectTransform = {};
+		gObjectTransform.Rotation = LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(45.0f), 0.0f, 0.0f);
 
 		// Define scene camera.
 		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.5f));

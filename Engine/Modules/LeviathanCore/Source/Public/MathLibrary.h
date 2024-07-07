@@ -54,5 +54,11 @@ namespace LeviathanCore
 		{
 			return atan2(y, x);
 		}
+
+		template <typename T>
+		constexpr T Clamp(T x, T min, T max)
+		{
+			return std::max(min, std::min(x, max));
+		}
 	}
 }

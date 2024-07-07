@@ -8,17 +8,17 @@ namespace LeviathanCore
 	{
 		Vector2 Vector2::operator-(const Vector2& rhs) const
 		{
-			return Vector2(GetX() - rhs.GetX(), GetY() - rhs.GetY());
+			return Vector2(X() - rhs.X(), Y() - rhs.Y());
 		}
 
 		float Vector3::DotProduct(const Vector3& a, const Vector3& b)
 		{
-			return (a.GetX() * b.GetX()) + (a.GetY() * b.GetY()) + (a.GetZ() * b.GetZ());
+			return (a.X() * b.X()) + (a.Y() * b.Y()) + (a.Z() * b.Z());
 		}
 
 		Vector3 Vector3::CrossProduct(const Vector3& a, const Vector3& b)
 		{
-			return Vector3((a.GetY() * b.GetZ()) - (b.GetY() * a.GetZ()), (b.GetX() * a.GetZ()) - (a.GetX() * b.GetZ()), (a.GetX() * b.GetY()) - (b.GetX() * a.GetY()));
+			return Vector3((a.Y() * b.Z()) - (b.Y() * a.Z()), (b.X() * a.Z()) - (a.X() * b.Z()), (a.X() * b.Y()) - (b.X() * a.Y()));
 		}
 
 		void Vector3::NormalizeSafe()
@@ -30,9 +30,9 @@ namespace LeviathanCore
 				return;
 			}
 
-			SetX(GetX() / length);
-			SetY(GetY() / length);
-			SetZ(GetZ() / length);
+			SetX(X() / length);
+			SetY(Y() / length);
+			SetZ(Z() / length);
 		}
 
 		Vector3 Vector3::AsNormalizedSafe() const
@@ -44,32 +44,32 @@ namespace LeviathanCore
 				return Vector3();
 			}
 
-			return Vector3(GetX() / length, GetY() / length, GetZ() / length);
+			return Vector3(X() / length, Y() / length, Z() / length);
 		}
 
 		float Vector3::Length() const
 		{
-			return sqrtf(MathLibrary::Square(GetX()) + MathLibrary::Square(GetY()) + MathLibrary::Square(GetZ()));
+			return sqrtf(MathLibrary::Square(X()) + MathLibrary::Square(Y()) + MathLibrary::Square(Z()));
 		}
 
 		float Vector3::SquaredLength() const
 		{
-			return (MathLibrary::Square(GetX()) + MathLibrary::Square(GetY()) + MathLibrary::Square(GetZ()));
+			return (MathLibrary::Square(X()) + MathLibrary::Square(Y()) + MathLibrary::Square(Z()));
 		}
 
 		Vector3 Vector3::operator*(float rhs) const
 		{
-			return Vector3(GetX() * rhs, GetY() * rhs, GetZ() * rhs);
+			return Vector3(X() * rhs, Y() * rhs, Z() * rhs);
 		}
 
 		Vector3 Vector3::operator+(const Vector3& rhs) const
 		{
-			return Vector3(GetX() + rhs.GetX(), GetY() + rhs.GetY(), GetZ() + rhs.GetZ());
+			return Vector3(X() + rhs.X(), Y() + rhs.Y(), Z() + rhs.Z());
 		}
 
 		Vector3 Vector3::operator-(const Vector3& rhs) const
 		{
-			return Vector3(GetX() - rhs.GetX(), GetY() - rhs.GetY(), GetZ() - rhs.GetZ());
+			return Vector3(X() - rhs.X(), Y() - rhs.Y(), Z() - rhs.Z());
 		}
 
 		Vector4::Vector4(float x, float y, float z, float w)
@@ -78,7 +78,7 @@ namespace LeviathanCore
 		}
 
 		Vector4::Vector4(const Vector3& xyz, float w)
-			:Components{ xyz.GetX(), xyz.GetY(), xyz.GetZ(), w }
+			:Components{ xyz.X(), xyz.Y(), xyz.Z(), w }
 		{
 		}
 
@@ -130,7 +130,7 @@ namespace LeviathanCore
 
 		Matrix4x4 Matrix4x4::Translation(const Vector3& translation)
 		{
-			const glm::mat4x4 glmMat = glm::translate(glm::identity<glm::mat4x4>(), glm::vec3(translation.GetX(), translation.GetY(), translation.GetZ()));
+			const glm::mat4x4 glmMat = glm::translate(glm::identity<glm::mat4x4>(), glm::vec3(translation.X(), translation.Y(), translation.Z()));
 
 			Matrix4x4 result = {};
 			memcpy(result.Data(), &glmMat[0], sizeof(float) * 16);
@@ -140,7 +140,7 @@ namespace LeviathanCore
 
 		Matrix4x4 Matrix4x4::Scaling(const Vector3& scale)
 		{
-			const glm::mat4x4 glmMat = glm::scale(glm::identity<glm::mat4x4>(), glm::vec3(scale.GetX(), scale.GetY(), scale.GetZ()));
+			const glm::mat4x4 glmMat = glm::scale(glm::identity<glm::mat4x4>(), glm::vec3(scale.X(), scale.Y(), scale.Z()));
 
 			Matrix4x4 result = {};
 			memcpy(result.Data(), &glmMat[0], sizeof(float) * 16);
@@ -150,7 +150,7 @@ namespace LeviathanCore
 
 		Matrix4x4 Matrix4x4::Rotation(const Vector3& axis, const float angleRadians)
 		{
-			const glm::mat4x4 rotation = glm::rotate(glm::identity<glm::mat4x4>(), angleRadians, glm::vec3(axis.GetX(), axis.GetY(), axis.GetZ()));
+			const glm::mat4x4 rotation = glm::rotate(glm::identity<glm::mat4x4>(), angleRadians, glm::vec3(axis.X(), axis.Y(), axis.Z()));
 
 			Matrix4x4 result = {};
 			memcpy(result.Data(), &rotation[0], sizeof(float) * 16);
@@ -160,7 +160,7 @@ namespace LeviathanCore
 
 		Matrix4x4 Matrix4x4::Rotation(const Euler& euler)
 		{
-			const glm::mat4x4 rotation = glm::mat4_cast(glm::quat(glm::vec3(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians())));
+			const glm::mat4x4 rotation = glm::mat4_cast(glm::quat(glm::vec3(euler.PitchRadians(), euler.YawRadians(), euler.RollRadians())));
 
 			Matrix4x4 result = {};
 			memcpy(result.Data(), &rotation[0], sizeof(float) * 16);
@@ -170,7 +170,7 @@ namespace LeviathanCore
 
 		Matrix4x4 Matrix4x4::Rotation(const Quaternion& quaternion)
 		{
-			glm::mat4x4 rotation = glm::mat4_cast(glm::quat(quaternion.GetW(), quaternion.GetX(), quaternion.GetY(), quaternion.GetZ()));
+			glm::mat4x4 rotation = glm::mat4_cast(glm::quat(quaternion.W(), quaternion.X(), quaternion.Y(), quaternion.Z()));
 
 			Matrix4x4 result = {};
 			memcpy(result.Data(), &rotation[0], sizeof(float) * 16);
@@ -240,7 +240,7 @@ namespace LeviathanCore
 			glm::mat4x4 glmMatA = {};
 			memcpy(&glmMatA[0], a.Data(), sizeof(float) * 16);
 
-			glm::vec4 glmVec4{ b.GetX(), b.GetY(), b.GetZ(), b.GetW() };
+			glm::vec4 glmVec4{ b.X(), b.Y(), b.Z(), b.W() };
 
 			const glm::vec4 glmResult = glmMatA * glmVec4;
 			return Vector4(glmResult.x, glmResult.y, glmResult.z, glmResult.w);
@@ -278,13 +278,13 @@ namespace LeviathanCore
 
 		Quaternion Quaternion::MakeFromEuler(const Euler& euler)
 		{
-			const glm::quat glmQuat = glm::quat(glm::vec3(euler.GetPitchRadians(), euler.GetYawRadians(), euler.GetRollRadians()));
+			const glm::quat glmQuat = glm::quat(glm::vec3(euler.PitchRadians(), euler.YawRadians(), euler.RollRadians()));
 			return Quaternion(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
 		}
 
 		Vector3 Quaternion::operator*(const Vector3& rhs)
 		{
-			const glm::vec3 rotated = (glm::quat(Components[WComponent], Components[XComponent], Components[YComponent], Components[ZComponent]) * glm::vec3(rhs.GetX(), rhs.GetY(), rhs.GetZ()));
+			const glm::vec3 rotated = (glm::quat(Components[WComponent], Components[XComponent], Components[YComponent], Components[ZComponent]) * glm::vec3(rhs.X(), rhs.Y(), rhs.Z()));
 			return Vector3(rotated.x, rotated.y, rotated.z);
 		}
 	}
