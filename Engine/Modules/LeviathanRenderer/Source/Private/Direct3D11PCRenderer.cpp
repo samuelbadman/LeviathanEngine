@@ -563,12 +563,12 @@ namespace LeviathanRenderer
 			ConstantBufferTypes::ObjectConstantBuffer initialObjectBufferData = {};
 			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::ObjectConstantBuffer), &initialObjectBufferData, &gObjectBuffer);
 			if (!success) { return false; }
+			// Light constant buffer.
+			ConstantBufferTypes::LightConstantBuffer initialLightBufferData = {};
+			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::LightConstantBuffer), &initialLightBufferData, &gLightBuffer);
+			if (!success) { return false; }
 
 			// Pixel shader.
-			// Light constant buffer.
-			ConstantBufferTypes::LightConstantBuffer initialSceneBufferData = {};
-			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::LightConstantBuffer), &initialSceneBufferData, &gLightBuffer);
-			if (!success) { return false; }
 
 			// Set pipeline primitive topology.
 			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -795,7 +795,7 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->PSSetShader(gPixelShader.Get(), nullptr, 0);
 
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
-			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gLightBuffer.GetAddressOf());
+			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gLightBuffer.GetAddressOf());
 
 			// Set resource tables.
 			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DSRVTableLength, gTexture2DSRVTable[0].GetAddressOf());

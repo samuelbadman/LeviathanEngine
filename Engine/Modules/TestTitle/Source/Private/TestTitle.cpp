@@ -185,7 +185,24 @@ namespace TestTitle
 		}
 
 		// Update object transform.
-		//gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.GetYawRadians() + (0.75f * deltaSeconds));
+		gObjectTransform.Rotation.SetPitchRadians(gObjectTransform.Rotation.PitchRadians() + (0.75f * deltaSeconds));
+		static float sign = 1.0f;
+		//gSceneDirectionalLight.Direction.SetZ(gSceneDirectionalLight.Direction.Z() + (0.75f * sign * deltaSeconds));
+		//gSceneDirectionalLight.Direction.NormalizeSafe();
+		if (sign < 0)
+		{
+			if (gSceneDirectionalLight.Direction.Z() <= -0.9f)
+			{
+				sign = 1.0f;
+			}
+		}
+		else
+		{
+			if (gSceneDirectionalLight.Direction.Z() >= 0.9f)
+			{
+				sign = -1.0f;
+			}
+		}
 	}
 
 	static void OnPostTick()

@@ -19,45 +19,17 @@
 // Shader definitions.
 #define PI 3.14159265359
 
-// Light types.
-struct DirectionalLight
-{
-    float3 Radiance;
-    float3 DirectionViewSpace;
-};
-
-struct PointLight
-{
-    float3 Radiance;
-    float3 PositionViewSpace;
-};
-
-struct SpotLight
-{
-    float3 Radiance;
-    float3 PositionViewSpace;
-    float3 DirectionViewSpace;
-    float CosineInnerConeAngle;
-    float CosineOuterConeAngle;
-};
-
 // Pixel shader input.
 struct PixelInput
 {
     float4 PositionClipSpace : SV_POSITION;
     float3 PositionViewSpace : POSITION_VIEW_SPACE;
+    float3 PositionTangentSpace : POSITION_TANGENT_SPACE;
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
-    
-    // TODO: Compute correct normal in vertex shader.
-    float3x3 TBNMatrix : TBN_MATRIX;
+    float3 Radiance : RADIANCE;
+    float3 LightDirectionTangentSpace : LIGHT_DIRECTION_TANGENT_SPACE;
 };
-
-// Constants.
-cbuffer LightBuffer : register(b0)
-{
-    DirectionalLight Light;
-}
 
 // Texture2D SRV table.
 Texture2D Texture2DSRVTable[TEXTURE2D_SRV_TABLE_LENGTH] : register(t0);
@@ -148,20 +120,16 @@ float4 main(PixelInput input) : SV_TARGET
     float3 baseColor = Texture2DSRVTable[COLOR_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[COLOR_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).rgb;
     float roughness = Texture2DSRVTable[ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
     float metallic = Texture2DSRVTable[METALLIC_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[METALLIC_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
-    float3 surfaceNormal = normalize(mul(
-        normalize(Texture2DSRVTable[NORMAL_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[NORMAL_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).xyz * 2.0f - 1.0f),
-        input.TBNMatrix
-        )
-    );
+    float3 surfaceNormal = normalize(Texture2DSRVTable[NORMAL_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[NORMAL_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).xyz * 2.0f - 1.0f);
     
     float3 totalColor = float3(0.0f, 0.0f, 0.0f);
 
-    float3 surfaceToViewDirectionViewSpace = normalize(-input.PositionViewSpace);
-    float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionViewSpace));
+    float3 surfaceToViewDirectionTangentSpace = normalize(-input.PositionTangentSpace);
+    float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionTangentSpace));
 
     // Directional light.
-    float3 surfaceToLightDirectionViewSpace = -Light.DirectionViewSpace;
-    totalColor += CalculateLighting(surfaceToLightDirectionViewSpace, surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, Light.Radiance, baseColor, roughness, metallic);
+    float3 surfaceToLightDirectionTangentSpace = -input.LightDirectionTangentSpace;
+    totalColor += CalculateLighting(surfaceToLightDirectionTangentSpace, surfaceToViewDirectionTangentSpace, surfaceNormal, nDotV, input.Radiance, baseColor, roughness, metallic);
     
     // Point light.
     //for (int j = 0; j < PointLightCount; ++j)
