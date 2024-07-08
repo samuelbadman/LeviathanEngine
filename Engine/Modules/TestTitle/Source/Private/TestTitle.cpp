@@ -185,24 +185,7 @@ namespace TestTitle
 		}
 
 		// Update object transform.
-		gObjectTransform.Rotation.SetPitchRadians(gObjectTransform.Rotation.PitchRadians() + (0.75f * deltaSeconds));
-		static float sign = 1.0f;
-		//gSceneDirectionalLight.Direction.SetZ(gSceneDirectionalLight.Direction.Z() + (0.75f * sign * deltaSeconds));
-		//gSceneDirectionalLight.Direction.NormalizeSafe();
-		if (sign < 0)
-		{
-			if (gSceneDirectionalLight.Direction.Z() <= -0.9f)
-			{
-				sign = 1.0f;
-			}
-		}
-		else
-		{
-			if (gSceneDirectionalLight.Direction.Z() >= 0.9f)
-			{
-				sign = -1.0f;
-			}
-		}
+		//gObjectTransform.Rotation.SetPitchRadians(gObjectTransform.Rotation.PitchRadians() + (0.75f * deltaSeconds));
 	}
 
 	static void OnPostTick()
@@ -698,7 +681,7 @@ namespace TestTitle
 
 		// Define object transform.
 		gObjectTransform = {};
-		gObjectTransform.Rotation = LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(45.0f), 0.0f, 0.0f);
+		gObjectTransform.Rotation = LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(0.0f), 0.0f, 0.0f);
 
 		// Define scene camera.
 		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.5f));
