@@ -11,7 +11,7 @@ namespace LeviathanRenderer
 
 	namespace ConstantBufferTypes
 	{
-		struct SceneConstantBuffer;
+		struct LightConstantBuffer;
 		struct ObjectConstantBuffer;
 	}
 
@@ -38,7 +38,7 @@ namespace LeviathanRenderer
 		void Present();
 		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId);
 		bool UpdateObjectBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
-		bool UpdateSceneBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+		bool UpdateLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
 		// TODO: These are pipeline specific. Should be set for a specific render pass during begin render pass.
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId);

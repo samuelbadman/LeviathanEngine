@@ -7,7 +7,7 @@ namespace LeviathanRenderer
 {
 	namespace ConstantBufferTypes
 	{
-		struct SceneConstantBuffer;
+		struct LightConstantBuffer;
 		struct ObjectConstantBuffer;
 		struct MaterialConstantBuffer;
 	}
@@ -66,7 +66,7 @@ namespace LeviathanRenderer
 	void EndFrame();
 	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId);
 	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
-	bool UpdateSceneData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+	bool UpdateLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
 	// TODO: Move into render pass.
 	void SetColorTexture2D(RendererResourceId::IdType texture2DId);

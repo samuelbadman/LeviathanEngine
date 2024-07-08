@@ -166,9 +166,9 @@ namespace LeviathanRenderer
 		return Renderer::UpdateObjectBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
-	bool UpdateSceneData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+	bool UpdateLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 	{
-		return Renderer::UpdateSceneBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
+		return Renderer::UpdateLightData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
 	void SetColorTexture2D(RendererResourceId::IdType texture2DId)

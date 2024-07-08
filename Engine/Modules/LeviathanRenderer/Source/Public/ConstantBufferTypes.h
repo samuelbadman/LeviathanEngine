@@ -69,16 +69,9 @@ namespace LeviathanRenderer
 			};
 		};
 
-		struct SceneConstantBuffer
+		struct LightConstantBuffer
 		{
-			uint32_t DirectionalLightCount = 0;
-			uint32_t PointLightCount = 0;
-			uint32_t SpotLightCount = 0;
-			char Padding0[4] = { 0 };
-
-			LightTypes::DirectionalLight DirectionalLights[RendererConstants::MaxDirectionalLightCount] = {};
-			LightTypes::PointLight PointLights[RendererConstants::MaxPointLightCount] = {};
-			LightTypes::SpotLight SpotLights[RendererConstants::MaxSpotLightCount] = {};
+			LightTypes::DirectionalLight DirectionalLight = {};
 		};
 	}
 }

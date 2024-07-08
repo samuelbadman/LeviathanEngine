@@ -55,7 +55,7 @@ namespace LeviathanRenderer
 		static std::vector<unsigned char> gPixelShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gPixelShader = {};
 
-		static Microsoft::WRL::ComPtr<ID3D11Buffer> gSceneBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> gLightBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gObjectBuffer = {};
 
 		// Renderer state.
@@ -73,9 +73,9 @@ namespace LeviathanRenderer
 
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
-#define CHECK_HRESULT(hResult) LEVIATHAN_ASSERT(SUCCEEDED(hResult))
+#define LEVIATHAN_CHECK_HRESULT(hResult) LEVIATHAN_ASSERT(SUCCEEDED(hResult))
 #else
-#define CHECK_HRESULT(hResult)
+#define LEVIATHAN_CHECK_HRESULT(hResult)
 #endif // LEVIATHAN_BUILD_CONFIG_DEBUG.
 
 		// Shader source code.
@@ -565,9 +565,9 @@ namespace LeviathanRenderer
 			if (!success) { return false; }
 
 			// Pixel shader.
-			// Scene constant buffer.
-			ConstantBufferTypes::SceneConstantBuffer initialSceneBufferData = {};
-			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::SceneConstantBuffer), &initialSceneBufferData, &gSceneBuffer);
+			// Light constant buffer.
+			ConstantBufferTypes::LightConstantBuffer initialSceneBufferData = {};
+			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::LightConstantBuffer), &initialSceneBufferData, &gLightBuffer);
 			if (!success) { return false; }
 
 			// Set pipeline primitive topology.
@@ -606,7 +606,7 @@ namespace LeviathanRenderer
 			gPixelShaderBuffer.clear();
 			gPixelShader.Reset();
 
-			gSceneBuffer.Reset();
+			gLightBuffer.Reset();
 			gObjectBuffer.Reset();
 
 			gVertexBuffers.clear();
@@ -795,7 +795,7 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->PSSetShader(gPixelShader.Get(), nullptr, 0);
 
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
-			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gSceneBuffer.GetAddressOf());
+			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gLightBuffer.GetAddressOf());
 
 			// Set resource tables.
 			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DSRVTableLength, gTexture2DSRVTable[0].GetAddressOf());
@@ -822,9 +822,9 @@ namespace LeviathanRenderer
 			return UpdateConstantBuffer(gObjectBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
-		bool UpdateSceneBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+		bool UpdateLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 		{
-			return UpdateConstantBuffer(gSceneBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
+			return UpdateConstantBuffer(gLightBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId)
