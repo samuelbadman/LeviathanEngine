@@ -1,8 +1,4 @@
-// Renderer constants.
-#define MAX_DIRECTIONAL_LIGHT_COUNT 10
-#define MAX_POINT_LIGHT_COUNT 10
-#define MAX_SPOT_LIGHT_COUNT 10
-
+// Shader definitions.
 #define TEXTURE2D_SRV_TABLE_LENGTH 5
 #define TEXTURE_SAMPLER_TABLE_LENGTH 4
 
@@ -16,7 +12,6 @@
 #define METALLIC_TEXTURE_SAMPLER_TABLE_INDEX 2
 #define NORMAL_TEXTURE_SAMPLER_TABLE_INDEX 3
 
-// Shader definitions.
 #define PI 3.14159265359
 
 // Pixel shader input.
@@ -28,7 +23,7 @@ struct PixelInput
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
     float3 Radiance : RADIANCE;
-    float3 LightDirectionTangentSpace : LIGHT_DIRECTION_TANGENT_SPACE;
+    float3 SurfaceToLightVectorTangentSpace : SURFACE_TO_LIGHT_VECTOR_TANGENT_SPACE;
 };
 
 // Texture2D SRV table.
@@ -126,33 +121,12 @@ float4 main(PixelInput input) : SV_TARGET
 
     float3 surfaceToViewDirectionTangentSpace = normalize(-input.PositionTangentSpace);
     float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionTangentSpace));
-
-    // Directional light.
-    float3 surfaceToLightDirectionTangentSpace = -input.LightDirectionTangentSpace;
-    totalColor += CalculateLighting(surfaceToLightDirectionTangentSpace, surfaceToViewDirectionTangentSpace, surfaceNormal, nDotV, input.Radiance, baseColor, roughness, metallic);
     
     // Point light.
-    //for (int j = 0; j < PointLightCount; ++j)
-    //{
-    //    float3 surfaceToLightVectorViewSpace = PointLights[j].PositionViewSpace - input.PositionViewSpace;
-    //    float attenuation = Attenuation(length(surfaceToLightVectorViewSpace));
-    //    float3 radiance = attenuation * PointLights[j].Radiance;
-    //    totalColor += CalculateLighting(normalize(surfaceToLightVectorViewSpace), surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
-    //}
-    
-    // Spot light.
-    //for (int k = 0; k < SpotLightCount; ++k)
-    //{
-    //    float3 surfaceToLightVectorViewSpace = SpotLights[k].PositionViewSpace - input.PositionViewSpace;
-    //    float3 surfaceToLightDirectionViewSpace = normalize(surfaceToLightVectorViewSpace);
-    //    float theta = saturate(dot(-surfaceToLightDirectionViewSpace, SpotLights[k].DirectionViewSpace));
-    //    float epsilon = SpotLights[k].CosineInnerConeAngle - SpotLights[k].CosineOuterConeAngle;
-    //    float intensity = smoothstep(0.0f, 1.0f, saturate((theta - SpotLights[k].CosineOuterConeAngle) / epsilon));
-    //    float attenuation = Attenuation(length(surfaceToLightVectorViewSpace));
-    //    float3 radiance = attenuation * intensity * SpotLights[k].Radiance;
-    //    totalColor += CalculateLighting(surfaceToLightDirectionViewSpace, surfaceToViewDirectionViewSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
-    //}
-    
+    float attenuation = Attenuation(length(input.SurfaceToLightVectorTangentSpace));
+    float3 radiance = attenuation * input.Radiance;
+    totalColor += CalculateLighting(normalize(input.SurfaceToLightVectorTangentSpace), surfaceToViewDirectionTangentSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
+
     // HDR tone mapping.
     totalColor = totalColor / (totalColor + float3(1.0f, 1.0f, 1.0f));
 

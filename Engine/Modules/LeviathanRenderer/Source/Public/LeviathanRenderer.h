@@ -69,17 +69,18 @@ namespace LeviathanRenderer
 	void SetShaderResourceTables();
 	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 	bool UpdateDirectionalLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+	bool UpdatePointLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 	void BeginDirectionalLightPass();
+	void BeginPointLightPass();
+	void Present();
 
+	// Shader resource table data.
 	void SetColorTexture2D(RendererResourceId::IdType texture2DId);
 	void SetRoughnessTexture2D(RendererResourceId::IdType texture2DId);
 	void SetMetallicTexture2D(RendererResourceId::IdType texture2DId);
 	void SetNormalTexture2D(RendererResourceId::IdType texture2DId);
-
 	void SetColorTextureSampler(RendererResourceId::IdType samplerId);
 	void SetRoughnessTextureSampler(RendererResourceId::IdType samplerId);
 	void SetMetallicTextureSampler(RendererResourceId::IdType samplerId);
 	void SetNormalTextureSampler(RendererResourceId::IdType samplerId);
-
-	void Present();
 }

@@ -37,12 +37,14 @@ namespace LeviathanRenderer
 		void SetRenderTargets();
 		void SetShaderResourceTables();
 		void SetDirectionalLightPipeline();
+		void SetPointLightPipeline();
 		void Present();
 		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId);
 		bool UpdateObjectBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdateDirectionalLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+		bool UpdatePointLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
-		// TODO: These are pipeline specific. Should be set for a specific render pass during begin render pass.
+		// Shader resource table data.
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId);
 		void SetRoughnessTexture2DResource(RendererResourceId::IdType texture2DId);
 		void SetMetallicTexture2DResource(RendererResourceId::IdType texture2DId);

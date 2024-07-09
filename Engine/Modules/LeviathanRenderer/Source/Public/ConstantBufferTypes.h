@@ -6,42 +6,6 @@ namespace LeviathanRenderer
 {
 	namespace ConstantBufferTypes
 	{
-		namespace LightTypes
-		{
-			struct DirectionalLight
-			{
-				float Radiance[3] = { 0.0f };
-				char Padding0[4] = { 0 };
-
-				float DirectionViewSpace[3] = { 0.0f };
-				char Padding1[4] = { 0 };
-			};
-
-			struct PointLight
-			{
-				float Radiance[3] = { 0.0f };
-				char Padding0[4] = { 0 };
-
-				float PositionViewSpace[3] = { 0.0f };
-				char Padding1[4] = { 0 };
-			};
-
-			struct SpotLight
-			{
-				float Radiance[3] = { 0.0f };
-				char Padding0[4] = { 0 };
-
-				float PositionViewSpace[3] = { 0.0f };
-				char Padding1[4] = { 0 };
-
-				float DirectionViewSpace[3] = { 0.0f };
-				float CosineInnerConeAngle = 0.0f;
-
-				float CosineOuterConeAngle = 0.0f;
-				char Padding2[4 * 3];
-			};
-		}
-
 		struct ObjectConstantBuffer
 		{
 			float WorldViewMatrix[4 * 4] =
@@ -71,7 +35,35 @@ namespace LeviathanRenderer
 
 		struct DirectionalLightConstantBuffer
 		{
-			LightTypes::DirectionalLight DirectionalLight = {};
+			float Radiance[3] = { 0.0f };
+			char Padding0[4] = { 0 };
+
+			float LightDirectionViewSpace[3] = { 0.0f };
+			char Padding1[4] = { 0 };
+		};
+
+		struct PointLightConstantBuffer
+		{
+			float Radiance[3] = { 0.0f };
+			char Padding0[4] = { 0 };
+
+			float LightPositionViewSpace[3] = { 0.0f };
+			char Padding1[4] = { 0 };
+		};
+
+		struct SpotLightConstantBuffer
+		{
+			float Radiance[3] = { 0.0f };
+			char Padding0[4] = { 0 };
+
+			float LightPositionViewSpace[3] = { 0.0f };
+			char Padding1[4] = { 0 };
+
+			float LightDirectionViewSpace[3] = { 0.0f };
+			float CosineInnerConeAngle = 0.0f;
+
+			float CosineOuterConeAngle = 0.0f;
+			char Padding2[4 * 3];
 		};
 	}
 }

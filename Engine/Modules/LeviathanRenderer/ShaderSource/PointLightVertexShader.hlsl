@@ -5,26 +5,10 @@ cbuffer ObjectBuffer : register(b0)
     float4x4 NormalMatrix;
 };
 
-// Light types.
-//struct PointLight
-//{
-//    float3 Radiance;
-//    float3 PositionViewSpace;
-//};
-
-//struct SpotLight
-//{
-//    float3 Radiance;
-//    float3 PositionViewSpace;
-//    float3 DirectionViewSpace;
-//    float CosineInnerConeAngle;
-//    float CosineOuterConeAngle;
-//};
-
-cbuffer DirectionalLightBuffer : register(b1)
+cbuffer PointLightBuffer : register(b1)
 {
     float3 Radiance;
-    float3 LightDirectionViewSpace;
+    float3 LightPositionViewSpace;
 }
 
 struct VertexInput
@@ -43,7 +27,7 @@ struct VertexOutput
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
     float3 Radiance : RADIANCE;
-    float3 LightDirectionTangentSpace : LIGHT_DIRECTION_TANGENT_SPACE;
+    float3 SurfaceToLightVectorTangentSpace : SURFACE_TO_LIGHT_VECTOR_TANGENT_SPACE;
 };
 
 VertexOutput main(VertexInput input)
@@ -64,7 +48,7 @@ VertexOutput main(VertexInput input)
     
     output.PositionTangentSpace = mul(output.PositionViewSpace, inverseTBNMatrix).xyz;
     output.Radiance = Radiance;
-    output.LightDirectionTangentSpace = normalize(mul(LightDirectionViewSpace, inverseTBNMatrix).xyz);
+    output.SurfaceToLightVectorTangentSpace = mul(LightPositionViewSpace - output.PositionViewSpace, inverseTBNMatrix).xyz;
     
     return output;
 }

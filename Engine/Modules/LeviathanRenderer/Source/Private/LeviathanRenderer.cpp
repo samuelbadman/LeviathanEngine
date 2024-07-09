@@ -176,9 +176,19 @@ namespace LeviathanRenderer
 		return Renderer::UpdateDirectionalLightBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
+	bool UpdatePointLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+	{
+		return Renderer::UpdatePointLightBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
+	}
+
 	void BeginDirectionalLightPass()
 	{
 		Renderer::SetDirectionalLightPipeline();
+	}
+
+	void BeginPointLightPass()
+	{
+		Renderer::SetPointLightPipeline();
 	}
 
 	void SetColorTexture2D(RendererResourceId::IdType texture2DId)
