@@ -38,8 +38,8 @@ namespace LeviathanRenderer
 		static D3D11_VIEWPORT gViewport = {};
 
 		// Shader compilation.
-		static constexpr const char* SHADER_MODEL_5_VERTEX_SHADER = "vs_5_0";
-		static constexpr const char* SHADER_MODEL_5_PIXEL_SHADER = "ps_5_0";
+		static constexpr const char* TARGET_SHADER_MODEL_5_VERTEX_SHADER = "vs_5_0";
+		static constexpr const char* TARGET_SHADER_MODEL_5_PIXEL_SHADER = "ps_5_0";
 		//static constexpr const wchar_t* SHADER_MODEL_6_VERTEX_SHADER = L"vs_6_0";
 		//static constexpr const wchar_t* SHADER_MODEL_6_PIXEL_SHADER = L"ps_6_0";
 
@@ -49,10 +49,10 @@ namespace LeviathanRenderer
 		// Define the renderer pipeline.
 		static Microsoft::WRL::ComPtr<ID3D11InputLayout> gInputLayout = {};
 
-		static std::vector<unsigned char> gVertexShaderBuffer = {};
+		static std::vector<unsigned char> gDirectionalLightVertexShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11VertexShader> gDirectionalLightVertexShader = {};
 
-		static std::vector<unsigned char> gPixelShaderBuffer = {};
+		static std::vector<unsigned char> gDirectionalLightPixelShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gDirectionalLightPixelShader = {};
 
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gDirectionalLightBuffer = {};
@@ -272,6 +272,23 @@ namespace LeviathanRenderer
 			return LeviathanCore::Serialize::ReadFile(file, false, outContentBuffer);
 		}
 
+		[[nodiscard]] static bool CompileAndCreateShaderBuffer(std::string_view file, bool forceRecompile, std::string_view entryPoint, std::string_view name, std::string_view target,
+			std::string_view cacheFile, std::vector<uint8_t>& outShaderBuffer)
+		{
+			bool success = true;
+
+			// Read shader source file contents.
+			std::vector<uint8_t> shaderSourceFileContents = {};
+			success = ReadShaderSourceCodeFileContents(file, shaderSourceFileContents);
+			if (!success) { return false; }
+
+			// Create shader resource buffers.
+			const std::string shaderSourceString = reinterpret_cast<char*>(shaderSourceFileContents.data());
+			success = CreateShaderBuffer(forceRecompile, shaderSourceString, entryPoint, name, target, cacheFile, outShaderBuffer);
+
+			return success;
+		}
+
 		[[nodiscard]] static bool InitializeShaders(bool forceRecompile)
 		{
 			static constexpr const char* ShaderCacheDirectory = "Shaders/";
@@ -292,34 +309,25 @@ namespace LeviathanRenderer
 			// Compile shaders.
 			bool success = true;
 
-			const std::string vertexShaderCacheFile(std::string(ShaderCacheDirectory) + "VertexShader");
-			const std::string pixelShaderCacheFile(std::string(ShaderCacheDirectory) + "PixelShader");
+			const std::string directionalLightVertexShaderCacheFile(std::string(ShaderCacheDirectory) + "DirectionalLightVertexShader");
+			const std::string directionalLightPixelShaderCacheFile(std::string(ShaderCacheDirectory) + "DirectionalLightPixelShader");
 
-			// Read shader source file contents.
-			std::vector<uint8_t> vertexShaderSourceFileContents = {};
-			success = ReadShaderSourceCodeFileContents("DirectionalLightVertexShader.hlsl", vertexShaderSourceFileContents);
+			success = CompileAndCreateShaderBuffer("DirectionalLightVertexShader.hlsl", forceRecompile, "main", "DirectionalLightVertexShader", TARGET_SHADER_MODEL_5_VERTEX_SHADER,
+				directionalLightVertexShaderCacheFile, gDirectionalLightVertexShaderBuffer);
 			if (!success) { return false; }
 
-			std::vector<uint8_t> pixelShaderSourceFileContents = {};
-			success = ReadShaderSourceCodeFileContents("DirectionalLightPixelShader.hlsl", pixelShaderSourceFileContents);
-			if (!success) { return false; }
-
-			// Create shader resource buffers.
-			const std::string vertexShaderSourceString = reinterpret_cast<char*>(vertexShaderSourceFileContents.data());
-			success = CreateShaderBuffer(forceRecompile, vertexShaderSourceString, "main", "VertexShader", SHADER_MODEL_5_VERTEX_SHADER, vertexShaderCacheFile, gVertexShaderBuffer);
-			if (!success) { return false; }
-
-			const std::string pixelShaderSourceString = reinterpret_cast<char*>(pixelShaderSourceFileContents.data());
-			success = CreateShaderBuffer(forceRecompile, pixelShaderSourceString, "main", "PixelShader", SHADER_MODEL_5_PIXEL_SHADER, pixelShaderCacheFile, gPixelShaderBuffer);
+			success = CompileAndCreateShaderBuffer("DirectionalLightPixelShader.hlsl", forceRecompile, "main", "DirectionalLightPixelShader", TARGET_SHADER_MODEL_5_PIXEL_SHADER,
+				directionalLightVertexShaderCacheFile, gDirectionalLightPixelShaderBuffer);
 			if (!success) { return false; }
 
 			// Create shaders.
 			HRESULT hr = {};
 
-			hr = gD3D11Device->CreateVertexShader(gVertexShaderBuffer.data(), gVertexShaderBuffer.size(), nullptr, &gDirectionalLightVertexShader);
+			hr = gD3D11Device->CreateVertexShader(gDirectionalLightVertexShaderBuffer.data(), gDirectionalLightVertexShaderBuffer.size(), nullptr, &gDirectionalLightVertexShader);
 			if (FAILED(hr)) { return false; };
 
-			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gPixelShaderBuffer.data()), gPixelShaderBuffer.size(), nullptr, &gDirectionalLightPixelShader);
+			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gDirectionalLightPixelShaderBuffer.data()), gDirectionalLightPixelShaderBuffer.size(), 
+				nullptr, &gDirectionalLightPixelShader);
 			if (FAILED(hr)) { return false; };
 
 			return true;
@@ -554,7 +562,7 @@ namespace LeviathanRenderer
 			};
 
 			hr = gD3D11Device->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()),
-				static_cast<void*>(gVertexShaderBuffer.data()), gVertexShaderBuffer.size(), &gInputLayout);
+				static_cast<void*>(gDirectionalLightVertexShaderBuffer.data()), gDirectionalLightVertexShaderBuffer.size(), &gInputLayout);
 			if (FAILED(hr)) { return false; };
 
 			// Create constant buffers.
@@ -598,10 +606,10 @@ namespace LeviathanRenderer
 
 			gInputLayout.Reset();
 
-			gVertexShaderBuffer.clear();
+			gDirectionalLightVertexShaderBuffer.clear();
 			gDirectionalLightVertexShader.Reset();
 
-			gPixelShaderBuffer.clear();
+			gDirectionalLightPixelShaderBuffer.clear();
 			gDirectionalLightPixelShader.Reset();
 
 			gDirectionalLightBuffer.Reset();
