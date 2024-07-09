@@ -69,7 +69,7 @@ namespace LeviathanRenderer
 			};
 		};
 
-		struct LightConstantBuffer
+		struct DirectionalLightConstantBuffer
 		{
 			LightTypes::DirectionalLight DirectionalLight = {};
 		};

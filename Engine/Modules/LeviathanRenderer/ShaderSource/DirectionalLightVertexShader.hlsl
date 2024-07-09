@@ -27,9 +27,9 @@ struct SpotLight
     float CosineOuterConeAngle;
 };
 
-cbuffer LightBuffer : register(b1)
+cbuffer DirectionalLightBuffer : register(b1)
 {
-    DirectionalLight Light;
+    DirectionalLight DirLight;
 }
 
 struct VertexInput
@@ -68,8 +68,8 @@ VertexOutput main(VertexInput input)
     const float3x3 inverseTBNMatrix = transpose(float3x3(tangentViewSpace, bitangentViewSpace, output.VertexNormalViewSpace));
     
     output.PositionTangentSpace = mul(output.PositionViewSpace, inverseTBNMatrix).xyz;
-    output.Radiance = Light.Radiance;
-    output.LightDirectionTangentSpace = normalize(mul(Light.DirectionViewSpace, inverseTBNMatrix).xyz);
+    output.Radiance = DirLight.Radiance;
+    output.LightDirectionTangentSpace = normalize(mul(DirLight.DirectionViewSpace, inverseTBNMatrix).xyz);
     
     return output;
 }

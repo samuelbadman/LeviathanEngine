@@ -50,12 +50,12 @@ namespace LeviathanRenderer
 		static Microsoft::WRL::ComPtr<ID3D11InputLayout> gInputLayout = {};
 
 		static std::vector<unsigned char> gVertexShaderBuffer = {};
-		static Microsoft::WRL::ComPtr<ID3D11VertexShader> gVertexShader = {};
+		static Microsoft::WRL::ComPtr<ID3D11VertexShader> gDirectionalLightVertexShader = {};
 
 		static std::vector<unsigned char> gPixelShaderBuffer = {};
-		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gPixelShader = {};
+		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gDirectionalLightPixelShader = {};
 
-		static Microsoft::WRL::ComPtr<ID3D11Buffer> gLightBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> gDirectionalLightBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gObjectBuffer = {};
 
 		// Renderer state.
@@ -297,11 +297,11 @@ namespace LeviathanRenderer
 
 			// Read shader source file contents.
 			std::vector<uint8_t> vertexShaderSourceFileContents = {};
-			success = ReadShaderSourceCodeFileContents("VertexShader.hlsl", vertexShaderSourceFileContents);
+			success = ReadShaderSourceCodeFileContents("DirectionalLightVertexShader.hlsl", vertexShaderSourceFileContents);
 			if (!success) { return false; }
 
 			std::vector<uint8_t> pixelShaderSourceFileContents = {};
-			success = ReadShaderSourceCodeFileContents("PixelShader.hlsl", pixelShaderSourceFileContents);
+			success = ReadShaderSourceCodeFileContents("DirectionalLightPixelShader.hlsl", pixelShaderSourceFileContents);
 			if (!success) { return false; }
 
 			// Create shader resource buffers.
@@ -316,10 +316,10 @@ namespace LeviathanRenderer
 			// Create shaders.
 			HRESULT hr = {};
 
-			hr = gD3D11Device->CreateVertexShader(gVertexShaderBuffer.data(), gVertexShaderBuffer.size(), nullptr, &gVertexShader);
+			hr = gD3D11Device->CreateVertexShader(gVertexShaderBuffer.data(), gVertexShaderBuffer.size(), nullptr, &gDirectionalLightVertexShader);
 			if (FAILED(hr)) { return false; };
 
-			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gPixelShaderBuffer.data()), gPixelShaderBuffer.size(), nullptr, &gPixelShader);
+			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gPixelShaderBuffer.data()), gPixelShaderBuffer.size(), nullptr, &gDirectionalLightPixelShader);
 			if (FAILED(hr)) { return false; };
 
 			return true;
@@ -563,15 +563,13 @@ namespace LeviathanRenderer
 			ConstantBufferTypes::ObjectConstantBuffer initialObjectBufferData = {};
 			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::ObjectConstantBuffer), &initialObjectBufferData, &gObjectBuffer);
 			if (!success) { return false; }
-			// Light constant buffer.
-			ConstantBufferTypes::LightConstantBuffer initialLightBufferData = {};
-			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::LightConstantBuffer), &initialLightBufferData, &gLightBuffer);
+			// Directional light constant buffer.
+			ConstantBufferTypes::DirectionalLightConstantBuffer initialDirectionalLightBufferData = {};
+			success = CreateConstantBuffer(sizeof(ConstantBufferTypes::DirectionalLightConstantBuffer), &initialDirectionalLightBufferData, &gDirectionalLightBuffer);
 			if (!success) { return false; }
 
 			// Pixel shader.
 
-			// Set pipeline primitive topology.
-			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			return success;
 		}
@@ -601,12 +599,12 @@ namespace LeviathanRenderer
 			gInputLayout.Reset();
 
 			gVertexShaderBuffer.clear();
-			gVertexShader.Reset();
+			gDirectionalLightVertexShader.Reset();
 
 			gPixelShaderBuffer.clear();
-			gPixelShader.Reset();
+			gDirectionalLightPixelShader.Reset();
 
-			gLightBuffer.Reset();
+			gDirectionalLightBuffer.Reset();
 			gObjectBuffer.Reset();
 
 			gVertexBuffers.clear();
@@ -785,21 +783,25 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->ClearDepthStencilView(gDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, clearDepth, clearStencil);
 		}
 
-		void BeginRenderPass()
+		void SetRenderTargets()
 		{
-			gD3D11DeviceContext->IASetInputLayout(gInputLayout.Get());
-
 			gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
+		}
 
-			gD3D11DeviceContext->VSSetShader(gVertexShader.Get(), nullptr, 0);
-			gD3D11DeviceContext->PSSetShader(gPixelShader.Get(), nullptr, 0);
-
-			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
-			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gLightBuffer.GetAddressOf());
-
-			// Set resource tables.
+		void SetShaderResourceTables()
+		{
 			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DSRVTableLength, gTexture2DSRVTable[0].GetAddressOf());
 			gD3D11DeviceContext->PSSetSamplers(0, RendererConstants::TextureSamplerTableLength, gTextureSamplerTable[0].GetAddressOf());
+		}
+
+		void SetDirectionalLightPipeline()
+		{
+			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			gD3D11DeviceContext->IASetInputLayout(gInputLayout.Get());
+			gD3D11DeviceContext->VSSetShader(gDirectionalLightVertexShader.Get(), nullptr, 0);
+			gD3D11DeviceContext->PSSetShader(gDirectionalLightPixelShader.Get(), nullptr, 0);
+			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
+			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gDirectionalLightBuffer.GetAddressOf());
 		}
 
 		void Present()
@@ -822,9 +824,9 @@ namespace LeviathanRenderer
 			return UpdateConstantBuffer(gObjectBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
-		bool UpdateLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+		bool UpdateDirectionalLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 		{
-			return UpdateConstantBuffer(gLightBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
+			return UpdateConstantBuffer(gDirectionalLightBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId)

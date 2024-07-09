@@ -90,6 +90,8 @@ namespace TestTitle
 	static LeviathanRenderer::Camera gSceneCamera = {};
 	static DirectionalLight gSceneDirectionalLight = {};
 
+	static bool gUseNormalMap = true;
+
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gMetallicTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -165,6 +167,7 @@ namespace TestTitle
 			// Poll input keys.
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::RightMouseButton);
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::F);
+			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::O);
 
 			if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
 			{
@@ -236,6 +239,13 @@ namespace TestTitle
 				}
 			}
 
+			break;
+		}
+
+		case LeviathanCore::InputKey::Keys::O:
+		{
+			if (wasKeyPressed(data, isRepeatKey))
+				gUseNormalMap = !gUseNormalMap;
 			break;
 		}
 
@@ -327,17 +337,6 @@ namespace TestTitle
 		// Begin frame.
 		LeviathanRenderer::BeginFrame();
 
-		// Update scene data.
-		LeviathanRenderer::ConstantBufferTypes::LightConstantBuffer lightData = {};
-
-		LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLight.Color * gSceneDirectionalLight.Brightness;
-		LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLight.Direction, 0.0f);
-		LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.X(), lightDirectionViewSpace4.Y(), lightDirectionViewSpace4.Z() };
-		lightDirectionViewSpace.NormalizeSafe();
-
-		memcpy(&lightData.DirectionalLight.Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
-		memcpy(&lightData.DirectionalLight.DirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
-
 		// For each directional light.
 		//for (size_t i = 0; i < gSceneDirectionalLightCount; ++i)
 		//{
@@ -384,22 +383,48 @@ namespace TestTitle
 		//	spotLightData.CosineOuterConeAngle = LeviathanCore::MathLibrary::Cos(gSceneSpotLights[i].OuterConeAngleRadians);
 		//}
 
-		LeviathanRenderer::UpdateLightData(0, &lightData, sizeof(LeviathanRenderer::ConstantBufferTypes::LightConstantBuffer));
+		// For each directional light
+			// Render each affected object
+		// For each point light
+			// Render each affected object
+		// For each spot light
+			// Render each affected object
+
+
+		// Render directional lights.
+		LeviathanRenderer::BeginDirectionalLightPass();
+
+		// Update directional light data.
+		LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer directionalLightData = {};
+
+		LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLight.Color * gSceneDirectionalLight.Brightness;
+		LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLight.Direction, 0.0f);
+		LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.X(), lightDirectionViewSpace4.Y(), lightDirectionViewSpace4.Z() };
+		lightDirectionViewSpace.NormalizeSafe();
+
+		memcpy(&directionalLightData.DirectionalLight.Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
+		memcpy(&directionalLightData.DirectionalLight.DirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
+
+		LeviathanRenderer::UpdateDirectionalLightData(0, &directionalLightData, sizeof(LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer));
 
 		// Object (dynamic).
 		if (gIndexCount > 0)
 		{
-			// Update material data.
+			// Update shader table data.
 			LeviathanRenderer::SetColorTexture2D(gColorTextureId);
 			LeviathanRenderer::SetRoughnessTexture2D(gRoughnessTextureId);
 			LeviathanRenderer::SetMetallicTexture2D(gMetallicTextureId);
-			LeviathanRenderer::SetNormalTexture2D(gNormalTextureId);
-			//LeviathanRenderer::SetNormalTexture2D(gDefaultNormalTextureId);
+			if (gUseNormalMap)
+				LeviathanRenderer::SetNormalTexture2D(gNormalTextureId);
+			else
+				LeviathanRenderer::SetNormalTexture2D(gDefaultNormalTextureId);
 
 			LeviathanRenderer::SetColorTextureSampler(gLinearTextureSamplerId);
 			LeviathanRenderer::SetRoughnessTextureSampler(gLinearTextureSamplerId);
 			LeviathanRenderer::SetMetallicTextureSampler(gLinearTextureSamplerId);
 			LeviathanRenderer::SetNormalTextureSampler(gLinearTextureSamplerId);
+
+			LeviathanRenderer::SetShaderResourceTables();
 
 			// Calculate world matrix.
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
@@ -697,7 +722,7 @@ namespace TestTitle
 		gSceneCamera.UpdateProjectionMatrix(windowWidth, windowHeight);
 		gSceneCamera.UpdateViewProjectionMatrix();
 
-		// Define scene light.
+		// Define scene lights.
 		gSceneDirectionalLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gSceneDirectionalLight.Brightness = 1.0f;
 		gSceneDirectionalLight.Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 1.0f }.AsNormalizedSafe();

@@ -149,7 +149,7 @@ namespace LeviathanRenderer
 		static constexpr unsigned char clearStencil = 0;
 
 		Renderer::Clear(clearColor, clearDepth, clearStencil);
-		Renderer::BeginRenderPass();
+		Renderer::SetRenderTargets();
 	}
 
 	void EndFrame()
@@ -161,14 +161,24 @@ namespace LeviathanRenderer
 		Renderer::DrawIndexed(indexCount, singleVertexStrideBytes, vertexBufferId, indexBufferId);
 	}
 
+	void SetShaderResourceTables()
+	{
+		Renderer::SetShaderResourceTables();
+	}
+
 	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 	{
 		return Renderer::UpdateObjectBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
-	bool UpdateLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+	bool UpdateDirectionalLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 	{
-		return Renderer::UpdateLightData(byteOffsetIntoBuffer, pNewData, byteWidth);
+		return Renderer::UpdateDirectionalLightBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
+	}
+
+	void BeginDirectionalLightPass()
+	{
+		Renderer::SetDirectionalLightPipeline();
 	}
 
 	void SetColorTexture2D(RendererResourceId::IdType texture2DId)

@@ -7,7 +7,7 @@ namespace LeviathanRenderer
 {
 	namespace ConstantBufferTypes
 	{
-		struct LightConstantBuffer;
+		struct DirectionalLightConstantBuffer;
 		struct ObjectConstantBuffer;
 		struct MaterialConstantBuffer;
 	}
@@ -65,10 +65,12 @@ namespace LeviathanRenderer
 	void BeginFrame();
 	void EndFrame();
 	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId);
+	// Needs to be called when shader table data is updated or a new light pass is started.
+	void SetShaderResourceTables();
 	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
-	bool UpdateLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+	bool UpdateDirectionalLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+	void BeginDirectionalLightPass();
 
-	// TODO: Move into render pass.
 	void SetColorTexture2D(RendererResourceId::IdType texture2DId);
 	void SetRoughnessTexture2D(RendererResourceId::IdType texture2DId);
 	void SetMetallicTexture2D(RendererResourceId::IdType texture2DId);

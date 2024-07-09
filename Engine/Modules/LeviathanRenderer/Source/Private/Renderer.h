@@ -11,7 +11,7 @@ namespace LeviathanRenderer
 
 	namespace ConstantBufferTypes
 	{
-		struct LightConstantBuffer;
+		struct DirectionalLightConstantBuffer;
 		struct ObjectConstantBuffer;
 	}
 
@@ -34,11 +34,13 @@ namespace LeviathanRenderer
 
 		// Render commands.
 		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil);
-		void BeginRenderPass();
+		void SetRenderTargets();
+		void SetShaderResourceTables();
+		void SetDirectionalLightPipeline();
 		void Present();
 		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId);
 		bool UpdateObjectBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
-		bool UpdateLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+		bool UpdateDirectionalLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
 		// TODO: These are pipeline specific. Should be set for a specific render pass during begin render pass.
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId);
