@@ -70,8 +70,10 @@ namespace LeviathanRenderer
 	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 	bool UpdateDirectionalLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 	bool UpdatePointLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+	bool UpdateSpotLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 	void BeginDirectionalLightPass();
 	void BeginPointLightPass();
+	void BeginSpotLightPass();
 	void Present();
 
 	// Shader resource table data.

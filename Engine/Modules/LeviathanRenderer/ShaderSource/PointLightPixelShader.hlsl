@@ -14,6 +14,12 @@
 
 #define PI 3.14159265359
 
+cbuffer PointLightBuffer : register(b0)
+{
+    float3 Radiance;
+    float3 LightPositionViewSpace;
+}
+
 // Pixel shader input.
 struct PixelInput
 {
@@ -22,7 +28,6 @@ struct PixelInput
     float3 PositionTangentSpace : POSITION_TANGENT_SPACE;
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
-    float3 Radiance : RADIANCE;
     float3 SurfaceToLightVectorTangentSpace : SURFACE_TO_LIGHT_VECTOR_TANGENT_SPACE;
 };
 
@@ -124,7 +129,7 @@ float4 main(PixelInput input) : SV_TARGET
     
     // Point light.
     float attenuation = Attenuation(length(input.SurfaceToLightVectorTangentSpace));
-    float3 radiance = attenuation * input.Radiance;
+    float3 radiance = attenuation * Radiance;
     totalColor += CalculateLighting(normalize(input.SurfaceToLightVectorTangentSpace), surfaceToViewDirectionTangentSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
 
     // HDR tone mapping.

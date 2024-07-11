@@ -63,7 +63,7 @@ namespace LeviathanRenderer
 			float CosineInnerConeAngle = 0.0f;
 
 			float CosineOuterConeAngle = 0.0f;
-			char Padding2[4 * 3];
+			char Padding2[4 * 3] = { 0 };
 		};
 	}
 }

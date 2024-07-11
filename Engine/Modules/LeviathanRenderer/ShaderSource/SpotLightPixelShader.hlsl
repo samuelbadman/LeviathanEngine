@@ -1,7 +1,3 @@
-#define MAX_DIRECTIONAL_LIGHT_COUNT 10
-#define MAX_POINT_LIGHT_COUNT 10
-#define MAX_SPOT_LIGHT_COUNT 10
-
 #define TEXTURE2D_SRV_TABLE_LENGTH 5
 #define TEXTURE_SAMPLER_TABLE_LENGTH 4
 
@@ -17,10 +13,13 @@
 
 #define PI 3.14159265359
 
-cbuffer DirectionalLightBuffer : register(b0)
+cbuffer SpotLightBuffer : register(b0)
 {
     float3 Radiance;
+    float3 LightPositionViewSpace;
     float3 LightDirectionViewSpace;
+    float CosineInnerConeAngle;
+    float CosineOuterConeAngle;
 }
 
 // Pixel shader input.
@@ -31,6 +30,7 @@ struct PixelInput
     float3 PositionTangentSpace : POSITION_TANGENT_SPACE;
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
+    float3 SurfaceToLightVectorTangentSpace : SURFACE_TO_LIGHT_VECTOR_TANGENT_SPACE;
     float3 LightDirectionTangentSpace : LIGHT_DIRECTION_TANGENT_SPACE;
 };
 
@@ -43,6 +43,11 @@ SamplerState TextureSamplerTable[TEXTURE_SAMPLER_TABLE_LENGTH] : register(s0);
 float Square(float x)
 {
     return x * x;
+}
+
+float Attenuation(float distance)
+{
+    return 1.0f / Square(distance);
 }
 
 float3 Lambert(float3 color)
@@ -124,10 +129,15 @@ float4 main(PixelInput input) : SV_TARGET
 
     float3 surfaceToViewDirectionTangentSpace = normalize(-input.PositionTangentSpace);
     float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionTangentSpace));
-
-    // Directional light.
-    float3 surfaceToLightDirectionTangentSpace = -input.LightDirectionTangentSpace;
-    totalColor += CalculateLighting(surfaceToLightDirectionTangentSpace, surfaceToViewDirectionTangentSpace, surfaceNormal, nDotV, Radiance, baseColor, roughness, metallic);
+    
+    // Spot light.
+    float3 surfaceToLightDirectionTangentSpace = normalize(input.SurfaceToLightVectorTangentSpace);
+    float theta = saturate(dot(-surfaceToLightDirectionTangentSpace, input.LightDirectionTangentSpace));
+    float epsilon = CosineInnerConeAngle - CosineOuterConeAngle;
+    float intensity = smoothstep(0.0f, 1.0f, saturate((theta - CosineOuterConeAngle) / epsilon));
+    float attenuation = Attenuation(length(input.SurfaceToLightVectorTangentSpace));
+    float3 radiance = attenuation * intensity * Radiance;
+    totalColor += CalculateLighting(normalize(input.SurfaceToLightVectorTangentSpace), surfaceToViewDirectionTangentSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
     
     // HDR tone mapping.
     totalColor = totalColor / (totalColor + float3(1.0f, 1.0f, 1.0f));

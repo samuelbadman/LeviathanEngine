@@ -38,11 +38,13 @@ namespace LeviathanRenderer
 		void SetShaderResourceTables();
 		void SetDirectionalLightPipeline();
 		void SetPointLightPipeline();
+		void SetSpotLightPipeline();
 		void Present();
 		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId);
 		bool UpdateObjectBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdateDirectionalLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdatePointLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+		bool UpdateSpotLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
 		// Shader resource table data.
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId);

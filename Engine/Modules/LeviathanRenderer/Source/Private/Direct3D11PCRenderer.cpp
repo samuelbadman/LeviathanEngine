@@ -46,23 +46,27 @@ namespace LeviathanRenderer
 		//static Microsoft::WRL::ComPtr<IDxcUtils> DxcUtils = nullptr;
 		//static Microsoft::WRL::ComPtr<IDxcCompiler> DxcCompiler = nullptr;
 
-		// Define the renderer pipeline.
+		// Define the renderer pipelines.
 		static Microsoft::WRL::ComPtr<ID3D11InputLayout> gInputLayout = {};
 
 		static std::vector<unsigned char> gDirectionalLightVertexShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11VertexShader> gDirectionalLightVertexShader = {};
-
 		static std::vector<unsigned char> gDirectionalLightPixelShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gDirectionalLightPixelShader = {};
 
 		static std::vector<unsigned char> gPointLightVertexShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11VertexShader> gPointLightVertexShader = {};
-
 		static std::vector<unsigned char> gPointLightPixelShaderBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gPointLightPixelShader = {};
 
+		static std::vector<unsigned char> gSpotLightVertexShaderBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11VertexShader> gSpotLightVertexShader = {};
+		static std::vector<unsigned char> gSpotLightPixelShaderBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11PixelShader> gSpotLightPixelShader = {};
+
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gDirectionalLightBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gPointLightBuffer = {};
+		static Microsoft::WRL::ComPtr<ID3D11Buffer> gSpotLightBuffer = {};
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gObjectBuffer = {};
 
 		// Renderer state.
@@ -319,7 +323,9 @@ namespace LeviathanRenderer
 			const std::string directionalLightVertexShaderCacheFile(std::string(ShaderCacheDirectory) + "DirectionalLightVertexShader");
 			const std::string directionalLightPixelShaderCacheFile(std::string(ShaderCacheDirectory) + "DirectionalLightPixelShader");
 			const std::string pointLightVertexShaderCacheFile(std::string(ShaderCacheDirectory) + "PointLightVertexShader");
-			const std::string pointLightPixelShaderCacheFile(std::string(ShaderCacheDirectory) + "PointLightPixelShader");
+			const std::string pointLightPixelShaderCacheFile(std::string(ShaderCacheDirectory) + "PointLightPixelShader");	
+			const std::string spotLightVertexShaderCacheFile(std::string(ShaderCacheDirectory) + "SpotLightVertexShader");
+			const std::string spotLightPixelShaderCacheFile(std::string(ShaderCacheDirectory) + "SpotLightPixelShader");
 
 			success = CompileAndCreateShaderBuffer("DirectionalLightVertexShader.hlsl", forceRecompile, "main", "DirectionalLightVertexShader", 
 				TARGET_SHADER_MODEL_5_VERTEX_SHADER, directionalLightVertexShaderCacheFile, gDirectionalLightVertexShaderBuffer);
@@ -335,6 +341,13 @@ namespace LeviathanRenderer
 				TARGET_SHADER_MODEL_5_PIXEL_SHADER, pointLightPixelShaderCacheFile, gPointLightPixelShaderBuffer);
 			if (!success) { return false; }
 
+			success = CompileAndCreateShaderBuffer("SpotLightVertexShader.hlsl", forceRecompile, "main", "SpotLightVertexShader",
+				TARGET_SHADER_MODEL_5_VERTEX_SHADER, spotLightVertexShaderCacheFile, gSpotLightVertexShaderBuffer);
+			if (!success) { return false; }
+			success = CompileAndCreateShaderBuffer("SpotLightPixelShader.hlsl", forceRecompile, "main", "SpotLightPixelShader",
+				TARGET_SHADER_MODEL_5_PIXEL_SHADER, spotLightPixelShaderCacheFile, gSpotLightPixelShaderBuffer);
+			if (!success) { return false; }
+
 			// Create shaders.
 			HRESULT hr = {};
 
@@ -346,6 +359,11 @@ namespace LeviathanRenderer
 			hr = gD3D11Device->CreateVertexShader(gPointLightVertexShaderBuffer.data(), gPointLightVertexShaderBuffer.size(), nullptr, &gPointLightVertexShader);
 			if (FAILED(hr)) { return false; };
 			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gPointLightPixelShaderBuffer.data()), gPointLightPixelShaderBuffer.size(), nullptr, &gPointLightPixelShader);
+			if (FAILED(hr)) { return false; };
+
+			hr = gD3D11Device->CreateVertexShader(gSpotLightVertexShaderBuffer.data(), gSpotLightVertexShaderBuffer.size(), nullptr, &gSpotLightVertexShader);
+			if (FAILED(hr)) { return false; };
+			hr = gD3D11Device->CreatePixelShader(static_cast<void*>(gSpotLightPixelShaderBuffer.data()), gSpotLightPixelShaderBuffer.size(), nullptr, &gSpotLightPixelShader);
 			if (FAILED(hr)) { return false; };
 
 			return true;
@@ -365,6 +383,13 @@ namespace LeviathanRenderer
 			initialData.pSysMem = pInitialData;
 
 			return SUCCEEDED(gD3D11Device->CreateBuffer(&desc, &initialData, ppOutBuffer));
+		}
+
+		template<typename T>
+		[[nodiscard]] static bool CreateDefaultConstantBuffer(ID3D11Buffer** outBuffer)
+		{
+			const T initialBufferData = {};
+			return CreateConstantBuffer(sizeof(T), &initialBufferData, outBuffer);
 		}
 
 		[[nodiscard]] static bool UpdateConstantBuffer(ID3D11Buffer* pBuffer, size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
@@ -400,13 +425,6 @@ namespace LeviathanRenderer
 			case TextureSamplerBorderMode::Mirror: return D3D11_TEXTURE_ADDRESS_MIRROR;
 			default: return D3D11_TEXTURE_ADDRESS_MODE();
 			}
-		}
-
-		template<typename T>
-		static bool CreateDefaultConstantBuffer(ID3D11Buffer** outBuffer)
-		{
-			const ConstantBufferTypes::ObjectConstantBuffer initialBufferData = {};
-			return CreateConstantBuffer(sizeof(T), &initialBufferData, outBuffer);
 		}
 
 		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
@@ -596,6 +614,8 @@ namespace LeviathanRenderer
 			if (!success) { return false; }
 			success = CreateDefaultConstantBuffer<ConstantBufferTypes::PointLightConstantBuffer>(&gPointLightBuffer);
 			if (!success) { return false; }
+			success = CreateDefaultConstantBuffer<ConstantBufferTypes::SpotLightConstantBuffer>(&gSpotLightBuffer);
+			if (!success) { return false; }
 
 			return success;
 		}
@@ -626,16 +646,21 @@ namespace LeviathanRenderer
 
 			gDirectionalLightVertexShaderBuffer.clear();
 			gDirectionalLightVertexShader.Reset();
-			gPointLightVertexShader.Reset();
 			gPointLightVertexShaderBuffer.clear();
+			gPointLightVertexShader.Reset();
+			gSpotLightVertexShaderBuffer.clear();
+			gSpotLightVertexShader.Reset();
 
 			gDirectionalLightPixelShaderBuffer.clear();
 			gDirectionalLightPixelShader.Reset();
 			gPointLightPixelShaderBuffer.clear();
 			gPointLightPixelShader.Reset();
+			gSpotLightPixelShaderBuffer.clear();
+			gSpotLightPixelShader.Reset();
 
 			gDirectionalLightBuffer.Reset();
 			gPointLightBuffer.Reset();
+			gSpotLightBuffer.Reset();
 			gObjectBuffer.Reset();
 
 			gVertexBuffers.clear();
@@ -833,6 +858,7 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->PSSetShader(gDirectionalLightPixelShader.Get(), nullptr, 0);
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gDirectionalLightBuffer.GetAddressOf());
+			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gDirectionalLightBuffer.GetAddressOf());
 		}
 
 		void SetPointLightPipeline()
@@ -843,6 +869,18 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->PSSetShader(gPointLightPixelShader.Get(), nullptr, 0);
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gPointLightBuffer.GetAddressOf());
+			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gPointLightBuffer.GetAddressOf());
+		}
+
+		void SetSpotLightPipeline()
+		{
+			gD3D11DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			gD3D11DeviceContext->IASetInputLayout(gInputLayout.Get());
+			gD3D11DeviceContext->VSSetShader(gSpotLightVertexShader.Get(), nullptr, 0);
+			gD3D11DeviceContext->PSSetShader(gSpotLightPixelShader.Get(), nullptr, 0);
+			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
+			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gSpotLightBuffer.GetAddressOf());
+			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gSpotLightBuffer.GetAddressOf());
 		}
 
 		void Present()
@@ -873,6 +911,11 @@ namespace LeviathanRenderer
 		bool UpdatePointLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 		{
 			return UpdateConstantBuffer(gPointLightBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
+		}
+
+		bool UpdateSpotLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+		{
+			return UpdateConstantBuffer(gSpotLightBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId)

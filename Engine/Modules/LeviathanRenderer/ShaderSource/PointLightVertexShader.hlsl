@@ -26,7 +26,6 @@ struct VertexOutput
     float3 PositionTangentSpace : POSITION_TANGENT_SPACE;
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
-    float3 Radiance : RADIANCE;
     float3 SurfaceToLightVectorTangentSpace : SURFACE_TO_LIGHT_VECTOR_TANGENT_SPACE;
 };
 
@@ -47,7 +46,6 @@ VertexOutput main(VertexInput input)
     const float3x3 inverseTBNMatrix = transpose(float3x3(tangentViewSpace, bitangentViewSpace, output.VertexNormalViewSpace));
     
     output.PositionTangentSpace = mul(output.PositionViewSpace, inverseTBNMatrix).xyz;
-    output.Radiance = Radiance;
     output.SurfaceToLightVectorTangentSpace = mul(LightPositionViewSpace - output.PositionViewSpace, inverseTBNMatrix).xyz;
     
     return output;

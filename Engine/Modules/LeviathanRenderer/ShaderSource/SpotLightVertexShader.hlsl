@@ -5,10 +5,13 @@ cbuffer ObjectBuffer : register(b0)
     float4x4 NormalMatrix;
 };
 
-cbuffer DirectionalLightBuffer : register(b1)
+cbuffer SpotLightBuffer : register(b1)
 {
     float3 Radiance;
+    float3 LightPositionViewSpace;
     float3 LightDirectionViewSpace;
+    float CosineInnerConeAngle;
+    float CosineOuterConeAngle;
 }
 
 struct VertexInput
@@ -26,6 +29,7 @@ struct VertexOutput
     float3 PositionTangentSpace : POSITION_TANGENT_SPACE;
     float3 VertexNormalViewSpace : VERTEX_NORMAL_VIEW_SPACE;
     float2 TexCoord : TEXTURE_COORD;
+    float3 SurfaceToLightVectorTangentSpace : SURFACE_TO_LIGHT_VECTOR_TANGENT_SPACE;
     float3 LightDirectionTangentSpace : LIGHT_DIRECTION_TANGENT_SPACE;
 };
 
@@ -46,6 +50,7 @@ VertexOutput main(VertexInput input)
     const float3x3 inverseTBNMatrix = transpose(float3x3(tangentViewSpace, bitangentViewSpace, output.VertexNormalViewSpace));
     
     output.PositionTangentSpace = mul(output.PositionViewSpace, inverseTBNMatrix).xyz;
+    output.SurfaceToLightVectorTangentSpace = mul(LightPositionViewSpace - output.PositionViewSpace, inverseTBNMatrix).xyz;
     output.LightDirectionTangentSpace = normalize(mul(LightDirectionViewSpace, inverseTBNMatrix).xyz);
     
     return output;
