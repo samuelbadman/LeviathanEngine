@@ -93,8 +93,6 @@ namespace TestTitle
 	static PointLight gScenePointLight = {};
 	static SpotLight gSceneSpotLight = {};
 
-	static bool gUseNormalMap = true;
-
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gMetallicTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -170,7 +168,6 @@ namespace TestTitle
 			// Poll input keys.
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::RightMouseButton);
 			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::F);
-			LeviathanInputCore::PlatformInput::DispatchCallbackForKey(LeviathanCore::InputKey::Keys::O);
 
 			if (LeviathanInputCore::PlatformInput::IsKeyDown(LeviathanCore::InputKey::Keys::RightMouseButton))
 			{
@@ -224,7 +221,6 @@ namespace TestTitle
 			{
 				LeviathanCore::Platform::ShowPlatformCursor(true);
 			}
-
 			break;
 		}
 
@@ -241,14 +237,6 @@ namespace TestTitle
 					LeviathanCore::Core::RuntimeWindowEnterFullscreen();
 				}
 			}
-
-			break;
-		}
-
-		case LeviathanCore::InputKey::Keys::O:
-		{
-			if (wasKeyPressed(data, isRepeatKey))
-				gUseNormalMap = !gUseNormalMap;
 			break;
 		}
 
@@ -258,7 +246,6 @@ namespace TestTitle
 			{
 				gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (gSceneCamera.GetForwardVector(forward) * deltaSeconds * cameraTranslationSpeed));
 			}
-
 			break;
 		}
 
@@ -268,7 +255,6 @@ namespace TestTitle
 			{
 				gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (gSceneCamera.GetForwardVector(forward) * deltaSeconds * cameraTranslationSpeed));
 			}
-
 			break;
 		}
 
@@ -278,7 +264,6 @@ namespace TestTitle
 			{
 				gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (gSceneCamera.GetRightVector(right) * deltaSeconds * cameraTranslationSpeed));
 			}
-
 			break;
 		}
 
@@ -288,7 +273,6 @@ namespace TestTitle
 			{
 				gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (gSceneCamera.GetRightVector(right) * deltaSeconds * cameraTranslationSpeed));
 			}
-
 			break;
 		}
 
@@ -299,7 +283,6 @@ namespace TestTitle
 				// Use base up vector instead of camera up vector to always ensure vertical movement happens in the base up vector axis.
 				gSceneCamera.SetPosition(gSceneCamera.GetPosition() + (up * deltaSeconds * cameraTranslationSpeed));
 			}
-
 			break;
 		}
 
@@ -310,7 +293,6 @@ namespace TestTitle
 				// Use base up vector instead of camera up vector to always ensure vertical movement happens in the base up vector axis.
 				gSceneCamera.SetPosition(gSceneCamera.GetPosition() - (up * deltaSeconds * cameraTranslationSpeed));
 			}
-
 			break;
 		}
 		}
@@ -343,10 +325,8 @@ namespace TestTitle
 			LeviathanRenderer::SetColorTexture2D(gColorTextureId);
 			LeviathanRenderer::SetRoughnessTexture2D(gRoughnessTextureId);
 			LeviathanRenderer::SetMetallicTexture2D(gMetallicTextureId);
-			if (gUseNormalMap)
-				LeviathanRenderer::SetNormalTexture2D(gNormalTextureId);
-			else
-				LeviathanRenderer::SetNormalTexture2D(gDefaultNormalTextureId);
+			LeviathanRenderer::SetNormalTexture2D(gNormalTextureId);
+			//LeviathanRenderer::SetNormalTexture2D(gDefaultNormalTextureId);
 
 			LeviathanRenderer::SetColorTextureSampler(gLinearTextureSamplerId);
 			LeviathanRenderer::SetRoughnessTextureSampler(gLinearTextureSamplerId);
