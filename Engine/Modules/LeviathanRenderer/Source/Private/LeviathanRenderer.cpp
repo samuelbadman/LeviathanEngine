@@ -142,6 +142,105 @@ namespace LeviathanRenderer
 		Renderer::DestroySampler(id);
 	}
 
+	void Render()
+	{
+		// Begin frame.
+
+		// Set offscreen render target.
+		static constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		static constexpr float clearDepth = 1.0f;
+		static constexpr uint8_t clearStencil = 0;
+
+		Renderer::Clear(clearColor, clearDepth, clearStencil);
+		Renderer::SetRenderTargets();
+
+		// Enable depth testing and disable additive blending.
+
+		// TODO: HDRI light pass.
+
+		// Disable depth testing and enable additive blending.
+
+		// Directional light pass.
+		// Point light pass.
+		// Spot light pass.
+
+		// Note: Begin post processing.
+		// Set screen render target.
+
+		// Tone map and gamma correct pass.
+
+		// End frame.
+
+
+
+		//// Begin frame.
+		//LeviathanRenderer::BeginFrame();
+
+		//// Render directional lights.
+		//LeviathanRenderer::BeginDirectionalLightPass();
+
+		//// Update directional light data.
+		//LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer directionalLightData = {};
+
+		//LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLight.Color * gSceneDirectionalLight.Brightness;
+		//LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLight.Direction, 0.0f);
+		//LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.X(), lightDirectionViewSpace4.Y(), lightDirectionViewSpace4.Z() };
+		//lightDirectionViewSpace.NormalizeSafe();
+
+		//memcpy(&directionalLightData.Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
+		//memcpy(&directionalLightData.LightDirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
+
+		//LeviathanRenderer::UpdateDirectionalLightData(0, static_cast<const void*>(&directionalLightData), sizeof(LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer));
+
+		//// Draw objects.
+		//DrawObject();
+
+		//// Render point lights.
+		//LeviathanRenderer::BeginPointLightPass();
+
+		//// Update point light data.
+		//LeviathanRenderer::ConstantBufferTypes::PointLightConstantBuffer pointLightData = {};
+
+		//LeviathanCore::MathTypes::Vector3 pointLightRadiance = gScenePointLight.Color * gScenePointLight.Brightness;
+		//LeviathanCore::MathTypes::Vector4 pointLightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gScenePointLight.Position, 1.0f };
+		//LeviathanCore::MathTypes::Vector3 pointLightPositionViewSpace{ pointLightPositionViewSpace4.X(), pointLightPositionViewSpace4.Y(), pointLightPositionViewSpace4.Z() };
+
+		//memcpy(&pointLightData.Radiance, pointLightRadiance.Data(), sizeof(float) * 3);
+		//memcpy(&pointLightData.LightPositionViewSpace, pointLightPositionViewSpace.Data(), sizeof(float) * 3);
+
+		//LeviathanRenderer::UpdatePointLightData(0, static_cast<const void*>(&pointLightData), sizeof(LeviathanRenderer::ConstantBufferTypes::PointLightConstantBuffer));
+
+		//// Draw objects.
+		//DrawObject();
+
+		//// Render spot lights.
+		//LeviathanRenderer::BeginSpotLightPass();
+
+		//// Update spot light data.
+		//LeviathanRenderer::ConstantBufferTypes::SpotLightConstantBuffer spotLightData = {};
+
+		//LeviathanCore::MathTypes::Vector3 spotLightRadiance = gSceneSpotLight.Color * gSceneSpotLight.Brightness;
+		//LeviathanCore::MathTypes::Vector4 spotLightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gSceneSpotLight.Position, 1.0f };
+		//LeviathanCore::MathTypes::Vector3 spotLightPositionViewSpace{ spotLightPositionViewSpace4.X(), spotLightPositionViewSpace4.Y(), spotLightPositionViewSpace4.Z() };
+		//LeviathanCore::MathTypes::Vector4 spotLightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gSceneSpotLight.Direction, 0.0f };
+		//LeviathanCore::MathTypes::Vector3 spotLightDirectionViewSpace{ spotLightDirectionViewSpace4.X(), spotLightDirectionViewSpace4.Y(), spotLightDirectionViewSpace4.Z() };
+		//spotLightDirectionViewSpace.NormalizeSafe();
+
+		//memcpy(&spotLightData.Radiance, spotLightRadiance.Data(), sizeof(float) * 3);
+		//memcpy(&spotLightData.LightPositionViewSpace, spotLightPositionViewSpace.Data(), sizeof(float) * 3);
+		//memcpy(&spotLightData.LightDirectionViewSpace, spotLightDirectionViewSpace.Data(), sizeof(float) * 3);
+		//spotLightData.CosineInnerConeAngle = LeviathanCore::MathLibrary::Cos(gSceneSpotLight.InnerConeAngleRadians);
+		//spotLightData.CosineOuterConeAngle = LeviathanCore::MathLibrary::Cos(gSceneSpotLight.OuterConeAngleRadians);
+
+		//LeviathanRenderer::UpdateSpotLightData(0, static_cast<const void*>(&spotLightData), sizeof(LeviathanRenderer::ConstantBufferTypes::SpotLightConstantBuffer));
+
+		//// Draw objects.
+		//DrawObject();
+
+		// End frame.
+		//LeviathanRenderer::EndFrame();
+	}
+
 	void BeginFrame()
 	{
 		//static constexpr float clearColor[] = { 0.0f, 0.15f, 0.275f, 1.0f };

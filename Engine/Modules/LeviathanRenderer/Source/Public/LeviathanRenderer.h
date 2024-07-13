@@ -62,6 +62,8 @@ namespace LeviathanRenderer
 	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceId::IdType& outID);
 	void DestroyTextureSampler(RendererResourceId::IdType& id);
 
+	void Render();
+
 	void BeginFrame();
 	void EndFrame();
 	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId);
