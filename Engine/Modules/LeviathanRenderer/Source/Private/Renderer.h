@@ -4,17 +4,6 @@
 
 namespace LeviathanRenderer
 {
-	namespace VertexTypes
-	{
-		struct VertexPos;
-	}
-
-	namespace ConstantBufferTypes
-	{
-		struct DirectionalLightConstantBuffer;
-		struct ObjectConstantBuffer;
-	}
-
 	enum class TextureSamplerFilter : uint8_t;
 	enum class TextureSamplerBorderMode : uint8_t;
 

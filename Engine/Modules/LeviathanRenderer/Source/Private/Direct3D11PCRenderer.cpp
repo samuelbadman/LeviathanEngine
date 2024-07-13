@@ -30,6 +30,15 @@ namespace LeviathanRenderer
 		// Texture resource to associate to the depth stencil view.
 		static Microsoft::WRL::ComPtr<ID3D11Texture2D> gDepthStencilBuffer = {};
 
+		// Texture resource used to render the scene to and sampled during post processing.
+		static Microsoft::WRL::ComPtr<ID3D11Texture2D> gSceneTexture = {};
+
+		// Scene texture render target view.
+		static Microsoft::WRL::ComPtr<ID3D11RenderTargetView> gSceneTextureRenderTargetView = {};
+
+		// Scene texture shader resource view.
+		static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gSceneTextureShaderResourceView = {};
+
 		// Shader compilation settings.
 		static constexpr const char* SHADER_MODEL_5_VERTEX_SHADER = "vs_5_0";
 		static constexpr const char* SHADER_MODEL_5_PIXEL_SHADER = "ps_5_0";
@@ -37,10 +46,11 @@ namespace LeviathanRenderer
 		static constexpr char CompiledShaderCacheFileTypeSeparatingCharacter = '_';
 		static constexpr const char* CompiledShaderCacheVertexShaderFilePostFixString = "CompiledVertexShader";
 		static constexpr const char* CompiledShaderCachePixelShaderFilePostFixString = "CompiledPixelShader";
+		static constexpr bool ForceShaderRecompilation =
 #ifdef LEVIATHAN_BUILD_CONFIG_MASTER
-		static constexpr bool ForceShaderRecompile = false;
+			false;
 #else
-		static constexpr bool ForceShaderRecompilation = true;
+			true;
 #endif
 
 		// Note: For d3d12 renderer implementation.
