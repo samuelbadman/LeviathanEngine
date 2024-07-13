@@ -382,6 +382,14 @@ namespace TestTitle
 
 		// Draw objects.
 		DrawObject();
+		DrawObject();
+		DrawObject();
+		DrawObject();
+		DrawObject();
+		DrawObject();
+		DrawObject();
+		DrawObject();
+		DrawObject();
 
 		//// Render point lights.
 		//LeviathanRenderer::BeginPointLightPass();
@@ -433,7 +441,7 @@ namespace TestTitle
 	static void OnRenderImGui()
 	{
 		//gDemoTool.Render();
-		gPerfStatsDisplay.Render(LeviathanCore::Core::GetPerfFPS(), LeviathanCore::Core::GetPerfMs());
+		//gPerfStatsDisplay.Render(LeviathanCore::Core::GetPerfFPS(), LeviathanCore::Core::GetPerfMs());
 	}
 #endif // LEVIATHAN_WITH_TOOLS.
 

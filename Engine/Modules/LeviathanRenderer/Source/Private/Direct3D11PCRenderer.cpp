@@ -33,8 +33,9 @@ namespace LeviathanRenderer
 		// Define the functionality of the depth/stencil stage.
 		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilState = {};
 
-		// Define the functionality of the rasterizer stage.
+		// Define the functionality of the fixed function stages.
 		static Microsoft::WRL::ComPtr<ID3D11RasterizerState> gRasterizerState = {};
+		static Microsoft::WRL::ComPtr<ID3D11BlendState> gBlendState = {};
 		static D3D11_VIEWPORT gViewport = {};
 
 		// Shader compilation.
@@ -512,15 +513,16 @@ namespace LeviathanRenderer
 			success = CreateDepthStencilBufferAndView(width, height);
 			if (!success) { return false; }
 
-			// Create depth stencil state.
+			// Create depth stencil states.
 			D3D11_DEPTH_STENCIL_DESC depthStencilStateDesc = {};
-			depthStencilStateDesc.DepthEnable = TRUE;
+			depthStencilStateDesc.DepthEnable = FALSE;
 			depthStencilStateDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 			depthStencilStateDesc.DepthFunc = D3D11_COMPARISON_LESS;
 			depthStencilStateDesc.StencilEnable = FALSE;
-
 			hr = gD3D11Device->CreateDepthStencilState(&depthStencilStateDesc, &gDepthStencilState);
 			if (FAILED(hr)) { return false; };
+
+			gD3D11DeviceContext->OMSetDepthStencilState(gDepthStencilState.Get(), 0);
 
 			// Create rasterizer state.
 			D3D11_RASTERIZER_DESC rasterizerStateDesc = {};
@@ -539,6 +541,26 @@ namespace LeviathanRenderer
 			if (FAILED(hr)) { return false; };
 
 			gD3D11DeviceContext->RSSetState(gRasterizerState.Get());
+
+			// Create blend state.
+			D3D11_BLEND_DESC blendDesc = {};
+
+			D3D11_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc = {};
+			renderTargetBlendDesc.BlendEnable = true;
+			renderTargetBlendDesc.SrcBlend = D3D11_BLEND::D3D11_BLEND_ONE;
+			renderTargetBlendDesc.DestBlend = D3D11_BLEND::D3D11_BLEND_ONE;
+			renderTargetBlendDesc.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+			renderTargetBlendDesc.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
+			renderTargetBlendDesc.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
+			renderTargetBlendDesc.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+			renderTargetBlendDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;
+
+			blendDesc.RenderTarget[0] = renderTargetBlendDesc;
+
+			hr = gD3D11Device->CreateBlendState(&blendDesc, &gBlendState);
+			if (FAILED(hr)) { return false; }
+
+			gD3D11DeviceContext->OMSetBlendState(gBlendState.Get(), nullptr, 0xffffffff);
 
 			// Set up the viewport.
 			SetupViewport(width, height);
@@ -638,8 +660,8 @@ namespace LeviathanRenderer
 			gDepthStencilBuffer.Reset();
 
 			gDepthStencilState.Reset();
-
 			gRasterizerState.Reset();
+			gBlendState.Reset();
 			gViewport = {};
 
 			gInputLayout.Reset();
@@ -842,6 +864,7 @@ namespace LeviathanRenderer
 		void SetRenderTargets()
 		{
 			gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
+			//gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), nullptr);
 		}
 
 		void SetShaderResourceTables()
