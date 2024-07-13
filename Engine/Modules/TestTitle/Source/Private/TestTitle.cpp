@@ -395,17 +395,17 @@ namespace TestTitle
 
 			// Build render mesh.
 			// Render mesh definition.
-			std::vector<LeviathanRenderer::VertexTypes::VertexPosNormUVTang> vertices = {};
+			std::vector<LeviathanRenderer::VertexTypes::VertexPos3Norm3UV2Tang3> vertices = {};
 			std::vector<unsigned int> indices = {};
 
-			gSingleVertexStrideBytes = sizeof(LeviathanRenderer::VertexTypes::VertexPosNormUVTang);
+			gSingleVertexStrideBytes = sizeof(LeviathanRenderer::VertexTypes::VertexPos3Norm3UV2Tang3);
 			gIndexCount = static_cast<unsigned int>(combinedModel.Indices.size());
 
 			// Build render mesh.
 			// For each vertex in the mesh.
 			for (size_t i = 0; i < combinedModel.Positions.size(); ++i)
 			{
-				vertices.emplace_back(LeviathanRenderer::VertexTypes::VertexPosNormUVTang
+				vertices.emplace_back(LeviathanRenderer::VertexTypes::VertexPos3Norm3UV2Tang3
 					{
 						.Position = { combinedModel.Positions[i].X(), combinedModel.Positions[i].Y(), combinedModel.Positions[i].Z() },
 						.Normal = { combinedModel.Normals[i].X(), combinedModel.Normals[i].Y(), combinedModel.Normals[i].Z() },
@@ -421,7 +421,7 @@ namespace TestTitle
 			}
 
 			// Create geometry buffers.
-			if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), sizeof(LeviathanRenderer::VertexTypes::VertexPosNormUVTang), gVertexBufferId))
+			if (!LeviathanRenderer::CreateVertexBuffer(vertices.data(), static_cast<unsigned int>(vertices.size()), sizeof(LeviathanRenderer::VertexTypes::VertexPos3Norm3UV2Tang3), gVertexBufferId))
 			{
 				return false;
 			}
@@ -431,25 +431,6 @@ namespace TestTitle
 				return false;
 			}
 		}
-
-		// Load quad geometry.
-		//std::array<LeviathanRenderer::VertexTypes::Vertex1Pos, 4> quadVertices =
-		//{
-		//	LeviathanRenderer::VertexTypes::Vertex1Pos{ -0.5f, -0.5f, 0.0f }, // Bottom left.
-		//	LeviathanRenderer::VertexTypes::Vertex1Pos{ -0.5f, 0.5f, 0.0f }, // Top left.
-		//	LeviathanRenderer::VertexTypes::Vertex1Pos{ 0.5f, 0.5f, 0.0f }, // Top right.
-		//	LeviathanRenderer::VertexTypes::Vertex1Pos{ 0.5f, -0.5f, 0.0f } // Bottom right.
-		//};
-
-		//std::array<unsigned int, 6> quadIndices =
-		//{
-		//	0, // Bottom left.
-		//	1, // Top left.
-		//	2, // Top right.
-		//	0, // Bottom left.
-		//	2, // Top right.
-		//	3 // Bottom right.
-		//};
 
 		// Import textures.
 		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};

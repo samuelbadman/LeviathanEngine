@@ -39,6 +39,9 @@ namespace LeviathanRenderer
 		// Scene texture shader resource view.
 		static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gSceneTextureShaderResourceView = {};
 
+		// Scene texture sampler state.
+		static Microsoft::WRL::ComPtr<ID3D11SamplerState> gSceneTextureSamplerState = {};
+
 		// Shader compilation settings.
 		static constexpr const char* SHADER_MODEL_5_VERTEX_SHADER = "vs_5_0";
 		static constexpr const char* SHADER_MODEL_5_PIXEL_SHADER = "ps_5_0";
@@ -338,6 +341,7 @@ namespace LeviathanRenderer
 		Pipeline gDirectionalLightPipeline = {};
 		Pipeline gPointLightPipeline = {};
 		Pipeline gSpotLightPipeline = {};
+		Pipeline gPostProcessPipeline = {};
 
 		// Renderer state.
 		static bool gVSync = false;
@@ -560,6 +564,60 @@ namespace LeviathanRenderer
 			success = CreateDepthStencilBufferAndView(width, height);
 			if (!success) { return false; }
 
+			// Create scene texture resource.
+			D3D11_TEXTURE2D_DESC sceneTextureResourceDesc = {};
+			sceneTextureResourceDesc.Width = width;
+			sceneTextureResourceDesc.Height = height;
+			sceneTextureResourceDesc.MipLevels = 1;
+			sceneTextureResourceDesc.ArraySize = 1;
+			sceneTextureResourceDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			sceneTextureResourceDesc.SampleDesc.Count = 1;
+			sceneTextureResourceDesc.Usage = D3D11_USAGE_DEFAULT;
+			sceneTextureResourceDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+			sceneTextureResourceDesc.CPUAccessFlags = 0;
+			sceneTextureResourceDesc.MiscFlags = 0;
+
+			hr = gD3D11Device->CreateTexture2D(&sceneTextureResourceDesc, nullptr, &gSceneTexture);
+			if (FAILED(hr)) { return false; }
+
+			// Create scene texture render target view.
+			D3D11_RENDER_TARGET_VIEW_DESC sceneTextureRenderTargetViewDesc = {};
+			sceneTextureRenderTargetViewDesc.Format = sceneTextureResourceDesc.Format;
+			sceneTextureRenderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			sceneTextureRenderTargetViewDesc.Texture2D.MipSlice = 0;
+
+			hr = gD3D11Device->CreateRenderTargetView(gSceneTexture.Get(), &sceneTextureRenderTargetViewDesc, &gSceneTextureRenderTargetView);
+			if (FAILED(hr)) { return false; }
+
+			// Create scene texture shader resource view.
+			D3D11_SHADER_RESOURCE_VIEW_DESC sceneTextureShaderResourceViewDesc = {};
+			sceneTextureShaderResourceViewDesc.Format = sceneTextureResourceDesc.Format;
+			sceneTextureShaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			sceneTextureShaderResourceViewDesc.Texture2D.MipLevels = 1;
+			sceneTextureShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+
+			hr = gD3D11Device->CreateShaderResourceView(gSceneTexture.Get(), &sceneTextureShaderResourceViewDesc, &gSceneTextureShaderResourceView);
+			if (FAILED(hr)) { return false; }
+
+			// Create scene texture sampler state.
+			D3D11_SAMPLER_DESC sceneTextureSamplerDesc = {};
+			sceneTextureSamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			sceneTextureSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+			sceneTextureSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+			sceneTextureSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+			sceneTextureSamplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+			sceneTextureSamplerDesc.BorderColor[0] = 1.0f;
+			sceneTextureSamplerDesc.BorderColor[1] = 0.0f;
+			sceneTextureSamplerDesc.BorderColor[2] = 1.0f;
+			sceneTextureSamplerDesc.BorderColor[3] = 1.0f;
+			sceneTextureSamplerDesc.MipLODBias = 0.0f;
+			sceneTextureSamplerDesc.MaxAnisotropy = 1;
+			sceneTextureSamplerDesc.MinLOD = 0.0f;
+			sceneTextureSamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+			hr = gD3D11Device->CreateSamplerState(&sceneTextureSamplerDesc, &gSceneTextureSamplerState);
+			if (FAILED(hr)) { return false; }
+
 			// Create depth stencil states.
 			D3D11_DEPTH_STENCIL_DESC depthTestEnabledStateDesc = {};
 			depthTestEnabledStateDesc.DepthEnable = TRUE;
@@ -632,6 +690,7 @@ namespace LeviathanRenderer
 			}
 
 			// Create pipelines.
+			// Lighting passes.
 			std::array<D3D11_INPUT_ELEMENT_DESC, 4> lightingPassInputLayoutDesc =
 			{
 				D3D11_INPUT_ELEMENT_DESC
@@ -689,6 +748,37 @@ namespace LeviathanRenderer
 				lightingPassInputLayoutDesc.data(), static_cast<UINT>(lightingPassInputLayoutDesc.size()), { .SourceCodeFile = "SpotLightPixelShader.hlsl", .EntryPointName = "main" });
 			if (!success) { return false; }
 
+			// Post processing.
+			std::array<D3D11_INPUT_ELEMENT_DESC, 2> postProcessPassInputLayoutDesc =
+			{
+				D3D11_INPUT_ELEMENT_DESC
+				{
+					.SemanticName = "POSITION",
+					.SemanticIndex = 0,
+					.Format = DXGI_FORMAT_R32G32_FLOAT,
+					.InputSlot = 0,
+					.AlignedByteOffset = 0,
+					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+					.InstanceDataStepRate = 0
+				},
+
+				D3D11_INPUT_ELEMENT_DESC
+				{
+					.SemanticName = "UV",
+					.SemanticIndex = 0,
+					.Format = DXGI_FORMAT_R32G32_FLOAT,
+					.InputSlot = 0,
+					.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT,
+					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+					.InstanceDataStepRate = 0
+				}
+			};
+
+			success = gPostProcessPipeline.Create("PostProcessPipeline", { .SourceCodeFile = "PostProcessVertexShader.hlsl", .EntryPointName = "main" },
+				postProcessPassInputLayoutDesc.data(), static_cast<UINT>(postProcessPassInputLayoutDesc.size()), 
+				{ .SourceCodeFile = "PostProcessPixelShader.hlsl", .EntryPointName = "main" });
+			if (!success) { return false; }
+
 			// Create constant buffers.
 			success = CreateDefaultConstantBuffer<ConstantBufferTypes::ObjectConstantBuffer>(&gObjectBuffer);
 			if (!success) { return false; }
@@ -718,6 +808,11 @@ namespace LeviathanRenderer
 			gBackBufferRenderTargetView.Reset();
 			gDepthStencilView.Reset();
 			gDepthStencilBuffer.Reset();
+
+			gSceneTexture.Reset();
+			gSceneTextureRenderTargetView.Reset();
+			gSceneTextureShaderResourceView.Reset();
+			gSceneTextureSamplerState.Reset();
 
 			gDepthTestEnabledState.Reset();
 			gDepthTestDisabledState.Reset();
@@ -768,8 +863,12 @@ namespace LeviathanRenderer
 			success = CreateDepthStencilBufferAndView(width, height);
 			if (!success) { return false; }
 
-			// Set up the viewport.
+			// Set the viewport.
 			SetViewport(width, height);
+
+			// Release current scene texture resources.
+			// Recreate scene texture resource.
+
 
 			return success;
 		}
@@ -909,6 +1008,11 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
 		}
 
+		void ClearSceneRenderTarget(const float* clearColor)
+		{
+			gD3D11DeviceContext->ClearRenderTargetView(gSceneTextureRenderTargetView.Get(), clearColor);
+		}
+
 		void ClearDepthStencil(float clearDepth, unsigned char clearStencil)
 		{
 			gD3D11DeviceContext->ClearDepthStencilView(gDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, clearDepth, clearStencil);
@@ -916,13 +1020,24 @@ namespace LeviathanRenderer
 
 		void SetScreenRenderTarget()
 		{
-			gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
+			gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), nullptr);
+		}
+
+		void SetSceneRenderTarget()
+		{
+			gD3D11DeviceContext->OMSetRenderTargets(1, gSceneTextureRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
 		}
 
 		void SetShaderResourceTables()
 		{
 			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DSRVTableLength, gTexture2DSRVTable[0].GetAddressOf());
 			gD3D11DeviceContext->PSSetSamplers(0, RendererConstants::TextureSamplerTableLength, gTextureSamplerTable[0].GetAddressOf());
+		}
+
+		void UnbindShaderResources()
+		{
+			ID3D11ShaderResourceView* nullShaderResourceView = nullptr;
+			gD3D11DeviceContext->PSSetShaderResources(0, 1, &nullShaderResourceView);
 		}
 
 		void SetDirectionalLightPipeline()
@@ -953,6 +1068,15 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gSpotLightBuffer.GetAddressOf());
 			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gSpotLightBuffer.GetAddressOf());
+		}
+
+		void SetPostProcessPipeline()
+		{
+			gD3D11DeviceContext->IASetInputLayout(gPostProcessPipeline.GetInputLayout());
+			gD3D11DeviceContext->VSSetShader(gPostProcessPipeline.GetVertexShader(), nullptr, 0);
+			gD3D11DeviceContext->PSSetShader(gPostProcessPipeline.GetPixelShader(), nullptr, 0);
+			gD3D11DeviceContext->PSSetShaderResources(0, 1, gSceneTextureShaderResourceView.GetAddressOf());
+			gD3D11DeviceContext->PSSetSamplers(0, 1, gSceneTextureSamplerState.GetAddressOf());
 		}
 
 		void Present()

@@ -8,6 +8,10 @@
 
 namespace LeviathanRenderer
 {
+	static uint32_t gScreenQuadIndexCount = 0;
+	static RendererResourceId::IdType gScreenQuadVertexBufferResourceId = RendererResourceId::InvalidId;
+	static RendererResourceId::IdType gScreenQuadIndexBufferResourceId = RendererResourceId::InvalidId;
+
 #ifdef LEVIATHAN_WITH_TOOLS
 	static LeviathanCore::Callback<RenderImGuiCallbackType> RenderImGuiCallback = {};
 #endif // LEVIATHAN_WITH_TOOLS.
@@ -39,6 +43,41 @@ namespace LeviathanRenderer
 		return RenderImGuiCallback;
 	}
 #endif // LEVIATHAN_WITH_TOOLS.
+
+	static bool CreateScreenQuadGeometryResources(uint32_t& outIndexCount, RendererResourceId::IdType& outVertexBufferId, RendererResourceId::IdType& outIndexBufferId)
+	{
+		std::array<VertexTypes::VertexPos2UV2, 4> screenQuadVertices =
+		{
+			VertexTypes::VertexPos2UV2{ -1.0f, -1.0f, 0.0f, 0.0f }, // Bottom left.
+			VertexTypes::VertexPos2UV2{ -1.0f, 1.0f, 0.0f, 1.0f }, // Top left.
+			VertexTypes::VertexPos2UV2{ 1.0f, 1.0f, 1.0f, 1.0f }, // Top right.
+			VertexTypes::VertexPos2UV2{ 1.0f, -1.0f,  1.0f, 0.0f } // Bottom right.
+		};
+
+		std::array<uint32_t, 6> screenQuadIndices =
+		{
+			0, // Bottom left.
+			1, // Top left.
+			2, // Top right.
+			0, // Bottom left.
+			2, // Top right.
+			3 // Bottom right.
+		};
+
+		outIndexCount = static_cast<uint32_t>(screenQuadIndices.size());
+
+		if (!CreateVertexBuffer(static_cast<const void*>(screenQuadVertices.data()), outIndexCount, sizeof(VertexTypes::VertexPos2UV2), outVertexBufferId))
+		{
+			return false;
+		}
+
+		if (!CreateIndexBuffer(screenQuadIndices.data(), static_cast<unsigned int>(screenQuadIndices.size()), outIndexBufferId))
+		{
+			return false;
+		}
+
+		return true;
+	}
 
 	bool Initialize()
 	{
@@ -79,6 +118,12 @@ namespace LeviathanRenderer
 			return false;
 		}
 #endif // LEVIATHAN_WITH_TOOLS.
+
+		// Create screen quad geometry for drawing post process effects.
+		if (!CreateScreenQuadGeometryResources(gScreenQuadIndexCount, gScreenQuadVertexBufferResourceId, gScreenQuadIndexBufferResourceId))
+		{
+			return false;
+		}
 
 		return true;
 	}
@@ -145,24 +190,25 @@ namespace LeviathanRenderer
 		Renderer::DestroySampler(id);
 	}
 
-	void Render(const LeviathanRenderer::Camera& view, 
-		const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, const size_t numDirectionalLights,
-		/*TODO: Temporary parameters. Make a material/object solution.*/ RendererResourceId::IdType colorTextureResourceId, RendererResourceId::IdType metallicTextureResourceId,
-		RendererResourceId::IdType roughnessTextureResourceId, RendererResourceId::IdType normalTextureResourceId, RendererResourceId::IdType samplerResourceId,
-		const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix, const uint32_t objectIndexCount, RendererResourceId::IdType objectVertexBufferResourceId,
-		RendererResourceId::IdType objectIndexBufferResourceId)
+	void Render([[maybe_unused]] const LeviathanRenderer::Camera& view,
+		[[maybe_unused]] const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, [[maybe_unused]] const size_t numDirectionalLights,
+		/*TODO: Temporary parameters. Make a material/object solution.*/ [[maybe_unused]] RendererResourceId::IdType colorTextureResourceId, [[maybe_unused]] RendererResourceId::IdType metallicTextureResourceId,
+		[[maybe_unused]] RendererResourceId::IdType roughnessTextureResourceId, [[maybe_unused]] RendererResourceId::IdType normalTextureResourceId, [[maybe_unused]] RendererResourceId::IdType samplerResourceId,
+		[[maybe_unused]] const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix, [[maybe_unused]] const uint32_t objectIndexCount, [[maybe_unused]] RendererResourceId::IdType objectVertexBufferResourceId,
+		[[maybe_unused]] RendererResourceId::IdType objectIndexBufferResourceId)
 	{
 		// Begin frame.
 
-		// Clear screen render target and depth/stencil buffer.
+		// Clear screen render target, scene render target and depth/stencil buffer.
 		static constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		Renderer::ClearScreenRenderTarget(clearColor);
+		Renderer::ClearSceneRenderTarget(clearColor);
 		static constexpr float clearDepth = 1.0f;
 		static constexpr uint8_t clearStencil = 0;
 		Renderer::ClearDepthStencil(clearDepth, clearStencil);
 
 		// Set offscreen render target.
-		Renderer::SetScreenRenderTarget();
+		Renderer::SetSceneRenderTarget();
 
 		// Enable depth testing and disable additive blending.
 		Renderer::SetDepthTestEnabled();
@@ -214,16 +260,25 @@ namespace LeviathanRenderer
 			Renderer::UpdateObjectBufferData(0, &objectData, sizeof(LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer));
 
 			// Draw.
-			Renderer::DrawIndexed(objectIndexCount, sizeof(LeviathanRenderer::VertexTypes::VertexPosNormUVTang), objectVertexBufferResourceId, objectIndexBufferResourceId);
+			Renderer::DrawIndexed(objectIndexCount, sizeof(LeviathanRenderer::VertexTypes::VertexPos3Norm3UV2Tang3), objectVertexBufferResourceId, objectIndexBufferResourceId);
 		}
 
 		// Point light pass.
 		// Spot light pass.
 
-		// Note: Begin post processing.
-		// Set screen render target.
+		// Disable blending.
+		Renderer::SetBlendingDisabled();
 
-		// Tone map and gamma correct pass.
+		// Begin post processing.
+		// Set screen render target.
+		Renderer::SetScreenRenderTarget();
+
+		// Post process pass.
+		Renderer::SetPostProcessPipeline();
+		Renderer::DrawIndexed(gScreenQuadIndexCount, sizeof(VertexTypes::VertexPos2UV2), gScreenQuadVertexBufferResourceId, gScreenQuadIndexBufferResourceId);
+
+		// Unbind shader resources.
+		Renderer::UnbindShaderResources();
 
 		// End frame.
 

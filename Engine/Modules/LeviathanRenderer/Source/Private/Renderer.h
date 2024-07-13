@@ -23,18 +23,22 @@ namespace LeviathanRenderer
 
 		// Render commands.
 		void ClearScreenRenderTarget(const float* clearColor);
+		void ClearSceneRenderTarget(const float* clearColor);
 		void ClearDepthStencil(float clearDepth, unsigned char clearStencil);
 		void SetScreenRenderTarget();
-		void SetShaderResourceTables();
+		void SetSceneRenderTarget();
 		void SetDirectionalLightPipeline();
 		void SetPointLightPipeline();
 		void SetSpotLightPipeline();
+		void SetPostProcessPipeline();
 		void Present();
 		void DrawIndexed(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId);
 		bool UpdateObjectBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdateDirectionalLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdatePointLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdateSpotLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+		void SetShaderResourceTables();
+		void UnbindShaderResources();
 		void SetDepthTestEnabled();
 		void SetDepthTestDisabled();
 		void SetBlendingAdditive();
