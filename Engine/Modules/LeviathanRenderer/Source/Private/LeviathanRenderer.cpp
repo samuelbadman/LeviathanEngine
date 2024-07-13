@@ -2,6 +2,9 @@
 #include "Logging.h"
 #include "Core.h"
 #include "Renderer.h"
+#include "ConstantBufferTypes.h"
+#include "Camera.h"
+#include "VertexTypes.h"
 
 namespace LeviathanRenderer
 {
@@ -142,25 +145,78 @@ namespace LeviathanRenderer
 		Renderer::DestroySampler(id);
 	}
 
-	void Render()
+	void Render(const LeviathanRenderer::Camera& view, 
+		const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, const size_t numDirectionalLights,
+		/*TODO: Temporary parameters. Make a material/object solution.*/ RendererResourceId::IdType colorTextureResourceId, RendererResourceId::IdType metallicTextureResourceId,
+		RendererResourceId::IdType roughnessTextureResourceId, RendererResourceId::IdType normalTextureResourceId, RendererResourceId::IdType samplerResourceId,
+		const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix, const uint32_t objectIndexCount, RendererResourceId::IdType objectVertexBufferResourceId,
+		RendererResourceId::IdType objectIndexBufferResourceId)
 	{
 		// Begin frame.
 
-		// Set offscreen render target.
+		// Clear screen render target and depth/stencil buffer.
 		static constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		Renderer::ClearScreenRenderTarget(clearColor);
 		static constexpr float clearDepth = 1.0f;
 		static constexpr uint8_t clearStencil = 0;
+		Renderer::ClearDepthStencil(clearDepth, clearStencil);
 
-		Renderer::Clear(clearColor, clearDepth, clearStencil);
-		Renderer::SetRenderTargets();
+		// Set offscreen render target.
+		Renderer::SetScreenRenderTarget();
 
 		// Enable depth testing and disable additive blending.
+		Renderer::SetDepthTestEnabled();
+		Renderer::SetBlendingDisabled();
 
 		// TODO: HDRI light pass.
 
 		// Disable depth testing and enable additive blending.
+		Renderer::SetDepthTestDisabled();
+		Renderer::SetBlendingAdditive();
 
 		// Directional light pass.
+		Renderer::SetDirectionalLightPipeline();
+		for (size_t i = 0; i < numDirectionalLights; ++i)
+		{
+			LeviathanCore::MathTypes::Vector3 directionalLightRadiance = pSceneDirectionalLights[i].Color * pSceneDirectionalLights[i].Brightness;
+			LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = view.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(pSceneDirectionalLights[i].Direction, 0.0f);
+			LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.X(), lightDirectionViewSpace4.Y(), lightDirectionViewSpace4.Z() };
+			lightDirectionViewSpace.NormalizeSafe();
+			LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer directionalLightData = {};
+			memcpy(&directionalLightData.Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(&directionalLightData.LightDirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
+			Renderer::UpdateDirectionalLightBufferData(0, static_cast<const void*>(&directionalLightData), sizeof(LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer));
+
+			// TODO: For each object affected by light, daw.
+			// Update shader table data.
+			Renderer::SetColorTexture2DResource(colorTextureResourceId);
+			Renderer::SetMetallicTexture2DResource(metallicTextureResourceId);
+			Renderer::SetRoughnessTexture2DResource(roughnessTextureResourceId);
+			Renderer::SetNormalTexture2DResource(normalTextureResourceId);
+
+			Renderer::SetColorTextureSampler(samplerResourceId);
+			Renderer::SetRoughnessTextureSampler(samplerResourceId);
+			Renderer::SetMetallicTextureSampler(samplerResourceId);
+			Renderer::SetNormalTextureSampler(samplerResourceId);
+
+			Renderer::SetShaderResourceTables();
+
+			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransformMatrix;
+			const LeviathanCore::MathTypes::Matrix4x4 worldViewMatrix = view.GetViewMatrix() * worldMatrix;
+			const LeviathanCore::MathTypes::Matrix4x4 normalMatrix = LeviathanCore::MathTypes::Matrix4x4::Transpose(LeviathanCore::MathTypes::Matrix4x4::Inverse(worldViewMatrix));
+			const LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = view.GetViewProjectionMatrix() * worldMatrix;
+
+			// Update object data.
+			LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer objectData = {};
+			memcpy(objectData.WorldViewMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
+			memcpy(objectData.WorldViewProjectionMatrix, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
+			memcpy(objectData.NormalMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
+			Renderer::UpdateObjectBufferData(0, &objectData, sizeof(LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer));
+
+			// Draw.
+			Renderer::DrawIndexed(objectIndexCount, sizeof(LeviathanRenderer::VertexTypes::VertexPosNormUVTang), objectVertexBufferResourceId, objectIndexBufferResourceId);
+		}
+
 		// Point light pass.
 		// Spot light pass.
 
@@ -239,106 +295,6 @@ namespace LeviathanRenderer
 
 		// End frame.
 		//LeviathanRenderer::EndFrame();
-	}
-
-	void BeginFrame()
-	{
-		//static constexpr float clearColor[] = { 0.0f, 0.15f, 0.275f, 1.0f };
-		static constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		static constexpr float clearDepth = 1.f;
-		static constexpr unsigned char clearStencil = 0;
-
-		Renderer::Clear(clearColor, clearDepth, clearStencil);
-		Renderer::SetRenderTargets();
-	}
-
-	void EndFrame()
-	{
-	}
-
-	void Draw(const unsigned int indexCount, size_t singleVertexStrideBytes, const RendererResourceId::IdType vertexBufferId, const RendererResourceId::IdType indexBufferId)
-	{
-		Renderer::DrawIndexed(indexCount, singleVertexStrideBytes, vertexBufferId, indexBufferId);
-	}
-
-	void SetShaderResourceTables()
-	{
-		Renderer::SetShaderResourceTables();
-	}
-
-	bool UpdateObjectData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
-	{
-		return Renderer::UpdateObjectBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
-	}
-
-	bool UpdateDirectionalLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
-	{
-		return Renderer::UpdateDirectionalLightBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
-	}
-
-	bool UpdatePointLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
-	{
-		return Renderer::UpdatePointLightBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
-	}
-
-	bool UpdateSpotLightData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
-	{
-		return Renderer::UpdateSpotLightBufferData(byteOffsetIntoBuffer, pNewData, byteWidth);
-	}
-
-	void BeginDirectionalLightPass()
-	{
-		Renderer::SetDirectionalLightPipeline();
-	}
-
-	void BeginPointLightPass()
-	{
-		Renderer::SetPointLightPipeline();
-	}
-
-	void BeginSpotLightPass()
-	{
-		Renderer::SetSpotLightPipeline();
-	}
-
-	void SetColorTexture2D(RendererResourceId::IdType texture2DId)
-	{
-		Renderer::SetColorTexture2DResource(texture2DId);
-	}
-
-	void SetRoughnessTexture2D(RendererResourceId::IdType texture2DId)
-	{
-		Renderer::SetRoughnessTexture2DResource(texture2DId);
-	}
-
-	void SetMetallicTexture2D(RendererResourceId::IdType texture2DId)
-	{
-		Renderer::SetMetallicTexture2DResource(texture2DId);
-	}
-
-	void SetNormalTexture2D(RendererResourceId::IdType texture2DId)
-	{
-		Renderer::SetNormalTexture2DResource(texture2DId);
-	}
-
-	void SetColorTextureSampler(RendererResourceId::IdType samplerId)
-	{
-		Renderer::SetColorTextureSampler(samplerId);
-	}
-
-	void SetRoughnessTextureSampler(RendererResourceId::IdType samplerId)
-	{
-		Renderer::SetRoughnessTextureSampler(samplerId);
-	}
-
-	void SetMetallicTextureSampler(RendererResourceId::IdType samplerId)
-	{
-		Renderer::SetMetallicTextureSampler(samplerId);
-	}
-
-	void SetNormalTextureSampler(RendererResourceId::IdType samplerId)
-	{
-		Renderer::SetNormalTextureSampler(samplerId);
 	}
 
 	void Present()

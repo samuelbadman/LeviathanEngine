@@ -12,9 +12,9 @@
 #include "Camera.h"
 #include "RendererResourceID.h"
 #include "DataStructures.h"
-#include "ConstantBufferTypes.h"
 #include "VertexTypes.h"
 #include "LinearColor.h"
+#include "LightTypes.h"
 
 #ifdef LEVIATHAN_WITH_TOOLS
 #include "DemoTool.h"
@@ -47,34 +47,6 @@ namespace TestTitle
 		}
 	};
 
-	struct DirectionalLight
-	{
-		LeviathanCore::MathTypes::Vector3 Color{ 1.0f, 1.0f, 1.0f };
-		float Brightness = 1.0f;
-		// Direction in world space.
-		LeviathanCore::MathTypes::Vector3 Direction{ -0.577350259f, -0.577350259f, 0.577350259f };
-	};
-
-	struct PointLight
-	{
-		LeviathanCore::MathTypes::Vector3 Color{ 1.0f, 1.0f, 1.0f };
-		float Brightness = 1.0f;
-		// Position in world space.
-		LeviathanCore::MathTypes::Vector3 Position{ 0.0f, 0.0f, 0.0f };
-	};
-
-	struct SpotLight
-	{
-		LeviathanCore::MathTypes::Vector3 Color{ 1.0f, 1.0f, 1.0f };
-		float Brightness = 1.0f;
-		// Position in world space.
-		LeviathanCore::MathTypes::Vector3 Position{ 0.0f, 0.0f, 0.0f };
-		// Direction in world space.
-		LeviathanCore::MathTypes::Vector3 Direction{ 0.0f, -1.0f, 0.0f };
-		float InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f);
-		float OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(17.5f);
-	};
-
 #ifdef LEVIATHAN_WITH_TOOLS
 	static LeviathanTools::DemoTool gDemoTool = {};
 	static LeviathanTools::PerfStatsDisplay gPerfStatsDisplay = {};
@@ -89,9 +61,9 @@ namespace TestTitle
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
 
-	static DirectionalLight gSceneDirectionalLight = {};
-	static PointLight gScenePointLight = {};
-	static SpotLight gSceneSpotLight = {};
+	static std::vector<LeviathanRenderer::LightTypes::DirectionalLight> gSceneDirectionalLights = {};
+	static LeviathanRenderer::LightTypes::PointLight gScenePointLight = {};
+	static LeviathanRenderer::LightTypes::SpotLight gSceneSpotLight = {};
 
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -317,124 +289,11 @@ namespace TestTitle
 
 	}
 
-	static void DrawObject()
-	{
-		if (gIndexCount > 0)
-		{
-			// Update shader table data.
-			LeviathanRenderer::SetColorTexture2D(gColorTextureId);
-			LeviathanRenderer::SetRoughnessTexture2D(gRoughnessTextureId);
-			LeviathanRenderer::SetMetallicTexture2D(gMetallicTextureId);
-			LeviathanRenderer::SetNormalTexture2D(gNormalTextureId);
-			//LeviathanRenderer::SetNormalTexture2D(gDefaultNormalTextureId);
-
-			LeviathanRenderer::SetColorTextureSampler(gLinearTextureSamplerId);
-			LeviathanRenderer::SetRoughnessTextureSampler(gLinearTextureSamplerId);
-			LeviathanRenderer::SetMetallicTextureSampler(gLinearTextureSamplerId);
-			LeviathanRenderer::SetNormalTextureSampler(gLinearTextureSamplerId);
-
-			LeviathanRenderer::SetShaderResourceTables();
-
-			// Calculate world matrix.
-			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = gObjectTransform.Matrix();
-
-			// Calculate world view matrix.
-			const LeviathanCore::MathTypes::Matrix4x4 worldViewMatrix = gSceneCamera.GetViewMatrix() * worldMatrix;
-
-			// Calculate normal matrix.
-			const LeviathanCore::MathTypes::Matrix4x4 normalMatrix = LeviathanCore::MathTypes::Matrix4x4::Transpose(LeviathanCore::MathTypes::Matrix4x4::Inverse(worldViewMatrix));
-
-			// Calculate world view projection matrix.
-			const LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = gSceneCamera.GetViewProjectionMatrix() * worldMatrix;
-
-			// Update object data.
-			LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer objectData = {};
-			memcpy(objectData.WorldViewMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
-			memcpy(objectData.WorldViewProjectionMatrix, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
-			memcpy(objectData.NormalMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
-			LeviathanRenderer::UpdateObjectData(0, &objectData, sizeof(LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer));
-
-			// Draw.
-			LeviathanRenderer::Draw(gIndexCount, gSingleVertexStrideBytes, gVertexBufferId, gIndexBufferId);
-		}
-	}
-
 	static void OnRender()
 	{
-		// Begin frame.
-		LeviathanRenderer::BeginFrame();
-
-		// Render directional lights.
-		LeviathanRenderer::BeginDirectionalLightPass();
-
-		// Update directional light data.
-		LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer directionalLightData = {};
-
-		LeviathanCore::MathTypes::Vector3 directionalLightRadiance = gSceneDirectionalLight.Color * gSceneDirectionalLight.Brightness;
-		LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(gSceneDirectionalLight.Direction, 0.0f);
-		LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.X(), lightDirectionViewSpace4.Y(), lightDirectionViewSpace4.Z() };
-		lightDirectionViewSpace.NormalizeSafe();
-
-		memcpy(&directionalLightData.Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
-		memcpy(&directionalLightData.LightDirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
-
-		LeviathanRenderer::UpdateDirectionalLightData(0, static_cast<const void*>(&directionalLightData), sizeof(LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer));
-
-		// Draw objects.
-		DrawObject();
-		DrawObject();
-		DrawObject();
-		DrawObject();
-		DrawObject();
-		DrawObject();
-		DrawObject();
-		DrawObject();
-		DrawObject();
-
-		//// Render point lights.
-		//LeviathanRenderer::BeginPointLightPass();
-
-		//// Update point light data.
-		//LeviathanRenderer::ConstantBufferTypes::PointLightConstantBuffer pointLightData = {};
-
-		//LeviathanCore::MathTypes::Vector3 pointLightRadiance = gScenePointLight.Color * gScenePointLight.Brightness;
-		//LeviathanCore::MathTypes::Vector4 pointLightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gScenePointLight.Position, 1.0f };
-		//LeviathanCore::MathTypes::Vector3 pointLightPositionViewSpace{ pointLightPositionViewSpace4.X(), pointLightPositionViewSpace4.Y(), pointLightPositionViewSpace4.Z() };
-
-		//memcpy(&pointLightData.Radiance, pointLightRadiance.Data(), sizeof(float) * 3);
-		//memcpy(&pointLightData.LightPositionViewSpace, pointLightPositionViewSpace.Data(), sizeof(float) * 3);
-
-		//LeviathanRenderer::UpdatePointLightData(0, static_cast<const void*>(&pointLightData), sizeof(LeviathanRenderer::ConstantBufferTypes::PointLightConstantBuffer));
-
-		//// Draw objects.
-		//DrawObject();
-
-		//// Render spot lights.
-		//LeviathanRenderer::BeginSpotLightPass();
-
-		//// Update spot light data.
-		//LeviathanRenderer::ConstantBufferTypes::SpotLightConstantBuffer spotLightData = {};
-
-		//LeviathanCore::MathTypes::Vector3 spotLightRadiance = gSceneSpotLight.Color * gSceneSpotLight.Brightness;
-		//LeviathanCore::MathTypes::Vector4 spotLightPositionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gSceneSpotLight.Position, 1.0f };
-		//LeviathanCore::MathTypes::Vector3 spotLightPositionViewSpace{ spotLightPositionViewSpace4.X(), spotLightPositionViewSpace4.Y(), spotLightPositionViewSpace4.Z() };
-		//LeviathanCore::MathTypes::Vector4 spotLightDirectionViewSpace4 = gSceneCamera.GetViewMatrix() * LeviathanCore::MathTypes::Vector4{ gSceneSpotLight.Direction, 0.0f };
-		//LeviathanCore::MathTypes::Vector3 spotLightDirectionViewSpace{ spotLightDirectionViewSpace4.X(), spotLightDirectionViewSpace4.Y(), spotLightDirectionViewSpace4.Z() };
-		//spotLightDirectionViewSpace.NormalizeSafe();
-
-		//memcpy(&spotLightData.Radiance, spotLightRadiance.Data(), sizeof(float) * 3);
-		//memcpy(&spotLightData.LightPositionViewSpace, spotLightPositionViewSpace.Data(), sizeof(float) * 3);
-		//memcpy(&spotLightData.LightDirectionViewSpace, spotLightDirectionViewSpace.Data(), sizeof(float) * 3);
-		//spotLightData.CosineInnerConeAngle = LeviathanCore::MathLibrary::Cos(gSceneSpotLight.InnerConeAngleRadians);
-		//spotLightData.CosineOuterConeAngle = LeviathanCore::MathLibrary::Cos(gSceneSpotLight.OuterConeAngleRadians);
-
-		//LeviathanRenderer::UpdateSpotLightData(0, static_cast<const void*>(&spotLightData), sizeof(LeviathanRenderer::ConstantBufferTypes::SpotLightConstantBuffer));
-
-		//// Draw objects.
-		//DrawObject();
-
-		// End frame.
-		LeviathanRenderer::EndFrame();
+		LeviathanRenderer::Render(gSceneCamera, gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
+			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gLinearTextureSamplerId,
+			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
 
 #ifdef LEVIATHAN_WITH_TOOLS
@@ -707,9 +566,50 @@ namespace TestTitle
 		gSceneCamera.UpdateViewProjectionMatrix();
 
 		// Define scene lights.
-		gSceneDirectionalLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
-		gSceneDirectionalLight.Brightness = 1.0f;
-		gSceneDirectionalLight.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe();
+		gSceneDirectionalLights = 
+		{
+			LeviathanRenderer::LightTypes::DirectionalLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
+			},
+
+						LeviathanRenderer::LightTypes::DirectionalLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
+			},
+
+						LeviathanRenderer::LightTypes::DirectionalLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
+			},
+
+						LeviathanRenderer::LightTypes::DirectionalLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
+			},
+
+						LeviathanRenderer::LightTypes::DirectionalLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
+			},
+
+						LeviathanRenderer::LightTypes::DirectionalLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
+			}
+		};
 
 		gScenePointLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gScenePointLight.Brightness = 1.0f;

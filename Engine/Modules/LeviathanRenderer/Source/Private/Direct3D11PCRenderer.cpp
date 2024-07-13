@@ -316,7 +316,7 @@ namespace LeviathanRenderer
 		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthTestDisabledState = {};
 
 		// Blend states.
-		static Microsoft::WRL::ComPtr<ID3D11BlendState> gBlendState = {};
+		static Microsoft::WRL::ComPtr<ID3D11BlendState> gAdditiveBlendState = {};
 
 		// Rasterizer states.
 		static Microsoft::WRL::ComPtr<ID3D11RasterizerState> gRasterizerState = {};
@@ -567,7 +567,7 @@ namespace LeviathanRenderer
 
 			gD3D11DeviceContext->OMSetDepthStencilState(gDepthTestDisabledState.Get(), 0);
 
-			// Create rasterizer state.
+			// Create rasterizer states.
 			D3D11_RASTERIZER_DESC rasterizerStateDesc = {};
 			rasterizerStateDesc.AntialiasedLineEnable = FALSE;
 			rasterizerStateDesc.CullMode = D3D11_CULL_BACK;
@@ -585,27 +585,25 @@ namespace LeviathanRenderer
 
 			gD3D11DeviceContext->RSSetState(gRasterizerState.Get());
 
-			// Create blend state.
-			D3D11_BLEND_DESC blendDesc = {};
+			// Create blend states.
+			D3D11_BLEND_DESC additiveBlendDesc = {};
 
-			D3D11_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc = {};
-			renderTargetBlendDesc.BlendEnable = true;
-			renderTargetBlendDesc.SrcBlend = D3D11_BLEND::D3D11_BLEND_ONE;
-			renderTargetBlendDesc.DestBlend = D3D11_BLEND::D3D11_BLEND_ONE;
-			renderTargetBlendDesc.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
-			renderTargetBlendDesc.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
-			renderTargetBlendDesc.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
-			renderTargetBlendDesc.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
-			renderTargetBlendDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;
+			D3D11_RENDER_TARGET_BLEND_DESC additiveRenderTargetBlendDesc = {};
+			additiveRenderTargetBlendDesc.BlendEnable = true;
+			additiveRenderTargetBlendDesc.SrcBlend = D3D11_BLEND::D3D11_BLEND_ONE;
+			additiveRenderTargetBlendDesc.DestBlend = D3D11_BLEND::D3D11_BLEND_ONE;
+			additiveRenderTargetBlendDesc.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+			additiveRenderTargetBlendDesc.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
+			additiveRenderTargetBlendDesc.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
+			additiveRenderTargetBlendDesc.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+			additiveRenderTargetBlendDesc.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;
 
-			blendDesc.RenderTarget[0] = renderTargetBlendDesc;
+			additiveBlendDesc.RenderTarget[0] = additiveRenderTargetBlendDesc;
 
-			hr = gD3D11Device->CreateBlendState(&blendDesc, &gBlendState);
+			hr = gD3D11Device->CreateBlendState(&additiveBlendDesc, &gAdditiveBlendState);
 			if (FAILED(hr)) { return false; }
 
-			gD3D11DeviceContext->OMSetBlendState(gBlendState.Get(), nullptr, 0xffffffff);
-
-			// Set up the viewport.
+			// Set the viewport.
 			SetViewport(width, height);
 
 			// Initialize shader compilation.
@@ -714,7 +712,7 @@ namespace LeviathanRenderer
 			gDepthTestEnabledState.Reset();
 			gDepthTestDisabledState.Reset();
 			gRasterizerState.Reset();
-			gBlendState.Reset();
+			gAdditiveBlendState.Reset();
 			gViewport = {};
 
 			gDirectionalLightPipeline.Destroy();
@@ -896,13 +894,17 @@ namespace LeviathanRenderer
 			resourceID = RendererResourceId::InvalidId;
 		}
 
-		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil)
+		void ClearScreenRenderTarget(const float* clearColor)
 		{
 			gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
+		}
+
+		void ClearDepthStencil(float clearDepth, unsigned char clearStencil)
+		{
 			gD3D11DeviceContext->ClearDepthStencilView(gDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, clearDepth, clearStencil);
 		}
 
-		void SetRenderTargets()
+		void SetScreenRenderTarget()
 		{
 			gD3D11DeviceContext->OMSetRenderTargets(1, gBackBufferRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
 		}
@@ -976,6 +978,26 @@ namespace LeviathanRenderer
 		bool UpdateSpotLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
 		{
 			return UpdateConstantBuffer(gSpotLightBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
+		}
+
+		void SetDepthTestEnabled()
+		{
+			gD3D11DeviceContext->OMSetDepthStencilState(gDepthTestEnabledState.Get(), 0);
+		}
+
+		void SetDepthTestDisabled()
+		{
+			gD3D11DeviceContext->OMSetDepthStencilState(gDepthTestDisabledState.Get(), 0);
+		}
+
+		void SetBlendingAdditive()
+		{
+			gD3D11DeviceContext->OMSetBlendState(gAdditiveBlendState.Get(), nullptr, 0xffffffff);
+		}
+
+		void SetBlendingDisabled()
+		{
+			gD3D11DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 		}
 
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId)

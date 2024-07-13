@@ -33,8 +33,9 @@ namespace LeviathanRenderer
 		void DestroySampler(RendererResourceId::IdType& resourceID);
 
 		// Render commands.
-		void Clear(const float* clearColor, float clearDepth, unsigned char clearStencil);
-		void SetRenderTargets();
+		void ClearScreenRenderTarget(const float* clearColor);
+		void ClearDepthStencil(float clearDepth, unsigned char clearStencil);
+		void SetScreenRenderTarget();
 		void SetShaderResourceTables();
 		void SetDirectionalLightPipeline();
 		void SetPointLightPipeline();
@@ -45,6 +46,10 @@ namespace LeviathanRenderer
 		bool UpdateDirectionalLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdatePointLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdateSpotLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+		void SetDepthTestEnabled();
+		void SetDepthTestDisabled();
+		void SetBlendingAdditive();
+		void SetBlendingDisabled();
 
 		// Shader resource table data.
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId);
