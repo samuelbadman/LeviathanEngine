@@ -111,7 +111,6 @@ float4 main(PixelInput input) : SV_TARGET
      // Light intensity = light radiance
      // nDotL = dot(surface normal, surface to light direction)
     
-    // TODO: How to handle sampling alpha for transparency.
     float3 baseColor = Texture2DSRVTable[COLOR_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[COLOR_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).rgb;
     float roughness = Texture2DSRVTable[ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
     float metallic = Texture2DSRVTable[METALLIC_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[METALLIC_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
@@ -123,15 +122,6 @@ float4 main(PixelInput input) : SV_TARGET
     // Directional light.
     float3 surfaceToLightDirectionTangentSpace = -input.LightDirectionTangentSpace;
     float3 color = CalculateLighting(surfaceToLightDirectionTangentSpace, surfaceToViewDirectionTangentSpace, surfaceNormal, nDotV, Radiance, baseColor, roughness, metallic);
-    
-    //// HDR tone mapping.
-    //color = color / (color + float3(1.0f, 1.0f, 1.0f));
 
-    //// Gamma correction.
-    //float gammaExponent = 1.0f / 2.2f;
-    //float4 finalColor = float4(pow(color, float3(gammaExponent, gammaExponent, gammaExponent)), 1.0f);
-
-    //return finalColor;
     return float4(color.rgb, 1.0f);
-
 }

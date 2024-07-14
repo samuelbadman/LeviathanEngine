@@ -554,41 +554,6 @@ namespace TestTitle
 				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
 				.Brightness = 1.0f,
 				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
-			},
-
-						LeviathanRenderer::LightTypes::DirectionalLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
-			},
-
-						LeviathanRenderer::LightTypes::DirectionalLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
-			},
-
-						LeviathanRenderer::LightTypes::DirectionalLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
-			},
-
-						LeviathanRenderer::LightTypes::DirectionalLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
-			},
-
-						LeviathanRenderer::LightTypes::DirectionalLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
 			}
 		};
 
