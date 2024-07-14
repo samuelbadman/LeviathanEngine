@@ -63,7 +63,7 @@ namespace TestTitle
 
 	static std::vector<LeviathanRenderer::LightTypes::DirectionalLight> gSceneDirectionalLights = {};
 	static std::vector<LeviathanRenderer::LightTypes::PointLight> gScenePointLights = {};
-	static LeviathanRenderer::LightTypes::SpotLight gSceneSpotLight = {};
+	static std::vector<LeviathanRenderer::LightTypes::SpotLight> gSceneSpotLights = {};
 
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -294,6 +294,7 @@ namespace TestTitle
 		LeviathanRenderer::Render(gSceneCamera,
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
+			gSceneSpotLights.data(), gSceneSpotLights.size(),
 			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gLinearTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
@@ -565,17 +566,22 @@ namespace TestTitle
 			{
 				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
 				.Brightness = 1.0f,
-				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.25f }
+				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.5f }
 			}
 		};
 
-
-		gSceneSpotLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
-		gSceneSpotLight.Brightness = 1.0f;
-		gSceneSpotLight.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.5f };
-		gSceneSpotLight.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe();
-		gSceneSpotLight.InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f);
-		gSceneSpotLight.OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(20.0f);
+		gSceneSpotLights =
+		{
+			LeviathanRenderer::LightTypes::SpotLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.5f },
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe(),
+				.InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
+				.OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(20.0f)
+			}
+		};
 
 		// ECS module prototype code region.
 		/*
