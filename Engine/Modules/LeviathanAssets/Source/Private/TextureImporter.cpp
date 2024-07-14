@@ -20,5 +20,3 @@ void LeviathanAssets::TextureImporter::FreeTexture(unsigned char* data)
 {
 	stbi_image_free(static_cast<void*>(data));
 }
-
-// TODO: Free texture data with stbi_image_free().

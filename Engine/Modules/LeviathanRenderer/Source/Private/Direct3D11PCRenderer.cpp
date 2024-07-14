@@ -31,7 +31,7 @@ namespace LeviathanRenderer
 		static Microsoft::WRL::ComPtr<ID3D11Texture2D> gDepthStencilBuffer = {};
 
 		// Texture resource used to render the scene to and sampled during post processing.
-		static Microsoft::WRL::ComPtr<ID3D11Texture2D> gSceneTexture = {};
+		static Microsoft::WRL::ComPtr<ID3D11Texture2D> gSceneTextureResource = {};
 
 		// Scene texture render target view.
 		static Microsoft::WRL::ComPtr<ID3D11RenderTargetView> gSceneTextureRenderTargetView = {};
@@ -479,6 +479,47 @@ namespace LeviathanRenderer
 			}
 		}
 
+		static bool CreateSceneTextureResource(UINT width, UINT height)
+		{
+			HRESULT hr = {};
+
+			D3D11_TEXTURE2D_DESC sceneTextureResourceDesc = {};
+			sceneTextureResourceDesc.Width = width;
+			sceneTextureResourceDesc.Height = height;
+			sceneTextureResourceDesc.MipLevels = 1;
+			sceneTextureResourceDesc.ArraySize = 1;
+			sceneTextureResourceDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			sceneTextureResourceDesc.SampleDesc.Count = 1;
+			sceneTextureResourceDesc.Usage = D3D11_USAGE_DEFAULT;
+			sceneTextureResourceDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+			sceneTextureResourceDesc.CPUAccessFlags = 0;
+			sceneTextureResourceDesc.MiscFlags = 0;
+
+			hr = gD3D11Device->CreateTexture2D(&sceneTextureResourceDesc, nullptr, &gSceneTextureResource);
+			if (FAILED(hr)) { return false; }
+
+			// Create scene texture render target view.
+			D3D11_RENDER_TARGET_VIEW_DESC sceneTextureRenderTargetViewDesc = {};
+			sceneTextureRenderTargetViewDesc.Format = sceneTextureResourceDesc.Format;
+			sceneTextureRenderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			sceneTextureRenderTargetViewDesc.Texture2D.MipSlice = 0;
+
+			hr = gD3D11Device->CreateRenderTargetView(gSceneTextureResource.Get(), &sceneTextureRenderTargetViewDesc, &gSceneTextureRenderTargetView);
+			if (FAILED(hr)) { return false; }
+
+			// Create scene texture shader resource view.
+			D3D11_SHADER_RESOURCE_VIEW_DESC sceneTextureShaderResourceViewDesc = {};
+			sceneTextureShaderResourceViewDesc.Format = sceneTextureResourceDesc.Format;
+			sceneTextureShaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			sceneTextureShaderResourceViewDesc.Texture2D.MipLevels = 1;
+			sceneTextureShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+
+			hr = gD3D11Device->CreateShaderResourceView(gSceneTextureResource.Get(), &sceneTextureShaderResourceViewDesc, &gSceneTextureShaderResourceView);
+			if (FAILED(hr)) { return false; }
+
+			return true;
+		}
+
 		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
 			gVSync = vsync;
@@ -565,39 +606,8 @@ namespace LeviathanRenderer
 			if (!success) { return false; }
 
 			// Create scene texture resource.
-			D3D11_TEXTURE2D_DESC sceneTextureResourceDesc = {};
-			sceneTextureResourceDesc.Width = width;
-			sceneTextureResourceDesc.Height = height;
-			sceneTextureResourceDesc.MipLevels = 1;
-			sceneTextureResourceDesc.ArraySize = 1;
-			sceneTextureResourceDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			sceneTextureResourceDesc.SampleDesc.Count = 1;
-			sceneTextureResourceDesc.Usage = D3D11_USAGE_DEFAULT;
-			sceneTextureResourceDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-			sceneTextureResourceDesc.CPUAccessFlags = 0;
-			sceneTextureResourceDesc.MiscFlags = 0;
-
-			hr = gD3D11Device->CreateTexture2D(&sceneTextureResourceDesc, nullptr, &gSceneTexture);
-			if (FAILED(hr)) { return false; }
-
-			// Create scene texture render target view.
-			D3D11_RENDER_TARGET_VIEW_DESC sceneTextureRenderTargetViewDesc = {};
-			sceneTextureRenderTargetViewDesc.Format = sceneTextureResourceDesc.Format;
-			sceneTextureRenderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-			sceneTextureRenderTargetViewDesc.Texture2D.MipSlice = 0;
-
-			hr = gD3D11Device->CreateRenderTargetView(gSceneTexture.Get(), &sceneTextureRenderTargetViewDesc, &gSceneTextureRenderTargetView);
-			if (FAILED(hr)) { return false; }
-
-			// Create scene texture shader resource view.
-			D3D11_SHADER_RESOURCE_VIEW_DESC sceneTextureShaderResourceViewDesc = {};
-			sceneTextureShaderResourceViewDesc.Format = sceneTextureResourceDesc.Format;
-			sceneTextureShaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-			sceneTextureShaderResourceViewDesc.Texture2D.MipLevels = 1;
-			sceneTextureShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-
-			hr = gD3D11Device->CreateShaderResourceView(gSceneTexture.Get(), &sceneTextureShaderResourceViewDesc, &gSceneTextureShaderResourceView);
-			if (FAILED(hr)) { return false; }
+			success = CreateSceneTextureResource(width, height);
+			if (!success) { return false; }
 
 			// Create scene texture sampler state.
 			D3D11_SAMPLER_DESC sceneTextureSamplerDesc = {};
@@ -809,7 +819,7 @@ namespace LeviathanRenderer
 			gDepthStencilView.Reset();
 			gDepthStencilBuffer.Reset();
 
-			gSceneTexture.Reset();
+			gSceneTextureResource.Reset();
 			gSceneTextureRenderTargetView.Reset();
 			gSceneTextureShaderResourceView.Reset();
 			gSceneTextureSamplerState.Reset();
@@ -867,8 +877,11 @@ namespace LeviathanRenderer
 			SetViewport(width, height);
 
 			// Release current scene texture resources.
-			// Recreate scene texture resource.
+			gSceneTextureResource.Reset();
 
+			// Recreate scene texture resource.
+			success = CreateSceneTextureResource(width, height);
+			if (!success) { return false; }
 
 			return success;
 		}

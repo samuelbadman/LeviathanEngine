@@ -160,7 +160,7 @@ namespace TestTitle
 		}
 
 		// Update object transform.
-		//gObjectTransform.Rotation.SetPitchRadians(gObjectTransform.Rotation.PitchRadians() + (0.75f * deltaSeconds));
+		//gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.YawRadians() + (0.75f * deltaSeconds));
 	}
 
 	static void OnPostTick()

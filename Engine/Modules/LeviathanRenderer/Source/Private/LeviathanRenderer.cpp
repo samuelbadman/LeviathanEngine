@@ -46,12 +46,13 @@ namespace LeviathanRenderer
 
 	static bool CreateScreenQuadGeometryResources(uint32_t& outIndexCount, RendererResourceId::IdType& outVertexBufferId, RendererResourceId::IdType& outIndexBufferId)
 	{
+		// Note: Vertical uvs (v axis) are flipped as scene texture is sampled upside down in post process pass with original uv coordinates.
 		std::array<VertexTypes::VertexPos2UV2, 4> screenQuadVertices =
 		{
-			VertexTypes::VertexPos2UV2{ -1.0f, -1.0f, 0.0f, 0.0f }, // Bottom left.
-			VertexTypes::VertexPos2UV2{ -1.0f, 1.0f, 0.0f, 1.0f }, // Top left.
-			VertexTypes::VertexPos2UV2{ 1.0f, 1.0f, 1.0f, 1.0f }, // Top right.
-			VertexTypes::VertexPos2UV2{ 1.0f, -1.0f,  1.0f, 0.0f } // Bottom right.
+			VertexTypes::VertexPos2UV2{ -1.0f, -1.0f, 0.0f, 1.0f }, // Bottom left.
+			VertexTypes::VertexPos2UV2{ -1.0f, 1.0f, 0.0f, 0.0f }, // Top left.
+			VertexTypes::VertexPos2UV2{ 1.0f, 1.0f, 1.0f, 0.0f }, // Top right.
+			VertexTypes::VertexPos2UV2{ 1.0f, -1.0f,  1.0f, 1.0f } // Bottom right.
 		};
 
 		std::array<uint32_t, 6> screenQuadIndices =
