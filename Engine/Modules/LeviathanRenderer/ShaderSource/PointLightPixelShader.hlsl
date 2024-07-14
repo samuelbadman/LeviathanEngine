@@ -1,4 +1,3 @@
-// Shader definitions.
 #define TEXTURE2D_SRV_TABLE_LENGTH 5
 #define TEXTURE_SAMPLER_TABLE_LENGTH 4
 
@@ -122,22 +121,13 @@ float4 main(PixelInput input) : SV_TARGET
     float metallic = Texture2DSRVTable[METALLIC_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[METALLIC_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).r;
     float3 surfaceNormal = normalize(Texture2DSRVTable[NORMAL_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[NORMAL_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).xyz * 2.0f - 1.0f);
     
-    float3 totalColor = float3(0.0f, 0.0f, 0.0f);
-
     float3 surfaceToViewDirectionTangentSpace = normalize(-input.PositionTangentSpace);
     float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionTangentSpace));
     
     // Point light.
     float attenuation = Attenuation(length(input.SurfaceToLightVectorTangentSpace));
     float3 radiance = attenuation * Radiance;
-    totalColor += CalculateLighting(normalize(input.SurfaceToLightVectorTangentSpace), surfaceToViewDirectionTangentSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
+    float3 color = CalculateLighting(normalize(input.SurfaceToLightVectorTangentSpace), surfaceToViewDirectionTangentSpace, surfaceNormal, nDotV, radiance, baseColor, roughness, metallic);
 
-    // HDR tone mapping.
-    totalColor = totalColor / (totalColor + float3(1.0f, 1.0f, 1.0f));
-
-    // Gamma correction.
-    float gammaExponent = 1.0f / 2.2f;
-    float4 finalColor = float4(pow(totalColor, float3(gammaExponent, gammaExponent, gammaExponent)), 1.0f);
-
-    return finalColor;
+    return float4(color.rgb, 1.0f);
 }

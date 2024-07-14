@@ -62,7 +62,7 @@ namespace TestTitle
 	static LeviathanRenderer::Camera gSceneCamera = {};
 
 	static std::vector<LeviathanRenderer::LightTypes::DirectionalLight> gSceneDirectionalLights = {};
-	static LeviathanRenderer::LightTypes::PointLight gScenePointLight = {};
+	static std::vector<LeviathanRenderer::LightTypes::PointLight> gScenePointLights = {};
 	static LeviathanRenderer::LightTypes::SpotLight gSceneSpotLight = {};
 
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -291,7 +291,9 @@ namespace TestTitle
 
 	static void OnRender()
 	{
-		LeviathanRenderer::Render(gSceneCamera, gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
+		LeviathanRenderer::Render(gSceneCamera,
+			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
+			gScenePointLights.data(), gScenePointLights.size(),
 			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gLinearTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
@@ -547,7 +549,7 @@ namespace TestTitle
 		gSceneCamera.UpdateViewProjectionMatrix();
 
 		// Define scene lights.
-		gSceneDirectionalLights = 
+		gSceneDirectionalLights =
 		{
 			LeviathanRenderer::LightTypes::DirectionalLight
 			{
@@ -557,9 +559,16 @@ namespace TestTitle
 			}
 		};
 
-		gScenePointLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
-		gScenePointLight.Brightness = 1.0f;
-		gScenePointLight.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.25f };
+		gScenePointLights =
+		{
+			LeviathanRenderer::LightTypes::PointLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.25f }
+			}
+		};
+
 
 		gSceneSpotLight.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f };
 		gSceneSpotLight.Brightness = 1.0f;
