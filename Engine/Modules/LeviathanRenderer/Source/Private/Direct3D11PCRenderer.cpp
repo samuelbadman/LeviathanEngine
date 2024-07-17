@@ -5,7 +5,6 @@
 #include "Serialize.h"
 #include "LeviathanRenderer.h"
 #include "ConstantBufferTypes.h"
-#include "LeviathanString.h"
 
 namespace LeviathanRenderer
 {
@@ -751,31 +750,19 @@ namespace LeviathanRenderer
 				}
 			};
 
-			static const std::string texture2DSRVTableLengthString = LeviathanCore::String::AsString(RendererConstants::Texture2DSRVTableLength);
-			static const std::string textureSamplerTableLengthString = LeviathanCore::String::AsString(RendererConstants::TextureSamplerTableLength);
-			static const std::string colorTexture2DSRVTableIndexString = LeviathanCore::String::AsString(RendererConstants::ColorTexture2DSRVTableIndex);
-			static const std::string roughnessTexture2DSRVTableIndexString = LeviathanCore::String::AsString(RendererConstants::RoughnessTexture2DSRVTableIndex);
-			static const std::string metallicTexture2DSRVTableIndexString = LeviathanCore::String::AsString(RendererConstants::MetallicTexture2DSRVTableIndex);
-			static const std::string normalTexture2DSRVTableIndexString = LeviathanCore::String::AsString(RendererConstants::NormalTexture2DSRVTableIndex);
-			static const std::string colorTextureSamplerTableIndexString = LeviathanCore::String::AsString(RendererConstants::ColorTextureSamplerTableIndex);
-			static const std::string roughnessTextureSamplerTableIndexString = LeviathanCore::String::AsString(RendererConstants::RoughnessTextureSamplerTableIndex);
-			static const std::string metallicTextureSamplerTableIndexString = LeviathanCore::String::AsString(RendererConstants::MetallicTextureSamplerTableIndex);
-			static const std::string normalTextureSamplerTableIndexString = LeviathanCore::String::AsString(RendererConstants::NormalTextureSamplerTableIndex);
-			static const std::string piString = LeviathanCore::String::AsString(LeviathanCore::MathLibrary::Pi);
-
-			static const std::array<D3D_SHADER_MACRO, 12> lightingPassPixelShaderDefinitions =
+			static constexpr std::array<D3D_SHADER_MACRO, 12> lightingPassPixelShaderDefinitions =
 			{
-				D3D_SHADER_MACRO{.Name = "TEXTURE2D_SRV_TABLE_LENGTH", .Definition = texture2DSRVTableLengthString.c_str() },
-				D3D_SHADER_MACRO{.Name = "TEXTURE_SAMPLER_TABLE_LENGTH", .Definition = textureSamplerTableLengthString.c_str() },
-				D3D_SHADER_MACRO{.Name = "COLOR_TEXTURE2D_SRV_TABLE_INDEX", .Definition = colorTexture2DSRVTableIndexString.c_str() },
-				D3D_SHADER_MACRO{.Name = "ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX", .Definition = roughnessTexture2DSRVTableIndexString.c_str() },
-				D3D_SHADER_MACRO{.Name = "METALLIC_TEXTURE2D_SRV_TABLE_INDEX", .Definition = metallicTexture2DSRVTableIndexString.c_str() },
-				D3D_SHADER_MACRO{.Name = "NORMAL_TEXTURE2D_SRV_TABLE_INDEX", .Definition = normalTexture2DSRVTableIndexString.c_str() },
-				D3D_SHADER_MACRO{.Name = "COLOR_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = colorTextureSamplerTableIndexString.c_str() },
-				D3D_SHADER_MACRO{.Name = "ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = roughnessTextureSamplerTableIndexString.c_str() },
-				D3D_SHADER_MACRO{.Name = "METALLIC_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = metallicTextureSamplerTableIndexString.c_str() },
-				D3D_SHADER_MACRO{.Name = "NORMAL_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = normalTextureSamplerTableIndexString.c_str() },
-				D3D_SHADER_MACRO{.Name = "PI", .Definition = piString.c_str() },
+				D3D_SHADER_MACRO{.Name = "TEXTURE2D_SRV_TABLE_LENGTH", .Definition = RendererConstants::Texture2DSRVTableLengthString },
+				D3D_SHADER_MACRO{.Name = "TEXTURE_SAMPLER_TABLE_LENGTH", .Definition = RendererConstants::TextureSamplerTableLengthString },
+				D3D_SHADER_MACRO{.Name = "COLOR_TEXTURE2D_SRV_TABLE_INDEX", .Definition = RendererConstants::ColorTexture2DSRVTableIndexString },
+				D3D_SHADER_MACRO{.Name = "ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX", .Definition = RendererConstants::RoughnessTexture2DSRVTableIndexString },
+				D3D_SHADER_MACRO{.Name = "METALLIC_TEXTURE2D_SRV_TABLE_INDEX", .Definition = RendererConstants::MetallicTexture2DSRVTableIndexString },
+				D3D_SHADER_MACRO{.Name = "NORMAL_TEXTURE2D_SRV_TABLE_INDEX", .Definition = RendererConstants::NormalTexture2DSRVTableIndexString },
+				D3D_SHADER_MACRO{.Name = "COLOR_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = RendererConstants::ColorTextureSamplerTableIndexString },
+				D3D_SHADER_MACRO{.Name = "ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = RendererConstants::RoughnessTextureSamplerTableIndexString },
+				D3D_SHADER_MACRO{.Name = "METALLIC_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = RendererConstants::MetallicTextureSamplerTableIndexString },
+				D3D_SHADER_MACRO{.Name = "NORMAL_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = RendererConstants::NormalTextureSamplerTableIndexString },
+				D3D_SHADER_MACRO{.Name = "PI", .Definition = LeviathanCore::MathLibrary::PiString },
 				D3D_SHADER_MACRO{.Name = nullptr, .Definition = nullptr }
 			};
 
@@ -826,9 +813,9 @@ namespace LeviathanRenderer
 				}
 			};
 
-			success = gPostProcessPipeline.Create("PostProcessPipeline", { .SourceCodeFile = "PostProcessVertexShader.hlsl", .EntryPointName = "main" },
+			success = gPostProcessPipeline.Create("PostProcessPipeline", { .SourceCodeFile = "PostProcessVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
 				postProcessPassInputLayoutDesc.data(), static_cast<UINT>(postProcessPassInputLayoutDesc.size()),
-				{ .SourceCodeFile = "PostProcessPixelShader.hlsl", .EntryPointName = "main" });
+				{ .SourceCodeFile = "PostProcessPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr });
 			if (!success) { return false; }
 
 			// Create constant buffers.

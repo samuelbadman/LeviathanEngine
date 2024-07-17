@@ -5,6 +5,7 @@ namespace LeviathanCore
 	namespace MathLibrary
 	{
 		static constexpr float Pi = 3.14159265359f;
+		static constexpr const char* PiString = "3.14159265359";
 		static constexpr float HalfPi = 0.5f * Pi; // 90 degrees.
 		static constexpr float TwoPi = 2.0f * Pi; // 180 degrees.
 
