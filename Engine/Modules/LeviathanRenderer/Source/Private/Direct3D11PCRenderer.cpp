@@ -5,6 +5,7 @@
 #include "Serialize.h"
 #include "LeviathanRenderer.h"
 #include "ConstantBufferTypes.h"
+#include "LeviathanString.h"
 
 namespace LeviathanRenderer
 {
@@ -69,6 +70,8 @@ namespace LeviathanRenderer
 			std::string_view SourceCodeFile = {};
 			// The name of the entry point function in the shader.
 			std::string_view EntryPointName = {};
+			// Null terminated list of shader definitions.
+			const D3D_SHADER_MACRO* ShaderMacros = nullptr;
 		};
 
 		static bool ReadShaderSourceCodeFileContents(std::string_view file, std::vector<uint8_t>& outBuffer)
@@ -87,14 +90,14 @@ namespace LeviathanRenderer
 			return true;
 		}
 
-		static bool CompileHLSLStringFXC(const std::string_view string, const std::string_view entryPoint, const std::string_view name,
+		static bool CompileHLSLStringFXC(const std::string_view string, const std::string_view entryPoint, const std::string_view name, const D3D_SHADER_MACRO* shaderMacros,
 			const std::string_view target, std::vector<unsigned char>& outBuffer)
 		{
 			HRESULT hr = {};
 
 			Microsoft::WRL::ComPtr<ID3DBlob> blob = {};
 			Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = {};
-			hr = D3DCompile(static_cast<const void*>(string.data()), string.size(), name.data(), nullptr, nullptr, entryPoint.data(),
+			hr = D3DCompile(static_cast<const void*>(string.data()), string.size(), name.data(), shaderMacros, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.data(),
 				target.data(), D3DCOMPILE_ENABLE_STRICTNESS, 0, &blob, &errorBlob);
 
 			if (FAILED(hr))
@@ -176,14 +179,14 @@ namespace LeviathanRenderer
 		//}
 		*/
 
-		static bool CompileShaderSourceCodeString(std::string_view shaderSourceCode, std::string_view entryPoint, std::string_view name, 
+		static bool CompileShaderSourceCodeString(std::string_view shaderSourceCode, std::string_view entryPoint, std::string_view name, const D3D_SHADER_MACRO* shaderMacros,
 			std::string_view target, std::vector<unsigned char>& outBuffer)
 		{
-			return CompileHLSLStringFXC(shaderSourceCode, entryPoint, name, target, outBuffer);
+			return CompileHLSLStringFXC(shaderSourceCode, entryPoint, name, shaderMacros, target, outBuffer);
 		}
 
-		static bool CompileNewShader(std::string_view sourceCodeFile, std::string_view entryPointName, std::string_view name, std::string_view target,
-			std::string_view cacheFile, std::vector<uint8_t>& outBuffer)
+		static bool CompileNewShader(std::string_view sourceCodeFile, std::string_view entryPointName, std::string_view name, const D3D_SHADER_MACRO* shaderMacros, 
+			std::string_view target, std::string_view cacheFile, std::vector<uint8_t>& outBuffer)
 		{
 			// Get shader source code as string.
 			std::string sourceCodeString = {};
@@ -193,7 +196,7 @@ namespace LeviathanRenderer
 			}
 
 			// Compile source code string and store in buffer.
-			if (!CompileShaderSourceCodeString(sourceCodeString, entryPointName, name, target, outBuffer))
+			if (!CompileShaderSourceCodeString(sourceCodeString, entryPointName, name, shaderMacros, target, outBuffer))
 			{
 				return false;
 			}
@@ -217,8 +220,8 @@ namespace LeviathanRenderer
 			return LeviathanCore::Serialize::ReadFile(file, true, outBuffer);
 		}
 
-		static bool TryReadCompiledShaderCacheFileElseCompileNewShader(std::string_view compiledShaderCacheFile, std::string_view shaderSourceCodeFile, 
-			std::string_view entryPointName, std::string_view shaderName, std::string_view shaderTarget, std::vector<uint8_t>& outBuffer)
+		static bool TryReadCompiledShaderCacheFileElseCompileNewShader(std::string_view compiledShaderCacheFile, std::string_view shaderSourceCodeFile,
+			std::string_view entryPointName, std::string_view shaderName, const D3D_SHADER_MACRO* shaderMacros, std::string_view shaderTarget, std::vector<uint8_t>& outBuffer)
 		{
 			if (DoesCompiledShaderCacheFileExist(compiledShaderCacheFile))
 			{
@@ -228,7 +231,7 @@ namespace LeviathanRenderer
 			else
 			{
 				LEVIATHAN_LOG("%s compiled shader cache file does not exist. Recompiling shader source.", compiledShaderCacheFile.data());
-				return CompileNewShader(shaderSourceCodeFile, entryPointName, shaderName, shaderTarget, compiledShaderCacheFile, outBuffer);
+				return CompileNewShader(shaderSourceCodeFile, entryPointName, shaderName, shaderMacros, shaderTarget, compiledShaderCacheFile, outBuffer);
 			}
 		}
 
@@ -261,7 +264,7 @@ namespace LeviathanRenderer
 				// If previously compiled shader file exists, read its contents into the buffer and use that instead of recompiling the source code.
 				const std::string compiledVertexShaderCacheFile(std::string(CompiledShaderCacheDirectory) +
 					name.data() + CompiledShaderCacheFileTypeSeparatingCharacter + CompiledShaderCacheVertexShaderFilePostFixString);
-				const std::string compiledPixelShaderCacheFile(std::string(CompiledShaderCacheDirectory) + 
+				const std::string compiledPixelShaderCacheFile(std::string(CompiledShaderCacheDirectory) +
 					name.data() + CompiledShaderCacheFileTypeSeparatingCharacter + CompiledShaderCachePixelShaderFilePostFixString);
 				const std::string vertexShaderName(std::string(name.data()) + PipelineShaderNameShaderTypeSeparatingCharacter + PipelineVertexShaderNamePostFixString);
 				const std::string pixelShaderName(std::string(name.data()) + PipelineShaderNameShaderTypeSeparatingCharacter + PipelinePixelShaderNamePostFixString);
@@ -272,13 +275,13 @@ namespace LeviathanRenderer
 				if (ForceShaderRecompilation)
 				{
 					LEVIATHAN_LOG("Forced recompilation of shaders for %s pipeline.", name.data());
-					if (!CompileNewShader(vertexShaderDescription.SourceCodeFile, vertexShaderDescription.EntryPointName, name, SHADER_MODEL_5_VERTEX_SHADER, 
-						compiledVertexShaderCacheFile, compiledVertexShader))
+					if (!CompileNewShader(vertexShaderDescription.SourceCodeFile, vertexShaderDescription.EntryPointName, name, vertexShaderDescription.ShaderMacros, 
+						SHADER_MODEL_5_VERTEX_SHADER, compiledVertexShaderCacheFile, compiledVertexShader))
 					{
 						return false;
 					}
-					if (!CompileNewShader(pixelShaderDescription.SourceCodeFile, pixelShaderDescription.EntryPointName, name, SHADER_MODEL_5_PIXEL_SHADER, 
-						compiledPixelShaderCacheFile, compiledPixelShader))
+					if (!CompileNewShader(pixelShaderDescription.SourceCodeFile, pixelShaderDescription.EntryPointName, name, pixelShaderDescription.ShaderMacros,
+						SHADER_MODEL_5_PIXEL_SHADER, compiledPixelShaderCacheFile, compiledPixelShader))
 					{
 						return false;
 					}
@@ -286,12 +289,12 @@ namespace LeviathanRenderer
 				else
 				{
 					if (!TryReadCompiledShaderCacheFileElseCompileNewShader(compiledVertexShaderCacheFile, vertexShaderDescription.SourceCodeFile, vertexShaderDescription.EntryPointName,
-						vertexShaderName, SHADER_MODEL_5_VERTEX_SHADER, compiledVertexShader))
+						vertexShaderName, vertexShaderDescription.ShaderMacros, SHADER_MODEL_5_VERTEX_SHADER, compiledVertexShader))
 					{
 						return false;
 					}
 					if (!TryReadCompiledShaderCacheFileElseCompileNewShader(compiledPixelShaderCacheFile, pixelShaderDescription.SourceCodeFile, pixelShaderDescription.EntryPointName,
-						pixelShaderName, SHADER_MODEL_5_PIXEL_SHADER, compiledPixelShader))
+						pixelShaderName, pixelShaderDescription.ShaderMacros, SHADER_MODEL_5_PIXEL_SHADER, compiledPixelShader))
 					{
 						return false;
 					}
@@ -701,7 +704,7 @@ namespace LeviathanRenderer
 
 			// Create pipelines.
 			// Lighting passes.
-			std::array<D3D11_INPUT_ELEMENT_DESC, 4> lightingPassInputLayoutDesc =
+			static constexpr std::array<D3D11_INPUT_ELEMENT_DESC, 4> lightingPassInputLayoutDesc =
 			{
 				D3D11_INPUT_ELEMENT_DESC
 				{
@@ -748,18 +751,57 @@ namespace LeviathanRenderer
 				}
 			};
 
-			success = gDirectionalLightPipeline.Create("DirectionalLightPipeline", { .SourceCodeFile = "DirectionalLightVertexShader.hlsl", .EntryPointName = "main" },
-				lightingPassInputLayoutDesc.data(), static_cast<UINT>(lightingPassInputLayoutDesc.size()), { .SourceCodeFile = "DirectionalLightPixelShader.hlsl", .EntryPointName = "main" });
+			static const std::string texture2DSRVTableLengthString = LeviathanCore::String::AsString(RendererConstants::Texture2DSRVTableLength);
+			static const std::string textureSamplerTableLengthString = LeviathanCore::String::AsString(RendererConstants::TextureSamplerTableLength);
+			static const std::string colorTexture2DSRVTableIndexString = LeviathanCore::String::AsString(RendererConstants::ColorTexture2DSRVTableIndex);
+			static const std::string roughnessTexture2DSRVTableIndexString = LeviathanCore::String::AsString(RendererConstants::RoughnessTexture2DSRVTableIndex);
+			static const std::string metallicTexture2DSRVTableIndexString = LeviathanCore::String::AsString(RendererConstants::MetallicTexture2DSRVTableIndex);
+			static const std::string normalTexture2DSRVTableIndexString = LeviathanCore::String::AsString(RendererConstants::NormalTexture2DSRVTableIndex);
+			static const std::string colorTextureSamplerTableIndexString = LeviathanCore::String::AsString(RendererConstants::ColorTextureSamplerTableIndex);
+			static const std::string roughnessTextureSamplerTableIndexString = LeviathanCore::String::AsString(RendererConstants::RoughnessTextureSamplerTableIndex);
+			static const std::string metallicTextureSamplerTableIndexString = LeviathanCore::String::AsString(RendererConstants::MetallicTextureSamplerTableIndex);
+			static const std::string normalTextureSamplerTableIndexString = LeviathanCore::String::AsString(RendererConstants::NormalTextureSamplerTableIndex);
+			static const std::string piString = LeviathanCore::String::AsString(LeviathanCore::MathLibrary::Pi);
+
+			static const std::array<D3D_SHADER_MACRO, 12> lightingPassPixelShaderDefinitions =
+			{
+				D3D_SHADER_MACRO{.Name = "TEXTURE2D_SRV_TABLE_LENGTH", .Definition = texture2DSRVTableLengthString.c_str() },
+				D3D_SHADER_MACRO{.Name = "TEXTURE_SAMPLER_TABLE_LENGTH", .Definition = textureSamplerTableLengthString.c_str() },
+				D3D_SHADER_MACRO{.Name = "COLOR_TEXTURE2D_SRV_TABLE_INDEX", .Definition = colorTexture2DSRVTableIndexString.c_str() },
+				D3D_SHADER_MACRO{.Name = "ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX", .Definition = roughnessTexture2DSRVTableIndexString.c_str() },
+				D3D_SHADER_MACRO{.Name = "METALLIC_TEXTURE2D_SRV_TABLE_INDEX", .Definition = metallicTexture2DSRVTableIndexString.c_str() },
+				D3D_SHADER_MACRO{.Name = "NORMAL_TEXTURE2D_SRV_TABLE_INDEX", .Definition = normalTexture2DSRVTableIndexString.c_str() },
+				D3D_SHADER_MACRO{.Name = "COLOR_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = colorTextureSamplerTableIndexString.c_str() },
+				D3D_SHADER_MACRO{.Name = "ROUGHNESS_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = roughnessTextureSamplerTableIndexString.c_str() },
+				D3D_SHADER_MACRO{.Name = "METALLIC_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = metallicTextureSamplerTableIndexString.c_str() },
+				D3D_SHADER_MACRO{.Name = "NORMAL_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = normalTextureSamplerTableIndexString.c_str() },
+				D3D_SHADER_MACRO{.Name = "PI", .Definition = piString.c_str() },
+				D3D_SHADER_MACRO{.Name = nullptr, .Definition = nullptr }
+			};
+
+			success = gDirectionalLightPipeline.Create("DirectionalLightPipeline", 
+				{ .SourceCodeFile = "DirectionalLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
+				lightingPassInputLayoutDesc.data(),
+				static_cast<UINT>(lightingPassInputLayoutDesc.size()), 
+				{ .SourceCodeFile = "DirectionalLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = lightingPassPixelShaderDefinitions.data() });
 			if (!success) { return false; }
-			success = gPointLightPipeline.Create("PointLightPipeline", { .SourceCodeFile = "PointLightVertexShader.hlsl", .EntryPointName = "main" },
-				lightingPassInputLayoutDesc.data(), static_cast<UINT>(lightingPassInputLayoutDesc.size()), { .SourceCodeFile = "PointLightPixelShader.hlsl", .EntryPointName = "main" });
+
+			success = gPointLightPipeline.Create("PointLightPipeline",
+				{ .SourceCodeFile = "PointLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
+				lightingPassInputLayoutDesc.data(), 
+				static_cast<UINT>(lightingPassInputLayoutDesc.size()),
+				{ .SourceCodeFile = "PointLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = lightingPassPixelShaderDefinitions.data() });
 			if (!success) { return false; }
-			success = gSpotLightPipeline.Create("SpotLightPipeline", { .SourceCodeFile = "SpotLightVertexShader.hlsl", .EntryPointName = "main" },
-				lightingPassInputLayoutDesc.data(), static_cast<UINT>(lightingPassInputLayoutDesc.size()), { .SourceCodeFile = "SpotLightPixelShader.hlsl", .EntryPointName = "main" });
+
+			success = gSpotLightPipeline.Create("SpotLightPipeline",
+				{ .SourceCodeFile = "SpotLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
+				lightingPassInputLayoutDesc.data(),
+				static_cast<UINT>(lightingPassInputLayoutDesc.size()), 
+				{ .SourceCodeFile = "SpotLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = lightingPassPixelShaderDefinitions.data() });
 			if (!success) { return false; }
 
 			// Post processing.
-			std::array<D3D11_INPUT_ELEMENT_DESC, 2> postProcessPassInputLayoutDesc =
+			static constexpr std::array<D3D11_INPUT_ELEMENT_DESC, 2> postProcessPassInputLayoutDesc =
 			{
 				D3D11_INPUT_ELEMENT_DESC
 				{
@@ -785,7 +827,7 @@ namespace LeviathanRenderer
 			};
 
 			success = gPostProcessPipeline.Create("PostProcessPipeline", { .SourceCodeFile = "PostProcessVertexShader.hlsl", .EntryPointName = "main" },
-				postProcessPassInputLayoutDesc.data(), static_cast<UINT>(postProcessPassInputLayoutDesc.size()), 
+				postProcessPassInputLayoutDesc.data(), static_cast<UINT>(postProcessPassInputLayoutDesc.size()),
 				{ .SourceCodeFile = "PostProcessPixelShader.hlsl", .EntryPointName = "main" });
 			if (!success) { return false; }
 
