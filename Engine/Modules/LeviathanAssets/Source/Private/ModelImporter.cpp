@@ -232,7 +232,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GeneratePlaneP
 
 LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCubePrimitive(float halfWidth)
 {
-	return AssetTypes::Mesh
+	AssetTypes::Mesh result =
 	{
 		.Positions =
 		{
@@ -323,6 +323,10 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCubePr
 			0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23
 		}
 	};
+
+	// Calculate tangents
+	result.Tangents = BuildTangentsList(result.Positions.size(), result.Positions.data(), result.TextureCoordinates.data(), result.Indices.size(), result.Indices.data());
+	return result;
 }
 
 LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateSpherePrimitive(float radius, int32_t sectors, int32_t stacks)
@@ -352,8 +356,9 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateSphere
 				radius * LeviathanCore::MathLibrary::Sin(stackAngle) });
 
 
-			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ static_cast<float>(j) / sectors,
-				static_cast<float>(i) / stacks });
+			static constexpr float uCoordinateScale = 1.75f;
+			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ (static_cast<float>(j) / sectors) * uCoordinateScale, // U coordinate is scale to fix texture stretching.
+				-static_cast<float>(i) / stacks });
 
 			result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ position.X() * lengthInv,
 				position.Y() * lengthInv,
@@ -389,6 +394,9 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateSphere
 	}
 
 	std::reverse(result.Indices.begin(), result.Indices.end());
+
+	// Calculate tangents
+	result.Tangents = BuildTangentsList(result.Positions.size(), result.Positions.data(), result.TextureCoordinates.data(), result.Indices.size(), result.Indices.data());
 
 	// Return result.
 	return result;
@@ -441,7 +449,8 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCylind
 		for (int32_t j = 0, k = 0; j <= sectors; ++j, k += 3)
 		{
 			result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ unitCircleVertices[k] * radius, unitCircleVertices[static_cast<size_t>(k) + 1] * radius, z });
-			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ static_cast<float>(j) / sectors, t });
+			static constexpr float uCoordinateScale = 3.5f;
+			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ static_cast<float>(j) * uCoordinateScale / sectors, t }); // U coordinate is scaled to fix texture stretching.
 			result.Normals.emplace_back(sideNormals[static_cast<size_t>(k)], sideNormals[static_cast<size_t>(k) + 1], sideNormals[static_cast<size_t>(k) + 2]);
 		}
 	}
@@ -533,6 +542,9 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCylind
 
 	std::reverse(result.Indices.begin(), result.Indices.end());
 
+	// Calculate tangents
+	result.Tangents = BuildTangentsList(result.Positions.size(), result.Positions.data(), result.TextureCoordinates.data(), result.Indices.size(), result.Indices.data());
+
 	return result;
 }
 
@@ -584,7 +596,8 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateConePr
 		{
 			result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ unitCircleVertices[static_cast<size_t>(k)] * radius, unitCircleVertices[static_cast<size_t>(k) + 1] * radius, z });
 
-			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ static_cast<float>(j) / sectors, t });
+			static constexpr float uCoordinateScale = 3.5f;
+			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ static_cast<float>(j) * uCoordinateScale / sectors, t }); // U coordinate is scaled to fix texture stretching.
 
 			result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ sideNormals[static_cast<size_t>(k)], sideNormals[static_cast<size_t>(k) + 1], sideNormals[static_cast<size_t>(k) + 2] });
 		}
@@ -644,6 +657,9 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateConePr
 	}
 
 	std::reverse(result.Indices.begin(), result.Indices.end());
+
+	// Calculate tangents
+	result.Tangents = BuildTangentsList(result.Positions.size(), result.Positions.data(), result.TextureCoordinates.data(), result.Indices.size(), result.Indices.data());
 
 	return result;
 }
