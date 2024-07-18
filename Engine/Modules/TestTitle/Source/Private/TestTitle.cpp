@@ -556,31 +556,31 @@ namespace TestTitle
 			{
 				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
 				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe(),
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe()
 			}
 		};
 
 		gScenePointLights =
 		{
-			LeviathanRenderer::LightTypes::PointLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.5f }
-			}
+			//LeviathanRenderer::LightTypes::PointLight
+			//{
+			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+			//	.Brightness = 1.0f,
+			//	.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.5f }
+			//}
 		};
 
 		gSceneSpotLights =
 		{
-			LeviathanRenderer::LightTypes::SpotLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.5f },
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe(),
-				.InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
-				.OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(20.0f)
-			}
+			//LeviathanRenderer::LightTypes::SpotLight
+			//{
+			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+			//	.Brightness = 1.0f,
+			//	.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.5f },
+			//	.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe(),
+			//	.InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
+			//	.OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(20.0f)
+			//}
 		};
 
 		// ECS module prototype code region.

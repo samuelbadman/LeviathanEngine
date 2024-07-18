@@ -27,6 +27,26 @@ static LeviathanCore::MathTypes::Vector3 CalculateTangent(const LeviathanCore::M
 	);
 }
 
+static std::vector<LeviathanCore::MathTypes::Vector3> BuildTangentsList(const size_t vertexCount, const LeviathanCore::MathTypes::Vector3* pPositions, 
+	const LeviathanCore::MathTypes::Vector2* pTextureCoordinates, const size_t indexCount, const uint32_t* pIndices)
+{
+	std::vector<LeviathanCore::MathTypes::Vector3> tangents(vertexCount, {});
+	for (size_t i = 0; i < indexCount; i += 3)
+	{
+		const LeviathanCore::MathTypes::Vector3 tangent = CalculateTangent(pPositions[pIndices[i]],
+			pPositions[pIndices[i + 1]],
+			pPositions[pIndices[i + 2]],
+			pTextureCoordinates[pIndices[i]],
+			pTextureCoordinates[pIndices[i + 1]],
+			pTextureCoordinates[pIndices[i + 2]]);
+
+		tangents[pIndices[i]] = tangent;
+		tangents[pIndices[i + 1]] = tangent;
+		tangents[pIndices[i + 2]] = tangent;
+	}
+	return tangents;
+}
+
 // Mesh attributes are appended onto the end of the vectors passed to out parameters.
 static LeviathanAssets::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unused]] const aiScene* scene)
 {
@@ -206,24 +226,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GeneratePlaneP
 	};
 
 	// Calculate tangents
-	// TODO: Make tangent calculation a function and apply to other primitive generation functions.
-	result.Tangents.resize(result.Positions.size(), {});
-
-	const size_t indexCount = result.Indices.size();
-	for (size_t i = 0; i < indexCount; i += 3)
-	{
-		const LeviathanCore::MathTypes::Vector3 tangent = CalculateTangent(result.Positions[result.Indices[i]], 
-			result.Positions[result.Indices[i + 1]], 
-			result.Positions[result.Indices[i + 2]],
-			result.TextureCoordinates[result.Indices[i]], 
-			result.TextureCoordinates[result.Indices[i + 1]], 
-			result.TextureCoordinates[result.Indices[i + 2]]);
-
-		result.Tangents[result.Indices[i]] = tangent;
-		result.Tangents[result.Indices[i + 1]] = tangent;
-		result.Tangents[result.Indices[i + 2]] = tangent;
-	}
-
+	result.Tangents = BuildTangentsList(result.Positions.size(), result.Positions.data(), result.TextureCoordinates.data(), result.Indices.size(), result.Indices.data());
 	return result;
 }
 
