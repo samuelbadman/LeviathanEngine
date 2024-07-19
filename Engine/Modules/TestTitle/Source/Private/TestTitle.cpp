@@ -161,6 +161,7 @@ namespace TestTitle
 
 		// Update object transform.
 		//gObjectTransform.Rotation.SetYawRadians(gObjectTransform.Rotation.YawRadians() + (0.75f * deltaSeconds));
+		//gObjectTransform.Rotation.SetPitchRadians(gObjectTransform.Rotation.PitchRadians() + (0.75f * deltaSeconds));
 	}
 
 	static void OnPostTick()
@@ -383,18 +384,20 @@ namespace TestTitle
 #endif // LEVIATHAN_WITH_TOOLS.
 
 		// Create scene.
-		// Import model from disk.
-		LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GeneratePlanePrimitive(0.5f);
+		// TODO: Imported and generated models are oriented incorrectly.
+		// TODO: Fix model orientation after import/generation.
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GeneratePlanePrimitive(0.5f);
 		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCubePrimitive(0.5f);
 		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateSpherePrimitive(0.5f, 64, 64);
 		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCylinderPrimitive(0.5f, 0.5f, 1.0f, 64, 64);
 		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateConePrimitive(0.5f, 1.0f, 64, 64);
-		//std::vector<LeviathanAssets::AssetTypes::Mesh> model = {};
-		//if (LeviathanAssets::ModelImporter::LoadModel("Cube.fbx", model))
+		// Import model from disk.
+		std::vector<LeviathanAssets::AssetTypes::Mesh> model = {};
+		if (LeviathanAssets::ModelImporter::LoadModel("Suzanne.fbx", model))
 		{
 			// Combine model meshes into a single mesh buffer.
-			LeviathanAssets::AssetTypes::Mesh combinedModel = model;
-			//LeviathanAssets::AssetTypes::Mesh combinedModel = LeviathanAssets::ModelImporter::CombineMeshes(model.data(), model.size());
+			//LeviathanAssets::AssetTypes::Mesh combinedModel = model;
+			LeviathanAssets::AssetTypes::Mesh combinedModel = LeviathanAssets::ModelImporter::CombineMeshes(model.data(), model.size());
 
 			// Build render mesh.
 			// Render mesh definition.
@@ -482,8 +485,8 @@ namespace TestTitle
 		LeviathanRenderer::Texture2DDescription metallicTextureDesc = {};
 		metallicTextureDesc.Width = 1;
 		metallicTextureDesc.Height = 1;
-		const uint32_t metallic = 0xff000000;
-		metallicTextureDesc.Data = static_cast<const void*>(&metallic);
+		const LeviathanRenderer::LinearColor metallicColor(1, 0, 0, 0);
+		metallicTextureDesc.Data = static_cast<const void*>(&metallicColor);
 		metallicTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 		metallicTextureDesc.sRGB = false;
 		if (!LeviathanRenderer::CreateTexture2D(metallicTextureDesc, gMetallicTextureId))
@@ -533,7 +536,8 @@ namespace TestTitle
 
 		// Define object transform.
 		gObjectTransform = {};
-		gObjectTransform.Rotation = LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(0.0f), 0.0f, 0.0f);
+		// TODO: Rotation to apply to models to make them face scene forwards after being imported/generated.
+		//gObjectTransform.Rotation = LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(-90.0f), LeviathanCore::MathLibrary::DegreesToRadians(180.0f), 0.0f);
 
 		// Define scene camera.
 		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.5f));
@@ -557,30 +561,51 @@ namespace TestTitle
 				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
 				.Brightness = 1.0f,
 				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe()
+			},
+
+			LeviathanRenderer::LightTypes::DirectionalLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, -1.0f }.AsNormalizedSafe()
+			},
+
+			LeviathanRenderer::LightTypes::DirectionalLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Direction = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 0.0f }.AsNormalizedSafe()
+			},
+
+			LeviathanRenderer::LightTypes::DirectionalLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 0.0f }.AsNormalizedSafe()
 			}
 		};
 
 		gScenePointLights =
 		{
-			//LeviathanRenderer::LightTypes::PointLight
-			//{
-			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-			//	.Brightness = 1.0f,
-			//	.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.5f }
-			//}
+			LeviathanRenderer::LightTypes::PointLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.75f }
+			}
 		};
 
 		gSceneSpotLights =
 		{
-			//LeviathanRenderer::LightTypes::SpotLight
-			//{
-			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-			//	.Brightness = 1.0f,
-			//	.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.5f },
-			//	.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe(),
-			//	.InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
-			//	.OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(20.0f)
-			//}
+			LeviathanRenderer::LightTypes::SpotLight
+			{
+				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+				.Brightness = 1.0f,
+				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.85f },
+				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe(),
+				.InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
+				.OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(20.0f)
+			}
 		};
 
 		// ECS module prototype code region.

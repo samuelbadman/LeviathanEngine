@@ -1,5 +1,10 @@
 #include "Math.hlsl"
 
+float Calculate_nDotV(float3 surfaceToViewDirection, float3 surfaceNormal)
+{
+    return saturate(dot(surfaceNormal, surfaceToViewDirection));
+}
+
 float Attenuation(float distance)
 {
     return 1.0f / Square(distance);

@@ -327,11 +327,12 @@ namespace LeviathanRenderer
 		};
 
 		// Depth/stencil states.
-		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthTestEnabledState = {};
-		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthTestDisabledState = {};
+		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled = {};
+		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled = {};
+		static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateDepthStencilDisabled = {};
 
 		// Blend states.
-		static Microsoft::WRL::ComPtr<ID3D11BlendState> gAdditiveBlendState = {};
+		static Microsoft::WRL::ComPtr<ID3D11BlendState> gBlendStateAdditive = {};
 
 		// Rasterizer states.
 		static Microsoft::WRL::ComPtr<ID3D11RasterizerState> gRasterizerState = {};
@@ -631,21 +632,27 @@ namespace LeviathanRenderer
 			if (FAILED(hr)) { return false; }
 
 			// Create depth stencil states.
-			D3D11_DEPTH_STENCIL_DESC depthTestEnabledStateDesc = {};
-			depthTestEnabledStateDesc.DepthEnable = TRUE;
-			depthTestEnabledStateDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-			depthTestEnabledStateDesc.DepthFunc = D3D11_COMPARISON_LESS;
-			depthTestEnabledStateDesc.StencilEnable = FALSE;
-			hr = gD3D11Device->CreateDepthStencilState(&depthTestEnabledStateDesc, &gDepthTestEnabledState);
+			D3D11_DEPTH_STENCIL_DESC gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc = {};
+			gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.DepthEnable = TRUE;
+			gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+			gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.DepthFunc = D3D11_COMPARISON_LESS;
+			gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.StencilEnable = FALSE;
+			hr = gD3D11Device->CreateDepthStencilState(&gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc, &gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled);
 			if (FAILED(hr)) { return false; };
 
-			D3D11_DEPTH_STENCIL_DESC depthTestDisabledStateDesc = {};
-			depthTestDisabledStateDesc.DepthEnable = FALSE;
-			depthTestDisabledStateDesc.StencilEnable = FALSE;
-			hr = gD3D11Device->CreateDepthStencilState(&depthTestDisabledStateDesc, &gDepthTestDisabledState);
+			D3D11_DEPTH_STENCIL_DESC depthStencilStateNoWriteDepthDepthFuncEqualStencilDisabledDesc = {};
+			depthStencilStateNoWriteDepthDepthFuncEqualStencilDisabledDesc.DepthEnable = TRUE;
+			depthStencilStateNoWriteDepthDepthFuncEqualStencilDisabledDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+			depthStencilStateNoWriteDepthDepthFuncEqualStencilDisabledDesc.DepthFunc = D3D11_COMPARISON_EQUAL;
+			depthStencilStateNoWriteDepthDepthFuncEqualStencilDisabledDesc.StencilEnable = FALSE;
+			hr = gD3D11Device->CreateDepthStencilState(&depthStencilStateNoWriteDepthDepthFuncEqualStencilDisabledDesc, &gDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled);
 			if (FAILED(hr)) { return false; };
 
-			gD3D11DeviceContext->OMSetDepthStencilState(gDepthTestDisabledState.Get(), 0);
+			D3D11_DEPTH_STENCIL_DESC depthStencilStateDepthStencilDisabledDesc = {};
+			depthStencilStateDepthStencilDisabledDesc.DepthEnable = FALSE;
+			depthStencilStateDepthStencilDisabledDesc.StencilEnable = FALSE;
+			hr = gD3D11Device->CreateDepthStencilState(&depthStencilStateDepthStencilDisabledDesc, &gDepthStencilStateDepthStencilDisabled);
+			if (FAILED(hr)) { return false; };
 
 			// Create rasterizer states.
 			D3D11_RASTERIZER_DESC rasterizerStateDesc = {};
@@ -680,7 +687,7 @@ namespace LeviathanRenderer
 
 			additiveBlendDesc.RenderTarget[0] = additiveRenderTargetBlendDesc;
 
-			hr = gD3D11Device->CreateBlendState(&additiveBlendDesc, &gAdditiveBlendState);
+			hr = gD3D11Device->CreateBlendState(&additiveBlendDesc, &gBlendStateAdditive);
 			if (FAILED(hr)) { return false; }
 
 			// Set the viewport.
@@ -853,10 +860,11 @@ namespace LeviathanRenderer
 			gSceneTextureShaderResourceView.Reset();
 			gSceneTextureSamplerState.Reset();
 
-			gDepthTestEnabledState.Reset();
-			gDepthTestDisabledState.Reset();
+			gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled.Reset();
+			gDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled.Reset();
+			gDepthStencilStateDepthStencilDisabled.Reset();
 			gRasterizerState.Reset();
-			gAdditiveBlendState.Reset();
+			gBlendStateAdditive.Reset();
 			gViewport = {};
 
 			gDirectionalLightPipeline.Destroy();
@@ -1156,22 +1164,27 @@ namespace LeviathanRenderer
 			return UpdateConstantBuffer(gSpotLightBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 		}
 
-		void SetDepthTestEnabled()
+		void SetDepthStencilStateWriteDepthDepthFuncLessStencilDisabled()
 		{
-			gD3D11DeviceContext->OMSetDepthStencilState(gDepthTestEnabledState.Get(), 0);
+			gD3D11DeviceContext->OMSetDepthStencilState(gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled.Get(), 0);
 		}
 
-		void SetDepthTestDisabled()
+		void SetDepthStencilStateDepthStencilDisabled()
 		{
-			gD3D11DeviceContext->OMSetDepthStencilState(gDepthTestDisabledState.Get(), 0);
+			gD3D11DeviceContext->OMSetDepthStencilState(gDepthStencilStateDepthStencilDisabled.Get(), 0);
 		}
 
-		void SetBlendingAdditive()
+		void SetDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled()
 		{
-			gD3D11DeviceContext->OMSetBlendState(gAdditiveBlendState.Get(), nullptr, 0xffffffff);
+			gD3D11DeviceContext->OMSetDepthStencilState(gDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled.Get(), 0);
 		}
 
-		void SetBlendingDisabled()
+		void SetBlendStateAdditive()
+		{
+			gD3D11DeviceContext->OMSetBlendState(gBlendStateAdditive.Get(), nullptr, 0xffffffff);
+		}
+
+		void SetBlendStateBlendDisabled()
 		{
 			gD3D11DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 		}

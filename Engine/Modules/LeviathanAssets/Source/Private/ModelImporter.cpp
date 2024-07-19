@@ -27,22 +27,14 @@ static LeviathanCore::MathTypes::Vector3 CalculateTangent(const LeviathanCore::M
 	);
 }
 
-static std::vector<LeviathanCore::MathTypes::Vector3> BuildTangentsList(const size_t vertexCount, const LeviathanCore::MathTypes::Vector3* pPositions, 
+static std::vector<LeviathanCore::MathTypes::Vector3> BuildTangentsList(const size_t vertexCount, const LeviathanCore::MathTypes::Vector3* pPositions,
 	const LeviathanCore::MathTypes::Vector2* pTextureCoordinates, const size_t indexCount, const uint32_t* pIndices)
 {
 	std::vector<LeviathanCore::MathTypes::Vector3> tangents(vertexCount, {});
 	for (size_t i = 0; i < indexCount; i += 3)
 	{
-		const LeviathanCore::MathTypes::Vector3 tangent = CalculateTangent(pPositions[pIndices[i]],
-			pPositions[pIndices[i + 1]],
-			pPositions[pIndices[i + 2]],
-			pTextureCoordinates[pIndices[i]],
-			pTextureCoordinates[pIndices[i + 1]],
-			pTextureCoordinates[pIndices[i + 2]]);
-
-		tangents[pIndices[i]] = tangent;
-		tangents[pIndices[i + 1]] = tangent;
-		tangents[pIndices[i + 2]] = tangent;
+		tangents[pIndices[i]] = tangents[pIndices[i + 1]] = tangents[pIndices[i + 2]] = CalculateTangent(pPositions[pIndices[i]], pPositions[pIndices[i + 1]], pPositions[pIndices[i + 2]],
+			pTextureCoordinates[pIndices[i]], pTextureCoordinates[pIndices[i + 1]], pTextureCoordinates[pIndices[i + 2]]);
 	}
 	return tangents;
 }
@@ -75,12 +67,9 @@ static LeviathanAssets::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unuse
 
 		// Texture coordinates.
 		// Check if the mesh has a uv set at index 0.
-		// TODO: Only supporting a single uv set (the one at index 0). Support multiple texture uv sets.
-		if (mesh->mTextureCoords[0])
-		{
-			const aiVector3D& textureCoordinate = mesh->mTextureCoords[0][i];
-			result.TextureCoordinates.emplace_back(textureCoordinate.x, textureCoordinate.y);
-		}
+		// TODO: Only currently supports a single uv set (the set at index 0). Support multiple texture uv sets.
+		const aiVector3D& textureCoordinate = mesh->mTextureCoords[0][i];
+		result.TextureCoordinates.emplace_back(textureCoordinate.x, textureCoordinate.y);
 
 		// Tangents.
 		const aiVector3D& tangent = mesh->mTangents[i];
@@ -104,13 +93,14 @@ static LeviathanAssets::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unuse
 	return result;
 }
 
-// Processes each mesh in the node being processed. Each meshe's attribute data is appended to the end of the out vectors.
+// Processes each mesh in the node being processed. Each mesh's attribute data is appended to the end of the out vectors.
 static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<LeviathanAssets::AssetTypes::Mesh>& outMeshes)
 {
 	// Process each mesh in the node.
 	for (size_t i = 0; i < node->mNumMeshes; ++i)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		// TODO: A mesh must have vertices, vertex normals, at least one uv set, tangents and faces. Fail to process node if any of these are missing.
 		outMeshes.emplace_back(ProcessMesh(mesh, scene));
 	}
 
@@ -139,9 +129,9 @@ bool LeviathanAssets::ModelImporter::LoadModel(std::string_view file, std::vecto
 	return true;
 }
 
-LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(const AssetTypes::Mesh* const meshes, const size_t count)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(const AssetTypes::Mesh* const meshes, const size_t meshCount)
 {
-	if ((!meshes) || (count == 0))
+	if ((!meshes) || (meshCount == 0))
 	{
 		return AssetTypes::Mesh();
 	}
@@ -151,7 +141,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(
 	// Count total number of vertices and indices in the model.
 	size_t vertexCount = 0;
 	size_t indexCount = 0;
-	for (size_t i = 0; i < count; ++i)
+	for (size_t i = 0; i < meshCount; ++i)
 	{
 		vertexCount += meshes[i].Positions.size();
 		indexCount += meshes[i].Indices.size();
@@ -165,7 +155,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(
 	result.Indices.reserve(indexCount);
 
 	// Build combined mesh.
-	for (size_t i = 0; i < count; ++i)
+	for (size_t i = 0; i < meshCount; ++i)
 	{
 		// For each mesh.
 		size_t indexOffset = result.Positions.size();

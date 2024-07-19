@@ -39,10 +39,11 @@ namespace LeviathanRenderer
 		bool UpdateSpotLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		void SetShaderResourceTables();
 		void UnbindShaderResources();
-		void SetDepthTestEnabled();
-		void SetDepthTestDisabled();
-		void SetBlendingAdditive();
-		void SetBlendingDisabled();
+		void SetDepthStencilStateWriteDepthDepthFuncLessStencilDisabled();
+		void SetDepthStencilStateDepthStencilDisabled();
+		void SetDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled();
+		void SetBlendStateAdditive();
+		void SetBlendStateBlendDisabled();
 
 		// Shader resource table data.
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId);

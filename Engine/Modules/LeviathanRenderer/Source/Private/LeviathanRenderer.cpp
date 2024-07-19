@@ -193,8 +193,8 @@ namespace LeviathanRenderer
 
 	void Render([[maybe_unused]] const LeviathanRenderer::Camera& view,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, [[maybe_unused]] const size_t numDirectionalLights,
-		const LeviathanRenderer::LightTypes::PointLight* const pScenePointLights, const size_t numPointLights,
-		const LeviathanRenderer::LightTypes::SpotLight* const pSceneSpotLights, const size_t numSpotLights,
+		[[maybe_unused]] const LeviathanRenderer::LightTypes::PointLight* const pScenePointLights, [[maybe_unused]] const size_t numPointLights,
+		[[maybe_unused]] const LeviathanRenderer::LightTypes::SpotLight* const pSceneSpotLights, [[maybe_unused]] const size_t numSpotLights,
 		/*TODO: Temporary parameters. Make a material/object solution.*/ [[maybe_unused]] RendererResourceId::IdType colorTextureResourceId, [[maybe_unused]] RendererResourceId::IdType metallicTextureResourceId,
 		[[maybe_unused]] RendererResourceId::IdType roughnessTextureResourceId, [[maybe_unused]] RendererResourceId::IdType normalTextureResourceId, [[maybe_unused]] RendererResourceId::IdType samplerResourceId,
 		[[maybe_unused]] const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix, [[maybe_unused]] const uint32_t objectIndexCount, [[maybe_unused]] RendererResourceId::IdType objectVertexBufferResourceId,
@@ -213,15 +213,64 @@ namespace LeviathanRenderer
 		// Set offscreen render target.
 		Renderer::SetSceneRenderTarget();
 
-		// Enable depth testing and disable additive blending.
-		Renderer::SetDepthTestEnabled();
-		Renderer::SetBlendingDisabled();
+		// Enable depth writes and less than depth tests.
+		Renderer::SetDepthStencilStateWriteDepthDepthFuncLessStencilDisabled();
+
+		// Disable blending.
+		Renderer::SetBlendStateBlendDisabled();
 
 		// TODO: HDRI light pass.
+		// Temporary until HDRI is implemented. Draw objects with a default directional light. Note: This could be an ambient lighting pass.
+		// TODO: Implement fallback base lighting pass if HDRI is not present or being used. Possibly just a depth pass to write to the depth buffer.
+		{
+			Renderer::SetDirectionalLightPipeline();
 
-		// Disable depth testing and enable additive blending.
-		Renderer::SetDepthTestDisabled();
-		Renderer::SetBlendingAdditive();
+			LeviathanCore::MathTypes::Vector3 directionalLightRadiance =
+				LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f) * 1.0f;
+			LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = view.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(
+				LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f), 0.0f);
+			LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.X(), lightDirectionViewSpace4.Y(), lightDirectionViewSpace4.Z() };
+			lightDirectionViewSpace.NormalizeSafe();
+			LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer directionalLightData = {};
+			memcpy(&directionalLightData.Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
+			memcpy(&directionalLightData.LightDirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
+			Renderer::UpdateDirectionalLightBufferData(0, static_cast<const void*>(&directionalLightData), sizeof(LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer));
+
+			// TODO: Material properties for object.
+			// Update shader resource table data.
+			Renderer::SetColorTexture2DResource(colorTextureResourceId);
+			Renderer::SetMetallicTexture2DResource(metallicTextureResourceId);
+			Renderer::SetRoughnessTexture2DResource(roughnessTextureResourceId);
+			Renderer::SetNormalTexture2DResource(normalTextureResourceId);
+
+			Renderer::SetColorTextureSampler(samplerResourceId);
+			Renderer::SetRoughnessTextureSampler(samplerResourceId);
+			Renderer::SetMetallicTextureSampler(samplerResourceId);
+			Renderer::SetNormalTextureSampler(samplerResourceId);
+
+			Renderer::SetShaderResourceTables();
+
+			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransformMatrix;
+			const LeviathanCore::MathTypes::Matrix4x4 worldViewMatrix = view.GetViewMatrix() * worldMatrix;
+			const LeviathanCore::MathTypes::Matrix4x4 normalMatrix = LeviathanCore::MathTypes::Matrix4x4::Transpose(LeviathanCore::MathTypes::Matrix4x4::Inverse(worldViewMatrix));
+			const LeviathanCore::MathTypes::Matrix4x4 worldViewProjectionMatrix = view.GetViewProjectionMatrix() * worldMatrix;
+
+			// Update object data.
+			LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer objectData = {};
+			memcpy(objectData.WorldViewMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
+			memcpy(objectData.WorldViewProjectionMatrix, worldViewProjectionMatrix.Data(), sizeof(float) * 16);
+			memcpy(objectData.NormalMatrix, worldViewMatrix.Data(), sizeof(float) * 16);
+			Renderer::UpdateObjectBufferData(0, &objectData, sizeof(LeviathanRenderer::ConstantBufferTypes::ObjectConstantBuffer));
+
+			// Draw.
+			Renderer::DrawIndexed(objectIndexCount, sizeof(LeviathanRenderer::VertexTypes::VertexPos3Norm3UV2Tang3), objectVertexBufferResourceId, objectIndexBufferResourceId);
+		}
+
+		// Disable depth buffer writes and set depth test function to equal.
+		Renderer::SetDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled();
+
+		// Set additive blending.
+		Renderer::SetBlendStateAdditive();
 
 		// Directional light pass.
 		Renderer::SetDirectionalLightPipeline();
@@ -368,7 +417,10 @@ namespace LeviathanRenderer
 		}
 
 		// Disable blending.
-		Renderer::SetBlendingDisabled();
+		Renderer::SetBlendStateBlendDisabled();
+
+		// Disable depth testing.
+		Renderer::SetDepthStencilStateDepthStencilDisabled();
 
 		// Begin post processing.
 		// Set screen render target.

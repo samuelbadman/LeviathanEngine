@@ -44,7 +44,7 @@ float4 main(PixelInput input) : SV_TARGET
     float3 surfaceNormal = normalize(Texture2DSRVTable[NORMAL_TEXTURE2D_SRV_TABLE_INDEX].Sample(TextureSamplerTable[NORMAL_TEXTURE_SAMPLER_TABLE_INDEX], input.TexCoord.xy).xyz * 2.0f - 1.0f);
     
     float3 surfaceToViewDirectionTangentSpace = normalize(-input.PositionTangentSpace);
-    float nDotV = saturate(dot(surfaceNormal, surfaceToViewDirectionTangentSpace));
+    float nDotV = Calculate_nDotV(surfaceToViewDirectionTangentSpace, surfaceNormal);
 
     // Directional light.
     float3 surfaceToLightDirectionTangentSpace = -input.LightDirectionTangentSpace;
