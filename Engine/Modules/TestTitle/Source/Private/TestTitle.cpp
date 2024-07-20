@@ -296,7 +296,7 @@ namespace TestTitle
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
-			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gLinearTextureSamplerId,
+			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gDefaultNormalTextureId, gLinearTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
 
@@ -384,8 +384,6 @@ namespace TestTitle
 #endif // LEVIATHAN_WITH_TOOLS.
 
 		// Create scene.
-		// TODO: Imported and generated models are oriented incorrectly.
-		// TODO: Fix model orientation after import/generation.
 		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GeneratePlanePrimitive(0.5f);
 		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCubePrimitive(0.5f);
 		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateSpherePrimitive(0.5f, 64, 64);
@@ -440,7 +438,8 @@ namespace TestTitle
 
 		// Import textures.
 		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};
-		if (!LeviathanAssets::TextureImporter::LoadTexture("red_bricks_04_diff_1k.png", brickDiffuseTexture))
+		//if (!LeviathanAssets::TextureImporter::LoadTexture("red_bricks_04_diff_1k.png", brickDiffuseTexture))
+		if (!LeviathanAssets::TextureImporter::LoadTexture("UVChecker_1k.png", brickDiffuseTexture))
 		{
 			LEVIATHAN_LOG("Failed to load brick diffuse texture from disk.");
 		}
@@ -472,10 +471,17 @@ namespace TestTitle
 		}
 
 		LeviathanRenderer::Texture2DDescription brickRoughnessTextureDesc = {};
-		brickRoughnessTextureDesc.Width = brickRoughnessTexture.Width;
-		brickRoughnessTextureDesc.Height = brickRoughnessTexture.Height;
-		brickRoughnessTextureDesc.Data = brickRoughnessTexture.Data;
-		brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * brickRoughnessTexture.Width;
+		//brickRoughnessTextureDesc.Width = brickRoughnessTexture.Width;
+		//brickRoughnessTextureDesc.Height = brickRoughnessTexture.Height;
+		//brickRoughnessTextureDesc.Data = brickRoughnessTexture.Data;
+		//brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * brickRoughnessTexture.Width;
+		//brickRoughnessTextureDesc.sRGB = false;
+
+		brickRoughnessTextureDesc.Width = 1;
+		brickRoughnessTextureDesc.Height = 1;
+		const LeviathanRenderer::LinearColor roughnessColor(254, 0, 0, 0);
+		brickRoughnessTextureDesc.Data = static_cast<const void*>(&roughnessColor);
+		brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 		brickRoughnessTextureDesc.sRGB = false;
 		if (!LeviathanRenderer::CreateTexture2D(brickRoughnessTextureDesc, gRoughnessTextureId))
 		{
@@ -536,8 +542,6 @@ namespace TestTitle
 
 		// Define object transform.
 		gObjectTransform = {};
-		// TODO: Rotation to apply to models to make them face scene forwards after being imported/generated.
-		//gObjectTransform.Rotation = LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::DegreesToRadians(-90.0f), LeviathanCore::MathLibrary::DegreesToRadians(180.0f), 0.0f);
 
 		// Define scene camera.
 		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.5f));

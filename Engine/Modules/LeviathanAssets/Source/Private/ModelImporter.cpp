@@ -66,7 +66,6 @@ static LeviathanAssets::AssetTypes::Mesh ProcessMesh(aiMesh* mesh, [[maybe_unuse
 		result.Normals.emplace_back(normal.x, normal.y, normal.z);
 
 		// Texture coordinates.
-		// Check if the mesh has a uv set at index 0.
 		// TODO: Only currently supports a single uv set (the set at index 0). Support multiple texture uv sets.
 		const aiVector3D& textureCoordinate = mesh->mTextureCoords[0][i];
 		result.TextureCoordinates.emplace_back(textureCoordinate.x, textureCoordinate.y);
@@ -116,7 +115,9 @@ bool LeviathanAssets::ModelImporter::LoadModel(std::string_view file, std::vecto
 	outMeshes.clear();
 
 	Assimp::Importer importer = {};
-	const aiScene* scene = importer.ReadFile(file.data(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace);
+	// TODO: Additional aiProcess flags may need not be included when using Vulkan api. Only necessary with Direct3D.
+	const aiScene* scene = importer.ReadFile(file.data(), aiProcessPreset_TargetRealtime_Fast 
+		| aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder);
 
 	if ((!scene) || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || (!scene->mRootNode))
 	{
