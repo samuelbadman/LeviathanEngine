@@ -182,24 +182,24 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CombineMeshes(
 	return result;
 }
 
-LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GeneratePlanePrimitive(float halfWidth)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CreatePlanePrimitive(float halfWidth)
 {
 	AssetTypes::Mesh result =
 	{
 		.Positions =
 		{
-			LeviathanCore::MathTypes::Vector3(-halfWidth, halfWidth, 0.0f),
-			LeviathanCore::MathTypes::Vector3(halfWidth, halfWidth, 0.0f),
-			LeviathanCore::MathTypes::Vector3(halfWidth, -halfWidth, 0.0f),
-			LeviathanCore::MathTypes::Vector3(-halfWidth, -halfWidth, 0.0f)
+			LeviathanCore::MathTypes::Vector3(-halfWidth, 0.0f, halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth, 0.0f, halfWidth),
+			LeviathanCore::MathTypes::Vector3(halfWidth, 0.0f, -halfWidth),
+			LeviathanCore::MathTypes::Vector3(-halfWidth, 0.0f, -halfWidth)
 		},
 
 		.Normals =
 		{
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f),
-			LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -1.0f)
+			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f),
+			LeviathanCore::MathTypes::Vector3(0.0f, 1.0f, 0.0f)
 		},
 
 		.TextureCoordinates =
@@ -221,7 +221,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GeneratePlaneP
 	return result;
 }
 
-LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCubePrimitive(float halfWidth)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CreateCubePrimitive(float halfWidth)
 {
 	AssetTypes::Mesh result =
 	{
@@ -320,7 +320,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCubePr
 	return result;
 }
 
-LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateSpherePrimitive(float radius, int32_t sectors, int32_t stacks)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CreateSpherePrimitive(float radius, int32_t sectors, int32_t stacks)
 {
 	float sectorStep = 2.f * LeviathanCore::MathLibrary::Pi / static_cast<float>(sectors);
 	float stackStep = LeviathanCore::MathLibrary::Pi / stacks;
@@ -346,10 +346,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateSphere
 				xy * LeviathanCore::MathLibrary::Sin(sectorAngle),
 				radius * LeviathanCore::MathLibrary::Sin(stackAngle) });
 
-
-			static constexpr float uCoordinateScale = 1.75f;
-			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ (static_cast<float>(j) / sectors) * uCoordinateScale, // U coordinate is scale to fix texture stretching.
-				-static_cast<float>(i) / stacks });
+			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ (static_cast<float>(j) / sectors), -static_cast<float>(i) / stacks });
 
 			result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ position.X() * lengthInv,
 				position.Y() * lengthInv,
@@ -393,7 +390,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateSphere
 	return result;
 }
 
-LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCylinderPrimitive(float baseRadius, float topRadius, float height, int32_t sectors, int32_t stacks)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CreateCylinderPrimitive(float baseRadius, float topRadius, float height, int32_t sectors, int32_t stacks)
 {
 	AssetTypes::Mesh result = {};
 
@@ -440,8 +437,7 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCylind
 		for (int32_t j = 0, k = 0; j <= sectors; ++j, k += 3)
 		{
 			result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ unitCircleVertices[k] * radius, unitCircleVertices[static_cast<size_t>(k) + 1] * radius, z });
-			static constexpr float uCoordinateScale = 3.5f;
-			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ static_cast<float>(j) * uCoordinateScale / sectors, t }); // U coordinate is scaled to fix texture stretching.
+			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 1.0f - (static_cast<float>(j) / sectors), 1.0f - t });
 			result.Normals.emplace_back(sideNormals[static_cast<size_t>(k)], sideNormals[static_cast<size_t>(k) + 1], sideNormals[static_cast<size_t>(k) + 2]);
 		}
 	}
@@ -458,17 +454,13 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCylind
 		auto const& position = result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.X() + (baseRadius * LeviathanCore::MathLibrary::Cos((float)i * LeviathanCore::MathLibrary::TwoPi / (float)sectors)),
 			capCenter.Y() + (baseRadius * LeviathanCore::MathLibrary::Sin((float)i * LeviathanCore::MathLibrary::TwoPi / (float)sectors)),
 			capCenter.Z() });
-
-		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f - (position.X()) / (2.f * baseRadius), 0.5f - (position.Y()) / (2.f * baseRadius) });
-
+		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 1.0f - (0.5f - (position.X()) / (2.f * baseRadius)), 1.0f - (0.5f - (position.Y()) / (2.f * baseRadius)) });
 		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -1.0f });
 	}
 
 	{
 		result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.X(), capCenter.Y(), capCenter.Z() });
-
 		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f, 0.5f });
-
 		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -1.0f });
 	}
 
@@ -483,16 +475,13 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCylind
 			capCenter.Y() + (topRadius * LeviathanCore::MathLibrary::Sin((float)i * LeviathanCore::MathLibrary::TwoPi / (float)sectors)),
 			capCenter.Z() });
 
-		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f + (position.X()) / (2.f * topRadius), 0.5f + (position.Y()) / (2.f * topRadius) });
-
+		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 1.0f - (0.5f + (position.X()) / (2.f * topRadius)), 1.0f - (0.5f + (position.Y()) / (2.f * topRadius)) });
 		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f });
 	}
 
 	{
 		result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.X(), capCenter.Y(), capCenter.Z() });
-
 		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f, 0.5f });
-
 		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f });
 	}
 
@@ -539,8 +528,9 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateCylind
 	return result;
 }
 
-LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateConePrimitive(float baseRadius, float height, int32_t sectors, int32_t stacks)
+LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::CreateConePrimitive(float baseRadius, float height, int32_t sectors, int32_t stacks)
 {
+	static constexpr float topRadius = 0.0001f;
 	AssetTypes::Mesh result = {};
 
 	// Vertices.
@@ -553,12 +543,12 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateConePr
 	float sectorStep = LeviathanCore::MathLibrary::TwoPi / sectors;
 	float sectorAngle = 0.f;
 
-	float zAngle = LeviathanCore::MathLibrary::ATan2(baseRadius - 0.f, height);
+	float zAngle = LeviathanCore::MathLibrary::ATan2(baseRadius - topRadius, height);
 	float x0 = LeviathanCore::MathLibrary::Cos(zAngle);
 	float y0 = 0;
 	float z0 = LeviathanCore::MathLibrary::Sin(zAngle);
 
-	for (int i = 0; i <= sectors; ++i)
+	for (int32_t i = 0; i <= sectors; ++i)
 	{
 		sectorAngle = i * sectorStep;
 		sideNormals.push_back(LeviathanCore::MathLibrary::Cos(sectorAngle) * x0 - LeviathanCore::MathLibrary::Sin(sectorAngle) * y0);
@@ -580,17 +570,14 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateConePr
 	for (int i = stacks; i >= 0; i--)
 	{
 		z = -(height * 0.5f) + (float)i / stacks * height;
-		radius = baseRadius + (float)i / stacks * (0.f - baseRadius);
+		radius = baseRadius + (float)i / stacks * (topRadius - baseRadius);
 		float t = 1.0f - (float)i / stacks;
 
 		for (int32_t j = 0, k = 0; j <= sectors; ++j, k += 3)
 		{
-			result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ unitCircleVertices[static_cast<size_t>(k)] * radius, unitCircleVertices[static_cast<size_t>(k) + 1] * radius, z });
-
-			static constexpr float uCoordinateScale = 3.5f;
-			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ static_cast<float>(j) * uCoordinateScale / sectors, t }); // U coordinate is scaled to fix texture stretching.
-
-			result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ sideNormals[static_cast<size_t>(k)], sideNormals[static_cast<size_t>(k) + 1], sideNormals[static_cast<size_t>(k) + 2] });
+			result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ unitCircleVertices[k] * radius, unitCircleVertices[static_cast<size_t>(k) + 1] * radius, z });
+			result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 1.0f - (static_cast<float>(j) / sectors), 1.0f - t });
+			result.Normals.emplace_back(sideNormals[static_cast<size_t>(k)], sideNormals[static_cast<size_t>(k) + 1], sideNormals[static_cast<size_t>(k) + 2]);
 		}
 	}
 
@@ -606,18 +593,35 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateConePr
 		auto const& position = result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.X() + (baseRadius * LeviathanCore::MathLibrary::Cos((float)i * LeviathanCore::MathLibrary::TwoPi / (float)sectors)),
 			capCenter.Y() + (baseRadius * LeviathanCore::MathLibrary::Sin((float)i * LeviathanCore::MathLibrary::TwoPi / (float)sectors)),
 			capCenter.Z() });
-
-		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f - (position.X()) / (2.f * baseRadius), 0.5f - (position.Y()) / (2.f * baseRadius) });
-
+		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 1.0f - (0.5f - (position.X()) / (2.f * baseRadius)), 1.0f - (0.5f - (position.Y()) / (2.f * baseRadius)) });
 		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -1.0f });
 	}
 
 	{
 		result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.X(), capCenter.Y(), capCenter.Z() });
-
 		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f, 0.5f });
-
 		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -1.0f });
+	}
+
+	int topCapStart = (int)result.Positions.size();
+
+	// Top cap.
+	capCenter = LeviathanCore::MathTypes::Vector3{ 0.f, 0.f, height / 2.f };
+
+	for (int i = numberOfCapVertices; i > 0; i--)
+	{
+		auto const& position = result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.X() + (topRadius * LeviathanCore::MathLibrary::Cos((float)i * LeviathanCore::MathLibrary::TwoPi / (float)sectors)),
+			capCenter.Y() + (topRadius * LeviathanCore::MathLibrary::Sin((float)i * LeviathanCore::MathLibrary::TwoPi / (float)sectors)),
+			capCenter.Z() });
+
+		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 1.0f - (0.5f + (position.X()) / (2.f * topRadius)), 1.0f - (0.5f + (position.Y()) / (2.f * topRadius)) });
+		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f });
+	}
+
+	{
+		result.Positions.emplace_back(LeviathanCore::MathTypes::Vector3{ capCenter.X(), capCenter.Y(), capCenter.Z() });
+		result.TextureCoordinates.emplace_back(LeviathanCore::MathTypes::Vector2{ 0.5f, 0.5f });
+		result.Normals.emplace_back(LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f });
 	}
 
 	// Indices.
@@ -625,6 +629,14 @@ LeviathanAssets::AssetTypes::Mesh LeviathanAssets::ModelImporter::GenerateConePr
 	for (int32_t i = baseCapStart + 2; i < baseCapStart + sectors; i++)
 	{
 		result.Indices.push_back(baseCapStart);
+		result.Indices.push_back(i - 1);
+		result.Indices.push_back(i);
+	}
+
+	// Top cap.
+	for (int32_t i = topCapStart + 2; i < topCapStart + sectors; i++)
+	{
+		result.Indices.push_back(topCapStart);
 		result.Indices.push_back(i - 1);
 		result.Indices.push_back(i);
 	}

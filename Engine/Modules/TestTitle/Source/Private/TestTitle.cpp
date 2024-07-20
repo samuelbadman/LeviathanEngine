@@ -384,18 +384,18 @@ namespace TestTitle
 #endif // LEVIATHAN_WITH_TOOLS.
 
 		// Create scene.
-		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GeneratePlanePrimitive(0.5f);
-		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCubePrimitive(0.5f);
-		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateSpherePrimitive(0.5f, 64, 64);
-		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateCylinderPrimitive(0.5f, 0.5f, 1.0f, 64, 64);
-		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::GenerateConePrimitive(0.5f, 1.0f, 64, 64);
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::CreatePlanePrimitive(0.5f);
+		LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::CreateSpherePrimitive(0.5f, 64, 64);
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::CreateCylinderPrimitive(0.5f, 0.5f, 1.0f, 64, 64);
+		//LeviathanAssets::AssetTypes::Mesh model = LeviathanAssets::ModelImporter::CreateConePrimitive(0.5f, 1.0f, 64, 64);
 		// Import model from disk.
-		std::vector<LeviathanAssets::AssetTypes::Mesh> model = {};
-		if (LeviathanAssets::ModelImporter::LoadModel("Suzanne.fbx", model))
+		//std::vector<LeviathanAssets::AssetTypes::Mesh> model = {};
+		//if (LeviathanAssets::ModelImporter::LoadModel("Suzanne.fbx", model))
 		{
 			// Combine model meshes into a single mesh buffer.
-			//LeviathanAssets::AssetTypes::Mesh combinedModel = model;
-			LeviathanAssets::AssetTypes::Mesh combinedModel = LeviathanAssets::ModelImporter::CombineMeshes(model.data(), model.size());
+			LeviathanAssets::AssetTypes::Mesh combinedModel = model;
+			//LeviathanAssets::AssetTypes::Mesh combinedModel = LeviathanAssets::ModelImporter::CombineMeshes(model.data(), model.size());
 
 			// Build render mesh.
 			// Render mesh definition.
@@ -438,8 +438,7 @@ namespace TestTitle
 
 		// Import textures.
 		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};
-		//if (!LeviathanAssets::TextureImporter::LoadTexture("red_bricks_04_diff_1k.png", brickDiffuseTexture))
-		if (!LeviathanAssets::TextureImporter::LoadTexture("UVChecker_1k.png", brickDiffuseTexture))
+		if (!LeviathanAssets::TextureImporter::LoadTexture("red_bricks_04_diff_1k.png", brickDiffuseTexture))
 		{
 			LEVIATHAN_LOG("Failed to load brick diffuse texture from disk.");
 		}
@@ -471,17 +470,10 @@ namespace TestTitle
 		}
 
 		LeviathanRenderer::Texture2DDescription brickRoughnessTextureDesc = {};
-		//brickRoughnessTextureDesc.Width = brickRoughnessTexture.Width;
-		//brickRoughnessTextureDesc.Height = brickRoughnessTexture.Height;
-		//brickRoughnessTextureDesc.Data = brickRoughnessTexture.Data;
-		//brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * brickRoughnessTexture.Width;
-		//brickRoughnessTextureDesc.sRGB = false;
-
-		brickRoughnessTextureDesc.Width = 1;
-		brickRoughnessTextureDesc.Height = 1;
-		const LeviathanRenderer::LinearColor roughnessColor(254, 0, 0, 0);
-		brickRoughnessTextureDesc.Data = static_cast<const void*>(&roughnessColor);
-		brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * 1;
+		brickRoughnessTextureDesc.Width = brickRoughnessTexture.Width;
+		brickRoughnessTextureDesc.Height = brickRoughnessTexture.Height;
+		brickRoughnessTextureDesc.Data = brickRoughnessTexture.Data;
+		brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * brickRoughnessTexture.Width;
 		brickRoughnessTextureDesc.sRGB = false;
 		if (!LeviathanRenderer::CreateTexture2D(brickRoughnessTextureDesc, gRoughnessTextureId))
 		{
