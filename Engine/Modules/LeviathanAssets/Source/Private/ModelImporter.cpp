@@ -99,7 +99,7 @@ static void ProcessNode(aiNode* node, const aiScene* scene, std::vector<Leviatha
 	for (size_t i = 0; i < node->mNumMeshes; ++i)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		// TODO: A mesh must have vertices, vertex normals, at least one uv set, tangents and faces. Fail to process node if any of these are missing.
+		// TODO: A mesh must have vertices, vertex normals, at least one uv set, tangents and faces. Fail to process node/mesh if any of these are missing.
 		outMeshes.emplace_back(ProcessMesh(mesh, scene));
 	}
 
