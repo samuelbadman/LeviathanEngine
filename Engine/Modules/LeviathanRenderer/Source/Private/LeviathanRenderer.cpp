@@ -219,34 +219,12 @@ namespace LeviathanRenderer
 		// Disable blending.
 		Renderer::SetBlendStateBlendDisabled();
 
-		// TODO: HDRI light pass.
-		// Temporary until HDRI is implemented. Draw objects with a default directional light. Note: This could be an ambient lighting pass.
+		// Ambient light pass. TODO: Replace with HDRI image based lighting.
 		// TODO: Implement fallback base lighting pass if HDRI is not present or being used. Possibly just a depth pass to write to the depth buffer.
+		Renderer::SetAmbientLightPipeline();
 		{
-			Renderer::SetDirectionalLightPipeline();
-
-			LeviathanCore::MathTypes::Vector3 directionalLightRadiance =
-				LeviathanCore::MathTypes::Vector3(1.0f, 1.0f, 1.0f) * 1.0f;
-			LeviathanCore::MathTypes::Vector4 lightDirectionViewSpace4 = view.GetViewMatrix() * LeviathanCore::MathTypes::Vector4(
-				LeviathanCore::MathTypes::Vector3(0.0f, -1.0f, 0.0f), 0.0f);
-			LeviathanCore::MathTypes::Vector3 lightDirectionViewSpace{ lightDirectionViewSpace4.X(), lightDirectionViewSpace4.Y(), lightDirectionViewSpace4.Z() };
-			lightDirectionViewSpace.NormalizeSafe();
-			LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer directionalLightData = {};
-			memcpy(&directionalLightData.Radiance, directionalLightRadiance.Data(), sizeof(float) * 3);
-			memcpy(&directionalLightData.LightDirectionViewSpace, lightDirectionViewSpace.Data(), sizeof(float) * 3);
-			Renderer::UpdateDirectionalLightBufferData(0, static_cast<const void*>(&directionalLightData), sizeof(LeviathanRenderer::ConstantBufferTypes::DirectionalLightConstantBuffer));
-
-			// TODO: Material properties for object.
-			// Update shader resource table data.
 			Renderer::SetColorTexture2DResource(colorTextureResourceId);
-			Renderer::SetMetallicTexture2DResource(metallicTextureResourceId);
-			Renderer::SetRoughnessTexture2DResource(roughnessTextureResourceId);
-			Renderer::SetNormalTexture2DResource(normalTextureResourceId);
-
 			Renderer::SetColorTextureSampler(samplerResourceId);
-			Renderer::SetRoughnessTextureSampler(samplerResourceId);
-			Renderer::SetMetallicTextureSampler(samplerResourceId);
-			Renderer::SetNormalTextureSampler(samplerResourceId);
 
 			Renderer::SetShaderResourceTables();
 

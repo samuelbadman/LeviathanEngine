@@ -27,6 +27,7 @@ namespace LeviathanRenderer
 		void ClearDepthStencil(float clearDepth, unsigned char clearStencil);
 		void SetScreenRenderTarget();
 		void SetSceneRenderTarget();
+		void SetAmbientLightPipeline();
 		void SetDirectionalLightPipeline();
 		void SetPointLightPipeline();
 		void SetSpotLightPipeline();

@@ -296,7 +296,7 @@ namespace TestTitle
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
-			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gDefaultNormalTextureId, gLinearTextureSamplerId,
+			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gLinearTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
 
@@ -552,56 +552,56 @@ namespace TestTitle
 		// Define scene lights.
 		gSceneDirectionalLights =
 		{
-			LeviathanRenderer::LightTypes::DirectionalLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe()
-			},
+			//LeviathanRenderer::LightTypes::DirectionalLight
+			//{
+			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+			//	.Brightness = 1.0f,
+			//	.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, 1.0f }.AsNormalizedSafe()
+			//},
+
+			//LeviathanRenderer::LightTypes::DirectionalLight
+			//{
+			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+			//	.Brightness = 1.0f,
+			//	.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, -1.0f }.AsNormalizedSafe()
+			//},
+
+			//LeviathanRenderer::LightTypes::DirectionalLight
+			//{
+			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+			//	.Brightness = 1.0f,
+			//	.Direction = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 0.0f }.AsNormalizedSafe()
+			//},
 
 			LeviathanRenderer::LightTypes::DirectionalLight
 			{
 				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
 				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, -1.0f, -1.0f }.AsNormalizedSafe()
-			},
-
-			LeviathanRenderer::LightTypes::DirectionalLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 0.0f }.AsNormalizedSafe()
-			},
-
-			LeviathanRenderer::LightTypes::DirectionalLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 0.0f }.AsNormalizedSafe()
+				.Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 1.0f }.AsNormalizedSafe()
 			}
 		};
 
 		gScenePointLights =
 		{
-			LeviathanRenderer::LightTypes::PointLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.75f }
-			}
+			//LeviathanRenderer::LightTypes::PointLight
+			//{
+			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+			//	.Brightness = 1.0f,
+			//	.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.75f }
+			//}
 		};
 
 		gSceneSpotLights =
 		{
-			LeviathanRenderer::LightTypes::SpotLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.85f },
-				.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe(),
-				.InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
-				.OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(20.0f)
-			}
+			//LeviathanRenderer::LightTypes::SpotLight
+			//{
+			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+			//	.Brightness = 1.0f,
+			//	.Position = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, -0.85f },
+			//	.Direction = LeviathanCore::MathTypes::Vector3{ 0.0f, 0.0f, 1.0f }.AsNormalizedSafe(),
+			//	.InnerConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(0.0f),
+			//	.OuterConeAngleRadians = LeviathanCore::MathLibrary::DegreesToRadians(20.0f)
+			//}
 		};
 
 		// ECS module prototype code region.

@@ -341,6 +341,7 @@ namespace LeviathanRenderer
 		static D3D11_VIEWPORT gViewport = {};
 
 		// Pipelines.
+		Pipeline gAmbientLightPipeline = {};
 		Pipeline gDirectionalLightPipeline = {};
 		Pipeline gPointLightPipeline = {};
 		Pipeline gSpotLightPipeline = {};
@@ -773,6 +774,11 @@ namespace LeviathanRenderer
 				D3D_SHADER_MACRO{.Name = nullptr, .Definition = nullptr }
 			};
 
+			success = gAmbientLightPipeline.Create("AmbientLightPipeline", { .SourceCodeFile = "AmbientLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
+				lightingPassInputLayoutDesc.data(), static_cast<UINT>(lightingPassInputLayoutDesc.size()),
+				{ .SourceCodeFile = "AmbientLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = lightingPassPixelShaderDefinitions.data() });
+			if (!success) { return false; }
+
 			success = gDirectionalLightPipeline.Create("DirectionalLightPipeline", 
 				{ .SourceCodeFile = "DirectionalLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
 				lightingPassInputLayoutDesc.data(),
@@ -867,9 +873,11 @@ namespace LeviathanRenderer
 			gBlendStateAdditive.Reset();
 			gViewport = {};
 
+			gAmbientLightPipeline.Destroy();
 			gDirectionalLightPipeline.Destroy();
 			gPointLightPipeline.Destroy();
 			gSpotLightPipeline.Destroy();
+			gPostProcessPipeline.Destroy();
 
 			gObjectBuffer.Reset();
 			gDirectionalLightBuffer.Reset();
@@ -1076,6 +1084,14 @@ namespace LeviathanRenderer
 		void SetSceneRenderTarget()
 		{
 			gD3D11DeviceContext->OMSetRenderTargets(1, gSceneTextureRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
+		}
+
+		void SetAmbientLightPipeline()
+		{
+			gD3D11DeviceContext->IASetInputLayout(gDirectionalLightPipeline.GetInputLayout());
+			gD3D11DeviceContext->VSSetShader(gAmbientLightPipeline.GetVertexShader(), nullptr, 0);
+			gD3D11DeviceContext->PSSetShader(gAmbientLightPipeline.GetPixelShader(), nullptr, 0);
+			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 		}
 
 		void SetShaderResourceTables()
