@@ -459,22 +459,46 @@ namespace TestTitle
 		static constexpr uint32_t bytesPerPixel = 4;
 
 		LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
-		brickDiffuseTextureDesc.Width = brickDiffuseTexture.Width;
-		brickDiffuseTextureDesc.Height = brickDiffuseTexture.Height;
-		brickDiffuseTextureDesc.Data = brickDiffuseTexture.Data;
-		brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
-		brickDiffuseTextureDesc.sRGB = true;
+		if (brickDiffuseTexture.Data)
+		{
+			brickDiffuseTextureDesc.Width = brickDiffuseTexture.Width;
+			brickDiffuseTextureDesc.Height = brickDiffuseTexture.Height;
+			brickDiffuseTextureDesc.Data = brickDiffuseTexture.Data;
+			brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
+			brickDiffuseTextureDesc.sRGB = true;
+		}
+		else
+		{
+			brickDiffuseTextureDesc.Width = 1;
+			brickDiffuseTextureDesc.Height = 1;
+			const LeviathanRenderer::LinearColor fallbackColor(255, 0, 255, 255);
+			brickDiffuseTextureDesc.Data = &fallbackColor;
+			brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * 1;
+			brickDiffuseTextureDesc.sRGB = false;
+		}
 		if (!LeviathanRenderer::CreateTexture2D(brickDiffuseTextureDesc, gColorTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create brick diffuse texture resource.");
 		}
 
 		LeviathanRenderer::Texture2DDescription brickRoughnessTextureDesc = {};
-		brickRoughnessTextureDesc.Width = brickRoughnessTexture.Width;
-		brickRoughnessTextureDesc.Height = brickRoughnessTexture.Height;
-		brickRoughnessTextureDesc.Data = brickRoughnessTexture.Data;
-		brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * brickRoughnessTexture.Width;
-		brickRoughnessTextureDesc.sRGB = false;
+		if (brickRoughnessTexture.Data)
+		{
+			brickRoughnessTextureDesc.Width = brickRoughnessTexture.Width;
+			brickRoughnessTextureDesc.Height = brickRoughnessTexture.Height;
+			brickRoughnessTextureDesc.Data = brickRoughnessTexture.Data;
+			brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * brickRoughnessTexture.Width;
+			brickRoughnessTextureDesc.sRGB = false;
+		}
+		else
+		{
+			brickRoughnessTextureDesc.Width = 1;
+			brickRoughnessTextureDesc.Height = 1;
+			const LeviathanRenderer::LinearColor fallbackRoughness(254, 0, 0, 0);
+			brickRoughnessTextureDesc.Data = &fallbackRoughness;
+			brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * 1;
+			brickRoughnessTextureDesc.sRGB = false;
+		}
 		if (!LeviathanRenderer::CreateTexture2D(brickRoughnessTextureDesc, gRoughnessTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create brick roughness texture resource.");
@@ -505,11 +529,18 @@ namespace TestTitle
 		}
 
 		LeviathanRenderer::Texture2DDescription brickNormalTextureDesc = {};
-		brickNormalTextureDesc.Width = brickNormalTexture.Width;
-		brickNormalTextureDesc.Height = brickNormalTexture.Height;
-		brickNormalTextureDesc.Data = brickNormalTexture.Data;
-		brickNormalTextureDesc.RowSizeBytes = bytesPerPixel * brickNormalTexture.Width;
-		brickNormalTextureDesc.sRGB = false;
+		if (brickNormalTextureDesc.Data)
+		{
+			brickNormalTextureDesc.Width = brickNormalTexture.Width;
+			brickNormalTextureDesc.Height = brickNormalTexture.Height;
+			brickNormalTextureDesc.Data = brickNormalTexture.Data;
+			brickNormalTextureDesc.RowSizeBytes = bytesPerPixel * brickNormalTexture.Width;
+			brickNormalTextureDesc.sRGB = false;
+		}
+		else
+		{
+			brickNormalTextureDesc = defaultNormalTextureDesc;
+		}
 		if (!LeviathanRenderer::CreateTexture2D(brickNormalTextureDesc, gNormalTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create brick normal texture resource.");
