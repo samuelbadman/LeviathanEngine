@@ -529,7 +529,7 @@ namespace TestTitle
 		}
 
 		LeviathanRenderer::Texture2DDescription brickNormalTextureDesc = {};
-		if (brickNormalTextureDesc.Data)
+		if (brickNormalTexture.Data)
 		{
 			brickNormalTextureDesc.Width = brickNormalTexture.Width;
 			brickNormalTextureDesc.Height = brickNormalTexture.Height;
