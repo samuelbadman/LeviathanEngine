@@ -65,6 +65,8 @@ namespace TestTitle
 	static std::vector<LeviathanRenderer::LightTypes::PointLight> gScenePointLights = {};
 	static std::vector<LeviathanRenderer::LightTypes::SpotLight> gSceneSpotLights = {};
 
+	static LeviathanRenderer::RendererResourceId::IdType gEnvironmentTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
+
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gMetallicTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -296,6 +298,7 @@ namespace TestTitle
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
+			gEnvironmentTextureId, gLinearTextureSamplerId,
 			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gLinearTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
@@ -457,6 +460,11 @@ namespace TestTitle
 
 		// Create texture resources.
 		static constexpr uint32_t bytesPerPixel = 4;
+
+		if (!LeviathanRenderer::CreateCubeTexture(gEnvironmentTextureId))
+		{
+			LEVIATHAN_LOG("Failed to create cube texture.");
+		}
 
 		LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
 		if (brickDiffuseTexture.Data)

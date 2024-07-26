@@ -20,6 +20,8 @@ namespace LeviathanRenderer
 		void DestroyTexture(RendererResourceId::IdType& resourceID);
 		bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, RendererResourceId::IdType& outID);
 		void DestroySampler(RendererResourceId::IdType& resourceID);
+		bool CreateCubeTexture(RendererResourceId::IdType& outId);
+		//void DestroyCubeTexture();
 
 		// Render commands.
 		void ClearScreenRenderTarget(const float* clearColor);
@@ -38,7 +40,6 @@ namespace LeviathanRenderer
 		bool UpdateDirectionalLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdatePointLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		bool UpdateSpotLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
-		void SetShaderResourceTables();
 		void UnbindShaderResources();
 		void SetDepthStencilStateWriteDepthDepthFuncLessStencilDisabled();
 		void SetDepthStencilStateDepthStencilDisabled();
@@ -46,11 +47,14 @@ namespace LeviathanRenderer
 		void SetBlendStateAdditive();
 		void SetBlendStateBlendDisabled();
 
-		// Shader resource table data.
+		void SetEnvironmentTextureCubeResource(RendererResourceId::IdType textureCubeId);
+
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId);
 		void SetRoughnessTexture2DResource(RendererResourceId::IdType texture2DId);
 		void SetMetallicTexture2DResource(RendererResourceId::IdType texture2DId);
 		void SetNormalTexture2DResource(RendererResourceId::IdType texture2DId);
+
+		void SetEnvironmentTextureSampler(RendererResourceId::IdType samplerId);
 		void SetColorTextureSampler(RendererResourceId::IdType samplerId);
 		void SetRoughnessTextureSampler(RendererResourceId::IdType samplerId);
 		void SetMetallicTextureSampler(RendererResourceId::IdType samplerId);

@@ -6,6 +6,9 @@
 #include "LeviathanRenderer.h"
 #include "ConstantBufferTypes.h"
 
+// Temp.
+#include "LinearColor.h"
+
 namespace LeviathanRenderer
 {
 	namespace Renderer
@@ -184,7 +187,7 @@ namespace LeviathanRenderer
 			return CompileHLSLStringFXC(shaderSourceCode, entryPoint, name, shaderMacros, target, outBuffer);
 		}
 
-		static bool CompileNewShader(std::string_view sourceCodeFile, std::string_view entryPointName, std::string_view name, const D3D_SHADER_MACRO* shaderMacros, 
+		static bool CompileNewShader(std::string_view sourceCodeFile, std::string_view entryPointName, std::string_view name, const D3D_SHADER_MACRO* shaderMacros,
 			std::string_view target, std::string_view cacheFile, std::vector<uint8_t>& outBuffer)
 		{
 			// Get shader source code as string.
@@ -274,7 +277,7 @@ namespace LeviathanRenderer
 				if (ForceShaderRecompilation)
 				{
 					LEVIATHAN_LOG("Forced recompilation of shaders for %s pipeline.", name.data());
-					if (!CompileNewShader(vertexShaderDescription.SourceCodeFile, vertexShaderDescription.EntryPointName, name, vertexShaderDescription.ShaderMacros, 
+					if (!CompileNewShader(vertexShaderDescription.SourceCodeFile, vertexShaderDescription.EntryPointName, name, vertexShaderDescription.ShaderMacros,
 						SHADER_MODEL_5_VERTEX_SHADER, compiledVertexShaderCacheFile, compiledVertexShader))
 					{
 						return false;
@@ -341,11 +344,11 @@ namespace LeviathanRenderer
 		static D3D11_VIEWPORT gViewport = {};
 
 		// Pipelines.
-		Pipeline gAmbientLightPipeline = {};
-		Pipeline gDirectionalLightPipeline = {};
-		Pipeline gPointLightPipeline = {};
-		Pipeline gSpotLightPipeline = {};
-		Pipeline gPostProcessPipeline = {};
+		static Pipeline gEnvironmentLightPipeline = {};
+		static Pipeline gDirectionalLightPipeline = {};
+		static Pipeline gPointLightPipeline = {};
+		static Pipeline gSpotLightPipeline = {};
+		static Pipeline gPostProcessPipeline = {};
 
 		// Renderer state.
 		static bool gVSync = false;
@@ -363,8 +366,9 @@ namespace LeviathanRenderer
 		static Microsoft::WRL::ComPtr<ID3D11Buffer> gObjectBuffer = {};
 
 		// Shader resource tables.
-		static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gTexture2DSRVTable[RendererConstants::Texture2DSRVTableLength] = { nullptr };
-		static Microsoft::WRL::ComPtr<ID3D11SamplerState> gTextureSamplerTable[RendererConstants::TextureSamplerTableLength] = { nullptr };
+		static std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, RendererConstants::Texture2DSRVTableLength> gTexture2DSRVTable = { nullptr };
+		static std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, RendererConstants::TextureCubeSRVTableLength> gTextureCubeSRVTable = { nullptr };
+		static std::array<Microsoft::WRL::ComPtr<ID3D11SamplerState>, RendererConstants::TextureSamplerTableLength> gTextureSamplerTable = { nullptr };
 
 		// Macro definitions.
 #ifdef LEVIATHAN_BUILD_CONFIG_DEBUG
@@ -758,10 +762,23 @@ namespace LeviathanRenderer
 				}
 			};
 
-			static constexpr std::array<D3D_SHADER_MACRO, 12> lightingPassPixelShaderDefinitions =
+			static constexpr std::array<D3D_SHADER_MACRO, 13> environmentLightingPassPixelShaderDefinitions =
+			{
+				D3D_SHADER_MACRO{.Name = "TEXTURE2D_SRV_TABLE_LENGTH", .Definition = RendererConstants::Texture2DSRVTableLengthString },
+				D3D_SHADER_MACRO{.Name = "TEXTURE_CUBE_SRV_TABLE_LENGTH", .Definition = RendererConstants::TextureCubeSRVTableLengthString },
+				D3D_SHADER_MACRO{.Name = "TEXTURE_SAMPLER_TABLE_LENGTH", .Definition = RendererConstants::TextureSamplerTableLengthString },
+				D3D_SHADER_MACRO{.Name = "ENVIRONMENT_TEXTURE_CUBE_SRV_TABLE_INDEX", .Definition = RendererConstants::EnvironmentTextureSamplerTableIndexString },
+				D3D_SHADER_MACRO{.Name = "ENVIRONMENT_TEXTURE_CUBE_SAMPLER_TABLE_INDEX", .Definition = RendererConstants::EnvironmentTextureCubeSRVTableIndexString },
+				D3D_SHADER_MACRO{.Name = "COLOR_TEXTURE2D_SRV_TABLE_INDEX", .Definition = RendererConstants::ColorTexture2DSRVTableIndexString },
+				D3D_SHADER_MACRO{.Name = "COLOR_TEXTURE_SAMPLER_TABLE_INDEX", .Definition = RendererConstants::ColorTextureSamplerTableIndexString },
+				D3D_SHADER_MACRO{.Name = nullptr, .Definition = nullptr }
+			};
+
+			static constexpr std::array<D3D_SHADER_MACRO, 13> lightingPassPixelShaderDefinitions =
 			{
 				D3D_SHADER_MACRO{.Name = "TEXTURE2D_SRV_TABLE_LENGTH", .Definition = RendererConstants::Texture2DSRVTableLengthString },
 				D3D_SHADER_MACRO{.Name = "TEXTURE_SAMPLER_TABLE_LENGTH", .Definition = RendererConstants::TextureSamplerTableLengthString },
+				D3D_SHADER_MACRO{.Name = "ENVIRONMENT_CUBEMAP_SRV_TABLE_INDEX", .Definition = RendererConstants::EnvironmentTextureCubeSRVTableIndexString },
 				D3D_SHADER_MACRO{.Name = "COLOR_TEXTURE2D_SRV_TABLE_INDEX", .Definition = RendererConstants::ColorTexture2DSRVTableIndexString },
 				D3D_SHADER_MACRO{.Name = "ROUGHNESS_TEXTURE2D_SRV_TABLE_INDEX", .Definition = RendererConstants::RoughnessTexture2DSRVTableIndexString },
 				D3D_SHADER_MACRO{.Name = "METALLIC_TEXTURE2D_SRV_TABLE_INDEX", .Definition = RendererConstants::MetallicTexture2DSRVTableIndexString },
@@ -774,21 +791,21 @@ namespace LeviathanRenderer
 				D3D_SHADER_MACRO{.Name = nullptr, .Definition = nullptr }
 			};
 
-			success = gAmbientLightPipeline.Create("AmbientLightPipeline", { .SourceCodeFile = "AmbientLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
+			success = gEnvironmentLightPipeline.Create("EnvironmentLightPipeline", { .SourceCodeFile = "EnvironmentLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
 				lightingPassInputLayoutDesc.data(), static_cast<UINT>(lightingPassInputLayoutDesc.size()),
-				{ .SourceCodeFile = "AmbientLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = lightingPassPixelShaderDefinitions.data() });
+				{ .SourceCodeFile = "EnvironmentLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = environmentLightingPassPixelShaderDefinitions.data() });
 			if (!success) { return false; }
 
-			success = gDirectionalLightPipeline.Create("DirectionalLightPipeline", 
+			success = gDirectionalLightPipeline.Create("DirectionalLightPipeline",
 				{ .SourceCodeFile = "DirectionalLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
 				lightingPassInputLayoutDesc.data(),
-				static_cast<UINT>(lightingPassInputLayoutDesc.size()), 
+				static_cast<UINT>(lightingPassInputLayoutDesc.size()),
 				{ .SourceCodeFile = "DirectionalLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = lightingPassPixelShaderDefinitions.data() });
 			if (!success) { return false; }
 
 			success = gPointLightPipeline.Create("PointLightPipeline",
 				{ .SourceCodeFile = "PointLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
-				lightingPassInputLayoutDesc.data(), 
+				lightingPassInputLayoutDesc.data(),
 				static_cast<UINT>(lightingPassInputLayoutDesc.size()),
 				{ .SourceCodeFile = "PointLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = lightingPassPixelShaderDefinitions.data() });
 			if (!success) { return false; }
@@ -796,7 +813,7 @@ namespace LeviathanRenderer
 			success = gSpotLightPipeline.Create("SpotLightPipeline",
 				{ .SourceCodeFile = "SpotLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
 				lightingPassInputLayoutDesc.data(),
-				static_cast<UINT>(lightingPassInputLayoutDesc.size()), 
+				static_cast<UINT>(lightingPassInputLayoutDesc.size()),
 				{ .SourceCodeFile = "SpotLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = lightingPassPixelShaderDefinitions.data() });
 			if (!success) { return false; }
 
@@ -873,7 +890,7 @@ namespace LeviathanRenderer
 			gBlendStateAdditive.Reset();
 			gViewport = {};
 
-			gAmbientLightPipeline.Destroy();
+			gEnvironmentLightPipeline.Destroy();
 			gDirectionalLightPipeline.Destroy();
 			gPointLightPipeline.Destroy();
 			gSpotLightPipeline.Destroy();
@@ -1061,6 +1078,60 @@ namespace LeviathanRenderer
 			resourceID = RendererResourceId::InvalidId;
 		}
 
+		bool CreateCubeTexture(RendererResourceId::IdType& outId)
+		{
+			static const LeviathanRenderer::LinearColor textureColor(15, 15, 15, 0);
+
+			// TODO: for now using the same texture for each face of the cubemap. Take in an array of textures.
+			// Description of each face.
+			D3D11_TEXTURE2D_DESC faceDesc = {};
+			faceDesc.Width = 1;
+			faceDesc.Height = 1;
+			faceDesc.MipLevels = 1;
+			faceDesc.ArraySize = 6;
+			faceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			faceDesc.CPUAccessFlags = 0;
+			faceDesc.SampleDesc.Count = 1;
+			faceDesc.SampleDesc.Quality = 0;
+			faceDesc.Usage = D3D11_USAGE_DEFAULT;
+			faceDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			faceDesc.CPUAccessFlags = 0;
+			faceDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+			// Cube texture shader resource view description.
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+			srvDesc.Format = faceDesc.Format;
+			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+			srvDesc.TextureCube.MipLevels = faceDesc.MipLevels;
+			srvDesc.TextureCube.MostDetailedMip = 0;
+
+			// Get texture data for each face of the cube texture.
+			std::array<D3D11_SUBRESOURCE_DATA, 6> data = {};
+			for (size_t cubemapFaceIndex = 0; cubemapFaceIndex < 6; ++cubemapFaceIndex)
+			{
+				// Pointer to the pixel data.
+				data[cubemapFaceIndex].pSysMem = &textureColor;
+				// Line width in bytes.
+				data[cubemapFaceIndex].SysMemPitch = faceDesc.Width * 4; // Texture width X bytes per pixel.
+				// Only used for 3D textures.
+				data[cubemapFaceIndex].SysMemSlicePitch = 0;
+			}
+
+			// Create texture resource.
+			Microsoft::WRL::ComPtr<ID3D11Texture2D> tex = {};
+			HRESULT hr = gD3D11Device->CreateTexture2D(&faceDesc, data.data(), &tex);
+			if (FAILED(hr)) { return false; }
+
+			// Create the shader resource view of the resource to use in shaders.
+			outId = RendererResourceId::GetAvailableId();
+			gShaderResourceViews.emplace(outId, nullptr);
+
+			hr = gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews.at(outId).GetAddressOf());
+			if (FAILED(hr)) { return false; }
+
+			return true;
+		}
+
 		void ClearScreenRenderTarget(const float* clearColor)
 		{
 			gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
@@ -1089,14 +1160,11 @@ namespace LeviathanRenderer
 		void SetAmbientLightPipeline()
 		{
 			gD3D11DeviceContext->IASetInputLayout(gDirectionalLightPipeline.GetInputLayout());
-			gD3D11DeviceContext->VSSetShader(gAmbientLightPipeline.GetVertexShader(), nullptr, 0);
-			gD3D11DeviceContext->PSSetShader(gAmbientLightPipeline.GetPixelShader(), nullptr, 0);
+			gD3D11DeviceContext->VSSetShader(gEnvironmentLightPipeline.GetVertexShader(), nullptr, 0);
+			gD3D11DeviceContext->PSSetShader(gEnvironmentLightPipeline.GetPixelShader(), nullptr, 0);
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
-		}
-
-		void SetShaderResourceTables()
-		{
 			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DSRVTableLength, gTexture2DSRVTable[0].GetAddressOf());
+			gD3D11DeviceContext->PSSetShaderResources(1, RendererConstants::TextureCubeSRVTableLength, gTextureCubeSRVTable[0].GetAddressOf());
 			gD3D11DeviceContext->PSSetSamplers(0, RendererConstants::TextureSamplerTableLength, gTextureSamplerTable[0].GetAddressOf());
 		}
 
@@ -1114,6 +1182,8 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gDirectionalLightBuffer.GetAddressOf());
 			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gDirectionalLightBuffer.GetAddressOf());
+			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DSRVTableLength, gTexture2DSRVTable[0].GetAddressOf());
+			gD3D11DeviceContext->PSSetSamplers(0, RendererConstants::TextureSamplerTableLength, gTextureSamplerTable[0].GetAddressOf());
 		}
 
 		void SetPointLightPipeline()
@@ -1124,6 +1194,8 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gPointLightBuffer.GetAddressOf());
 			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gPointLightBuffer.GetAddressOf());
+			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DSRVTableLength, gTexture2DSRVTable[0].GetAddressOf());
+			gD3D11DeviceContext->PSSetSamplers(0, RendererConstants::TextureSamplerTableLength, gTextureSamplerTable[0].GetAddressOf());
 		}
 
 		void SetSpotLightPipeline()
@@ -1134,6 +1206,8 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());
 			gD3D11DeviceContext->VSSetConstantBuffers(1, 1, gSpotLightBuffer.GetAddressOf());
 			gD3D11DeviceContext->PSSetConstantBuffers(0, 1, gSpotLightBuffer.GetAddressOf());
+			gD3D11DeviceContext->PSSetShaderResources(0, RendererConstants::Texture2DSRVTableLength, gTexture2DSRVTable[0].GetAddressOf());
+			gD3D11DeviceContext->PSSetSamplers(0, RendererConstants::TextureSamplerTableLength, gTextureSamplerTable[0].GetAddressOf());
 		}
 
 		void SetPostProcessPipeline()
@@ -1205,6 +1279,11 @@ namespace LeviathanRenderer
 			gD3D11DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 		}
 
+		void SetEnvironmentTextureCubeResource(RendererResourceId::IdType textureCubeId)
+		{
+			gTextureCubeSRVTable[RendererConstants::EnvironmentTextureCubeSRVTableIndex] = gShaderResourceViews.at(textureCubeId);
+		}
+
 		void SetColorTexture2DResource(RendererResourceId::IdType texture2DId)
 		{
 			gTexture2DSRVTable[RendererConstants::ColorTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
@@ -1223,6 +1302,11 @@ namespace LeviathanRenderer
 		void SetNormalTexture2DResource(RendererResourceId::IdType texture2DId)
 		{
 			gTexture2DSRVTable[RendererConstants::NormalTexture2DSRVTableIndex] = gShaderResourceViews.at(texture2DId);
+		}
+
+		void SetEnvironmentTextureSampler(RendererResourceId::IdType samplerId)
+		{
+			gTextureSamplerTable[RendererConstants::EnvironmentTextureSamplerTableIndex] = gSamplerStates.at(samplerId);
 		}
 
 		void SetColorTextureSampler(RendererResourceId::IdType samplerId)

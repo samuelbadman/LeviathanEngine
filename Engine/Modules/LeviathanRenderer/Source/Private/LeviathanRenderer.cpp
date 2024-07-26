@@ -191,10 +191,16 @@ namespace LeviathanRenderer
 		Renderer::DestroySampler(id);
 	}
 
+	bool CreateCubeTexture(RendererResourceId::IdType& outId)
+	{
+		return Renderer::CreateCubeTexture(outId);
+	}
+
 	void Render([[maybe_unused]] const LeviathanRenderer::Camera& view,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, [[maybe_unused]] const size_t numDirectionalLights,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::PointLight* const pScenePointLights, [[maybe_unused]] const size_t numPointLights,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::SpotLight* const pSceneSpotLights, [[maybe_unused]] const size_t numSpotLights,
+		[[maybe_unused]] const RendererResourceId::IdType environmentTextureResourceId, [[maybe_unused]] const RendererResourceId::IdType environmentTextureSamplerId,
 		/*TODO: Temporary parameters. Make a material/object solution.*/ [[maybe_unused]] RendererResourceId::IdType colorTextureResourceId, [[maybe_unused]] RendererResourceId::IdType metallicTextureResourceId,
 		[[maybe_unused]] RendererResourceId::IdType roughnessTextureResourceId, [[maybe_unused]] RendererResourceId::IdType normalTextureResourceId, [[maybe_unused]] RendererResourceId::IdType samplerResourceId,
 		[[maybe_unused]] const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix, [[maybe_unused]] const uint32_t objectIndexCount, [[maybe_unused]] RendererResourceId::IdType objectVertexBufferResourceId,
@@ -223,10 +229,10 @@ namespace LeviathanRenderer
 		// TODO: Implement fallback base lighting pass if HDRI is not present or being used. Possibly just a depth pass to write to the depth buffer.
 		Renderer::SetAmbientLightPipeline();
 		{
+			Renderer::SetEnvironmentTextureCubeResource(environmentTextureResourceId);
 			Renderer::SetColorTexture2DResource(colorTextureResourceId);
+			Renderer::SetEnvironmentTextureSampler(environmentTextureSamplerId);
 			Renderer::SetColorTextureSampler(samplerResourceId);
-
-			Renderer::SetShaderResourceTables();
 
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransformMatrix;
 			const LeviathanCore::MathTypes::Matrix4x4 worldViewMatrix = view.GetViewMatrix() * worldMatrix;
@@ -276,8 +282,6 @@ namespace LeviathanRenderer
 			Renderer::SetMetallicTextureSampler(samplerResourceId);
 			Renderer::SetNormalTextureSampler(samplerResourceId);
 
-			Renderer::SetShaderResourceTables();
-
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransformMatrix;
 			const LeviathanCore::MathTypes::Matrix4x4 worldViewMatrix = view.GetViewMatrix() * worldMatrix;
 			const LeviathanCore::MathTypes::Matrix4x4 normalMatrix = LeviathanCore::MathTypes::Matrix4x4::Transpose(LeviathanCore::MathTypes::Matrix4x4::Inverse(worldViewMatrix));
@@ -322,8 +326,6 @@ namespace LeviathanRenderer
 			Renderer::SetRoughnessTextureSampler(samplerResourceId);
 			Renderer::SetMetallicTextureSampler(samplerResourceId);
 			Renderer::SetNormalTextureSampler(samplerResourceId);
-
-			Renderer::SetShaderResourceTables();
 
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransformMatrix;
 			const LeviathanCore::MathTypes::Matrix4x4 worldViewMatrix = view.GetViewMatrix() * worldMatrix;
@@ -375,8 +377,6 @@ namespace LeviathanRenderer
 			Renderer::SetRoughnessTextureSampler(samplerResourceId);
 			Renderer::SetMetallicTextureSampler(samplerResourceId);
 			Renderer::SetNormalTextureSampler(samplerResourceId);
-
-			Renderer::SetShaderResourceTables();
 
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransformMatrix;
 			const LeviathanCore::MathTypes::Matrix4x4 worldViewMatrix = view.GetViewMatrix() * worldMatrix;
