@@ -560,8 +560,11 @@ add_executable_target(
 # Copy assimp dll to build target directory.
 add_custom_command(TARGET "${EXE_NAME}" POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/Redist/Assimp" "$<TARGET_FILE_DIR:${EXE_NAME}>")
 
-# Copy Leviathan renderer shader source files to build target directory
+# Copy Leviathan renderer shader source files to build target directory.
 add_custom_command(TARGET "${EXE_NAME}" POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/Modules/LeviathanRenderer/ShaderSource" "$<TARGET_FILE_DIR:${EXE_NAME}>")
+
+# Copy Leviathan renderer shader source files to working build target directory.
+add_custom_command(TARGET "${EXE_NAME}" POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/Modules/LeviathanRenderer/ShaderSource" "${CMAKE_SOURCE_DIR}/Build")
 
 if(BUILD_RENDERER_API_DIRECT3D12_PC MATCHES ON)
 # Copy directx dlls to build target directory.
