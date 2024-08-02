@@ -439,6 +439,20 @@ namespace TestTitle
 			}
 		}
 
+		// Import HDR environment texture and convert equirectangular to cubemap.
+		// Import HRD environment texture. Imported image is in equirectangular format.
+		LeviathanAssets::AssetTypes::Texture hdrEnvTexture = {};
+		if (!LeviathanAssets::TextureImporter::LoadHDR("blocky_photo_studio_4k.hdr", hdrEnvTexture))
+		{
+			LEVIATHAN_LOG("Failed to load HDR environment texture from disk.");
+		}
+
+		// Render the equirectangular map projected onto each face of a unit cube into separate render targets (6 render targets).
+
+
+		// Use each render target as the texture for a face of a cubemap texture.
+
+
 		// Import textures.
 		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};
 		if (!LeviathanAssets::TextureImporter::LoadTexture("red_bricks_04_diff_1k.png", brickDiffuseTexture))

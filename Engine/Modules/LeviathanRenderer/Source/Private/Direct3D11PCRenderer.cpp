@@ -344,6 +344,7 @@ namespace LeviathanRenderer
 		static D3D11_VIEWPORT gViewport = {};
 
 		// Pipelines.
+		static Pipeline gEquirectToCubemapPipeline = {};
 		static Pipeline gEnvironmentLightPipeline = {};
 		static Pipeline gDirectionalLightPipeline = {};
 		static Pipeline gPointLightPipeline = {};
@@ -714,6 +715,25 @@ namespace LeviathanRenderer
 			}
 
 			// Create pipelines.
+			// Equirectangular to cubemap.
+			static constexpr std::array<D3D11_INPUT_ELEMENT_DESC, 1> equirectToCubemapInputLayoutDesc =
+			{
+				D3D11_INPUT_ELEMENT_DESC
+				{
+					.SemanticName = "POSITION",
+					.SemanticIndex = 0,
+					.Format = DXGI_FORMAT_R32G32B32_FLOAT,
+					.InputSlot = 0,
+					.AlignedByteOffset = 0,
+					.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+					.InstanceDataStepRate = 0
+				}
+			};
+
+			success = gEquirectToCubemapPipeline.Create("EquirectToCubemapPipeline", { .SourceCodeFile = "EquirectToCubemapVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
+				equirectToCubemapInputLayoutDesc.data(), static_cast<UINT>(equirectToCubemapInputLayoutDesc.size()), { .SourceCodeFile = "EquirectToCubemapPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr });
+			if (!success) { return false; }
+
 			// Lighting passes.
 			static constexpr std::array<D3D11_INPUT_ELEMENT_DESC, 4> lightingPassInputLayoutDesc =
 			{
@@ -774,6 +794,11 @@ namespace LeviathanRenderer
 				D3D_SHADER_MACRO{.Name = nullptr, .Definition = nullptr }
 			};
 
+			success = gEnvironmentLightPipeline.Create("EnvironmentLightPipeline", { .SourceCodeFile = "EnvironmentLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
+				lightingPassInputLayoutDesc.data(), static_cast<UINT>(lightingPassInputLayoutDesc.size()),
+				{ .SourceCodeFile = "EnvironmentLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = environmentLightingPassPixelShaderDefinitions.data() });
+			if (!success) { return false; }
+
 			static constexpr std::array<D3D_SHADER_MACRO, 13> lightingPassPixelShaderDefinitions =
 			{
 				D3D_SHADER_MACRO{.Name = "TEXTURE2D_SRV_TABLE_LENGTH", .Definition = RendererConstants::Texture2DSRVTableLengthString },
@@ -790,11 +815,6 @@ namespace LeviathanRenderer
 				D3D_SHADER_MACRO{.Name = "PI", .Definition = LeviathanCore::MathLibrary::PiString },
 				D3D_SHADER_MACRO{.Name = nullptr, .Definition = nullptr }
 			};
-
-			success = gEnvironmentLightPipeline.Create("EnvironmentLightPipeline", { .SourceCodeFile = "EnvironmentLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
-				lightingPassInputLayoutDesc.data(), static_cast<UINT>(lightingPassInputLayoutDesc.size()),
-				{ .SourceCodeFile = "EnvironmentLightPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = environmentLightingPassPixelShaderDefinitions.data() });
-			if (!success) { return false; }
 
 			success = gDirectionalLightPipeline.Create("DirectionalLightPipeline",
 				{ .SourceCodeFile = "DirectionalLightVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
