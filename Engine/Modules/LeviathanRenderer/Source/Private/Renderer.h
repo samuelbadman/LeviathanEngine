@@ -16,7 +16,7 @@ namespace LeviathanRenderer
 		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceId::IdType& outId);
 		void DestroyVertexBuffer(RendererResourceId::IdType& resourceID);
 		void DestroyIndexBuffer(RendererResourceId::IdType& resourceID);
-		bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, RendererResourceId::IdType& outID);
+		bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, bool generateMips, RendererResourceId::IdType& outID);
 		void DestroyTexture(RendererResourceId::IdType& resourceID);
 		bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, RendererResourceId::IdType& outID);
 		void DestroySampler(RendererResourceId::IdType& resourceID);

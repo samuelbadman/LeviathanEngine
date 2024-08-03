@@ -45,6 +45,7 @@ namespace LeviathanRenderer
 		const void* Data = 0;
 		uint32_t RowSizeBytes = 0;
 		bool sRGB = false;
+		bool GenerateMipmaps = false;
 	};
 
 	struct TextureSamplerDescription

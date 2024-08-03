@@ -173,7 +173,7 @@ namespace LeviathanRenderer
 
 	bool CreateTexture2D(const Texture2DDescription& description, RendererResourceId::IdType& outID)
 	{
-		return Renderer::CreateTexture2D(description.Width, description.Height, description.Data, description.RowSizeBytes, description.sRGB, outID);
+		return Renderer::CreateTexture2D(description.Width, description.Height, description.Data, description.RowSizeBytes, description.sRGB, description.GenerateMipmaps, outID);
 	}
 
 	void DestroyTexture2D(RendererResourceId::IdType& id)

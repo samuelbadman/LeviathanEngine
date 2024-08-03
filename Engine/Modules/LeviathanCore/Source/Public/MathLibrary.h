@@ -61,5 +61,17 @@ namespace LeviathanCore
 		{
 			return std::max(min, std::min(x, max));
 		}
+
+		template <typename T>
+		constexpr T Max(T x, T y)
+		{
+			return (x > y) ? x : y;
+		}
+
+		template <typename T>
+		constexpr T Min(T x, T y)
+		{
+			return (x < y) ? x : y;
+		}
 	}
 }

@@ -529,6 +529,18 @@ namespace LeviathanRenderer
 			return true;
 		}
 
+		static uint32_t GetNumMipLevels(uint32_t width, uint32_t height)
+		{
+			uint32_t numLevels = 1;
+			while (width > 1 && height > 1)
+			{
+				width = LeviathanCore::MathLibrary::Max(width / 2u, 1u);
+				height = LeviathanCore::MathLibrary::Max(height / 2u, 1u);
+				++numLevels;
+			}
+			return numLevels;
+		}
+
 		bool InitializeRendererApi(unsigned int width, unsigned int height, void* windowPlatformHandle, bool vsync, unsigned int bufferCount)
 		{
 			gVSync = vsync;
@@ -1020,44 +1032,69 @@ namespace LeviathanRenderer
 			resourceID = RendererResourceId::InvalidId;
 		}
 
-		bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, RendererResourceId::IdType& outID)
+		bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, bool generateMips, RendererResourceId::IdType& outID)
 		{
 			HRESULT hr = {};
 
 			// Create texture 2D resource.
+			[[maybe_unused]] const uint32_t numMipLevels = (generateMips) ? GetNumMipLevels(width, height) : 1;
+
 			D3D11_TEXTURE2D_DESC texture2DDesc;
 			texture2DDesc.Width = width;
 			texture2DDesc.Height = height;
-			texture2DDesc.MipLevels = 1;
 			texture2DDesc.ArraySize = 1;
 			texture2DDesc.Format = ((sRGB) ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM);
 			texture2DDesc.SampleDesc.Count = 1;
 			texture2DDesc.SampleDesc.Quality = 0;
 			texture2DDesc.Usage = D3D11_USAGE_DEFAULT;
-			texture2DDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 			texture2DDesc.CPUAccessFlags = 0;
-			texture2DDesc.MiscFlags = 0;
 
-			D3D11_SUBRESOURCE_DATA initData;
-			initData.pSysMem = data;
-			initData.SysMemPitch = static_cast<UINT>(rowPitchBytes);
+			if (generateMips)
+			{
+				texture2DDesc.MipLevels = numMipLevels; // 0 generates a full mipmap chain. Values greater than 0 can be used to specify a specific number of mipmap images.
+				texture2DDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; // Must flag to be bound as a render target and shader resource for mipmap generation.
+				texture2DDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // Flag that this resource will have generated mipmaps.
+			}
+			else
+			{
+				texture2DDesc.MipLevels = 1;
+				texture2DDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				texture2DDesc.MiscFlags = 0;
+			}
+
+			std::vector<D3D11_SUBRESOURCE_DATA> initDatas(numMipLevels, {});
+			uint32_t mipRowPitchBytes = rowPitchBytes;
+			for (uint32_t i = 0; i < numMipLevels; ++i)
+			{
+				initDatas[i].pSysMem = data;
+				initDatas[i].SysMemPitch = static_cast<UINT>(mipRowPitchBytes);
+
+				mipRowPitchBytes /= 2u;
+			}
 
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> tex = nullptr;
-			hr = gD3D11Device->CreateTexture2D(&texture2DDesc, &initData, &tex);
+			hr = gD3D11Device->CreateTexture2D(&texture2DDesc, initDatas.data(), &tex);
 			if (FAILED(hr)) { return false; }
-
-			// TODO: Generate mip levels.
 
 			// Create shader resource view of texture 2D resource.
 			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 			srvDesc.Format = texture2DDesc.Format;
 			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MipLevels = 1;
+			srvDesc.Texture2D.MipLevels = numMipLevels;
 
 			outID = RendererResourceId::GetAvailableId();
 			gShaderResourceViews.emplace(outID, nullptr);
 
-			return SUCCEEDED(gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews.at(outID).GetAddressOf()));
+			hr = gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews.at(outID).GetAddressOf());
+			if (FAILED(hr)) { return false; }
+
+			// Generate mipmaps if requested.
+			if (generateMips)
+			{
+				gD3D11DeviceContext->GenerateMips(gShaderResourceViews.at(outID).Get());
+			}
+
+			return true;
 		}
 
 		void DestroyTexture(RendererResourceId::IdType& resourceID)

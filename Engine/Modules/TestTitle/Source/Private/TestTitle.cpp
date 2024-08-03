@@ -488,6 +488,7 @@ namespace TestTitle
 			brickDiffuseTextureDesc.Data = brickDiffuseTexture.Data;
 			brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * brickDiffuseTexture.Width;
 			brickDiffuseTextureDesc.sRGB = true;
+			brickDiffuseTextureDesc.GenerateMipmaps = true;
 		}
 		else
 		{
@@ -497,6 +498,7 @@ namespace TestTitle
 			brickDiffuseTextureDesc.Data = &fallbackColor;
 			brickDiffuseTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 			brickDiffuseTextureDesc.sRGB = false;
+			brickDiffuseTextureDesc.GenerateMipmaps = false;
 		}
 		if (!LeviathanRenderer::CreateTexture2D(brickDiffuseTextureDesc, gColorTextureId))
 		{
@@ -511,6 +513,7 @@ namespace TestTitle
 			brickRoughnessTextureDesc.Data = brickRoughnessTexture.Data;
 			brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * brickRoughnessTexture.Width;
 			brickRoughnessTextureDesc.sRGB = false;
+			brickRoughnessTextureDesc.GenerateMipmaps = true;
 		}
 		else
 		{
@@ -520,6 +523,7 @@ namespace TestTitle
 			brickRoughnessTextureDesc.Data = &fallbackRoughness;
 			brickRoughnessTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 			brickRoughnessTextureDesc.sRGB = false;
+			brickRoughnessTextureDesc.GenerateMipmaps = false;
 		}
 		if (!LeviathanRenderer::CreateTexture2D(brickRoughnessTextureDesc, gRoughnessTextureId))
 		{
@@ -533,6 +537,7 @@ namespace TestTitle
 		metallicTextureDesc.Data = static_cast<const void*>(&metallicColor);
 		metallicTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 		metallicTextureDesc.sRGB = false;
+		metallicTextureDesc.GenerateMipmaps = false;
 		if (!LeviathanRenderer::CreateTexture2D(metallicTextureDesc, gMetallicTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create metallic texture resource.");
@@ -545,6 +550,7 @@ namespace TestTitle
 		defaultNormalTextureDesc.Data = static_cast<const void*>(&defaultNormalColor);
 		defaultNormalTextureDesc.RowSizeBytes = bytesPerPixel * 1;
 		defaultNormalTextureDesc.sRGB = false;
+		defaultNormalTextureDesc.GenerateMipmaps = false;
 		if (!LeviathanRenderer::CreateTexture2D(defaultNormalTextureDesc, gDefaultNormalTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create default normal texture resource.");
@@ -558,6 +564,7 @@ namespace TestTitle
 			brickNormalTextureDesc.Data = brickNormalTexture.Data;
 			brickNormalTextureDesc.RowSizeBytes = bytesPerPixel * brickNormalTexture.Width;
 			brickNormalTextureDesc.sRGB = false;
+			brickNormalTextureDesc.GenerateMipmaps = true;
 		}
 		else
 		{

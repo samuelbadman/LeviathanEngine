@@ -24,7 +24,7 @@ bool LeviathanAssets::TextureImporter::LoadHDR(std::string_view filename, AssetT
 	return (outTexture.Data != nullptr);
 }
 
-void LeviathanAssets::TextureImporter::FreeTexture(unsigned char* data)
+void LeviathanAssets::TextureImporter::FreeTextureOrHDR(unsigned char* data)
 {
 	stbi_image_free(static_cast<void*>(data));
 }
