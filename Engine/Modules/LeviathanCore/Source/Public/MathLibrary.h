@@ -31,6 +31,13 @@ namespace LeviathanCore
 			return (T(0) < value) - (value < T(0));
 		}
 
+		// Returns true if the parameter is a power of 2 otherwise, false.
+		template <typename T>
+		bool IsPowerOfTwo(T x)
+		{
+			return (x != T(0)) && ((x & (x - T(1))) == 0);
+		}
+
 		// Returns the value squared.
 		template <typename T>
 		constexpr T Square(T value)

@@ -449,7 +449,6 @@ namespace TestTitle
 
 		// Render the equirectangular map projected onto each face of a unit cube into separate render targets (6 render targets).
 
-
 		// Use each render target as the texture for a face of a cubemap texture.
 
 
