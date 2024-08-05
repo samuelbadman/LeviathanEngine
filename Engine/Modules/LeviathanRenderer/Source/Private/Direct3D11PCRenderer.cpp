@@ -470,6 +470,7 @@ namespace LeviathanRenderer
 		{
 			switch (filter)
 			{
+			case TextureSamplerFilter::Anisotropic: return D3D11_FILTER_ANISOTROPIC;
 			case TextureSamplerFilter::Linear: return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 			case TextureSamplerFilter::Point: return D3D11_FILTER_MIN_MAG_MIP_POINT;
 			default:return D3D11_FILTER();
@@ -1074,6 +1075,7 @@ namespace LeviathanRenderer
 				srvDesc.Format = texture2DDesc.Format;
 				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 				srvDesc.Texture2D.MipLevels = numMipLevels;
+				srvDesc.Texture2D.MostDetailedMip = 0;
 
 				outID = RendererResourceId::GetAvailableId();
 				gShaderResourceViews.emplace(outID, nullptr);
@@ -1120,7 +1122,7 @@ namespace LeviathanRenderer
 			resourceID = RendererResourceId::InvalidId;
 		}
 
-		bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, RendererResourceId::IdType& outId)
+		bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, const uint32_t anisotropy, RendererResourceId::IdType& outId)
 		{
 			D3D11_SAMPLER_DESC samplerDesc = {};
 			samplerDesc.Filter = TranslateTextureSamplerFilter(filter);
@@ -1136,7 +1138,7 @@ namespace LeviathanRenderer
 				samplerDesc.BorderColor[3] = borderColor[3];
 			}
 			samplerDesc.MipLODBias = 0.0f;
-			samplerDesc.MaxAnisotropy = 1;
+			samplerDesc.MaxAnisotropy = static_cast<UINT>(anisotropy);
 			samplerDesc.MinLOD = 0.0f;
 			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 

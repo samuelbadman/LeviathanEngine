@@ -73,7 +73,7 @@ namespace TestTitle
 	static LeviathanRenderer::RendererResourceId::IdType gDefaultNormalTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gNormalTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 
-	static LeviathanRenderer::RendererResourceId::IdType gLinearTextureSamplerId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gAnisotropicTextureSamplerId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gPointTextureSamplerId = LeviathanRenderer::RendererResourceId::InvalidId;
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
@@ -298,8 +298,8 @@ namespace TestTitle
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
-			gEnvironmentTextureId, gLinearTextureSamplerId,
-			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gLinearTextureSamplerId,
+			gEnvironmentTextureId, gAnisotropicTextureSamplerId,
+			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gAnisotropicTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
 
@@ -440,6 +440,10 @@ namespace TestTitle
 		}
 
 		// Import HDR environment texture and convert equirectangular to cubemap.
+		// Create unit cube geometry.
+		LeviathanAssets::AssetTypes::Mesh unitCubeMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
+
+
 		// Import HRD environment texture. Imported image is in equirectangular format.
 		LeviathanAssets::AssetTypes::Texture hdrEnvTexture = {};
 		if (!LeviathanAssets::TextureImporter::LoadHDR("blocky_photo_studio_4k.hdr", hdrEnvTexture))
@@ -575,12 +579,13 @@ namespace TestTitle
 		}
 
 		// Create texture samplers.
-		LeviathanRenderer::TextureSamplerDescription linearSamplerDesc = {};
-		linearSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Linear;
-		linearSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
-		if (!LeviathanRenderer::CreateTextureSampler(linearSamplerDesc, gLinearTextureSamplerId))
+		LeviathanRenderer::TextureSamplerDescription anisotropicSamplerDesc = {};
+		anisotropicSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Anisotropic;
+		anisotropicSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
+		anisotropicSamplerDesc.AnisotropyLevel = 16;
+		if (!LeviathanRenderer::CreateTextureSampler(anisotropicSamplerDesc, gAnisotropicTextureSamplerId))
 		{
-			LEVIATHAN_LOG("Failed to create linear texture sampler.");
+			LEVIATHAN_LOG("Failed to create anisotropic texture sampler.");
 		}
 
 		LeviathanRenderer::TextureSamplerDescription pointSamplerDesc = {};

@@ -26,6 +26,7 @@ namespace LeviathanRenderer
 	{
 		Linear,
 		Point,
+		Anisotropic,
 		MAX
 	};
 
@@ -54,6 +55,8 @@ namespace LeviathanRenderer
 		TextureSamplerBorderMode BorderMode = TextureSamplerBorderMode::MAX;
 		// Pointer to a 4 element float array containing the unit rgba color to use when border mode is set to solid color. float a[4] = {r, g, b, a}.
 		const float* BorderColor = nullptr;
+		// Used when Filter is set to Anisotropic. Specified anisotropy level. Valid values in the range 1 - 16.
+		uint32_t AnisotropyLevel = 1;
 	};
 
 	[[nodiscard]] bool Initialize();
