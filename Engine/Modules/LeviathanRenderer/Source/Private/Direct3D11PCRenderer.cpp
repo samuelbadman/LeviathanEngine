@@ -1037,8 +1037,6 @@ namespace LeviathanRenderer
 			HRESULT hr = {};
 
 			// Create texture 2D resource.
-			[[maybe_unused]] const uint32_t numMipLevels = (generateMips) ? GetNumMipLevels(width, height) : 1;
-
 			D3D11_TEXTURE2D_DESC texture2DDesc;
 			texture2DDesc.Width = width;
 			texture2DDesc.Height = height;
@@ -1051,49 +1049,68 @@ namespace LeviathanRenderer
 
 			if (generateMips)
 			{
+				const uint32_t numMipLevels = GetNumMipLevels(width, height);
+
 				texture2DDesc.MipLevels = numMipLevels; // 0 generates a full mipmap chain. Values greater than 0 can be used to specify a specific number of mipmap images.
 				texture2DDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; // Must flag to be bound as a render target and shader resource for mipmap generation.
 				texture2DDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // Flag that this resource will have generated mipmaps.
+
+				std::vector<D3D11_SUBRESOURCE_DATA> initDatas(numMipLevels, {});
+				uint32_t mipRowPitchBytes = rowPitchBytes;
+				for (uint32_t i = 0; i < numMipLevels; ++i)
+				{
+					initDatas[i].pSysMem = data;
+					initDatas[i].SysMemPitch = static_cast<UINT>(mipRowPitchBytes);
+
+					mipRowPitchBytes /= 2u;
+				}
+
+				Microsoft::WRL::ComPtr<ID3D11Texture2D> tex = nullptr;
+				hr = gD3D11Device->CreateTexture2D(&texture2DDesc, initDatas.data(), &tex);
+				if (FAILED(hr)) { return false; }
+
+				// Create shader resource view of texture 2D resource.
+				D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.Format = texture2DDesc.Format;
+				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Texture2D.MipLevels = numMipLevels;
+
+				outID = RendererResourceId::GetAvailableId();
+				gShaderResourceViews.emplace(outID, nullptr);
+
+				hr = gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews.at(outID).GetAddressOf());
+				if (FAILED(hr)) { return false; }
+
+				// Generate mipmap chain.
+				gD3D11DeviceContext->GenerateMips(gShaderResourceViews.at(outID).Get());
 			}
 			else
 			{
 				texture2DDesc.MipLevels = 1;
 				texture2DDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 				texture2DDesc.MiscFlags = 0;
+
+				D3D11_SUBRESOURCE_DATA initData = {};
+				initData.pSysMem = data;
+				initData.SysMemPitch = static_cast<UINT>(rowPitchBytes);
+
+				Microsoft::WRL::ComPtr<ID3D11Texture2D> tex = nullptr;
+				hr = gD3D11Device->CreateTexture2D(&texture2DDesc, &initData, &tex);
+				if (FAILED(hr)) { return false; }
+
+				// Create shader resource view of texture 2D resource.
+				D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.Format = texture2DDesc.Format;
+				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Texture2D.MipLevels = 1;
+
+				outID = RendererResourceId::GetAvailableId();
+				gShaderResourceViews.emplace(outID, nullptr);
+
+				hr = gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews.at(outID).GetAddressOf());
+				if (FAILED(hr)) { return false; }
 			}
-
-			std::vector<D3D11_SUBRESOURCE_DATA> initDatas(numMipLevels, {});
-			uint32_t mipRowPitchBytes = rowPitchBytes;
-			for (uint32_t i = 0; i < numMipLevels; ++i)
-			{
-				initDatas[i].pSysMem = data;
-				initDatas[i].SysMemPitch = static_cast<UINT>(mipRowPitchBytes);
-
-				mipRowPitchBytes /= 2u;
-			}
-
-			Microsoft::WRL::ComPtr<ID3D11Texture2D> tex = nullptr;
-			hr = gD3D11Device->CreateTexture2D(&texture2DDesc, initDatas.data(), &tex);
-			if (FAILED(hr)) { return false; }
-
-			// Create shader resource view of texture 2D resource.
-			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-			srvDesc.Format = texture2DDesc.Format;
-			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MipLevels = numMipLevels;
-
-			outID = RendererResourceId::GetAvailableId();
-			gShaderResourceViews.emplace(outID, nullptr);
-
-			hr = gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews.at(outID).GetAddressOf());
-			if (FAILED(hr)) { return false; }
-
-			// Generate mipmaps if requested.
-			if (generateMips)
-			{
-				gD3D11DeviceContext->GenerateMips(gShaderResourceViews.at(outID).Get());
-			}
-
+			
 			return true;
 		}
 
