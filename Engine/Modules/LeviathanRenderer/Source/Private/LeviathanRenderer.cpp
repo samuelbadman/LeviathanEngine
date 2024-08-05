@@ -173,6 +173,14 @@ namespace LeviathanRenderer
 
 	bool CreateTexture2D(const Texture2DDescription& description, RendererResourceId::IdType& outID)
 	{
+		if (description.GenerateMipmaps)
+		{
+			if ((!LeviathanCore::MathLibrary::IsPowerOfTwo(description.Width)) || (!LeviathanCore::MathLibrary::IsPowerOfTwo(description.Height)))
+			{
+				LEVIATHAN_LOG("Failed to create texture2D. Generate mipmap chain is requested on a texture with unsupported width or height. Width and height of a texture to generate a mipmap chain from must be a power of 2.");
+				return false;
+			}
+		}
 		return Renderer::CreateTexture2D(description.Width, description.Height, description.Data, description.RowSizeBytes, description.sRGB, description.GenerateMipmaps, outID);
 	}
 
