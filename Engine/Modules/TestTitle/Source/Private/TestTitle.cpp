@@ -57,6 +57,9 @@ namespace TestTitle
 	static LeviathanRenderer::RendererResourceId::IdType gVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
 
+	static LeviathanRenderer::RendererResourceId::IdType gUnitCubeVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gUnitCubeIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
+
 	static Transform gObjectTransform = {};
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
@@ -443,6 +446,33 @@ namespace TestTitle
 		// Create unit cube geometry.
 		LeviathanAssets::AssetTypes::Mesh unitCubeMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
 
+		// Create unit cube render geometry.
+		std::vector<LeviathanRenderer::VertexTypes::VertexPos3> unitCubeRenderMesh = {};
+		unitCubeRenderMesh.reserve(unitCubeMesh.Positions.size());
+		for (size_t i = 0; i < unitCubeMesh.Positions.size(); ++i)
+		{
+			unitCubeRenderMesh.emplace_back(LeviathanRenderer::VertexTypes::VertexPos3
+				{
+					.Position = { unitCubeMesh.Positions[i].X(), unitCubeMesh.Positions[i].Y(), unitCubeMesh.Positions[i].Z() }
+				});
+		}
+
+		std::vector<uint32_t> unitCubeRenderMeshIndices = {};
+		unitCubeRenderMeshIndices.reserve(unitCubeMesh.Indices.size());
+		for (size_t i = 0; i < unitCubeMesh.Indices.size(); ++i)
+		{
+				unitCubeRenderMeshIndices.emplace_back(unitCubeMesh.Indices[i]);
+		}
+
+		if (!LeviathanRenderer::CreateVertexBuffer(unitCubeRenderMesh.data(), static_cast<unsigned int>(unitCubeRenderMesh.size()), sizeof(LeviathanRenderer::VertexTypes::VertexPos3), gUnitCubeVertexBufferId))
+		{
+			return false;
+		}
+
+		if (!LeviathanRenderer::CreateIndexBuffer(unitCubeRenderMeshIndices.data(), static_cast<unsigned int>(unitCubeRenderMesh.size()), gUnitCubeIndexBufferId))
+		{
+			return false;
+		}
 
 		// Import HRD environment texture. Imported image is in equirectangular format.
 		LeviathanAssets::AssetTypes::Texture hdrEnvTexture = {};
