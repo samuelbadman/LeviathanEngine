@@ -47,6 +47,12 @@ namespace LeviathanRenderer
 		uint32_t RowSizeBytes = 0;
 		bool sRGB = false;
 		bool GenerateMipmaps = false;
+		bool HDR = false;
+	};
+
+	struct TextureCubeDescription
+	{
+
 	};
 
 	struct TextureSamplerDescription
@@ -57,6 +63,12 @@ namespace LeviathanRenderer
 		const float* BorderColor = nullptr;
 		// Used when Filter is set to Anisotropic. Specified anisotropy level. Valid values in the range 1 - 16.
 		uint32_t AnisotropyLevel = 1;
+	};
+
+	struct TextureCubeRenderTargetIds
+	{
+		std::array<RendererResourceId::IdType, 6> FaceRenderTargetIds = { RendererResourceId::InvalidId };
+		RendererResourceId::IdType ShaderResourceId = RendererResourceId::InvalidId;
 	};
 
 	[[nodiscard]] bool Initialize();
@@ -75,7 +87,10 @@ namespace LeviathanRenderer
 	void DestroyTexture2D(RendererResourceId::IdType& id);
 	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceId::IdType& outID);
 	void DestroyTextureSampler(RendererResourceId::IdType& id);
-	bool CreateCubeTexture(RendererResourceId::IdType& outId);
+	bool CreateTextureCube(RendererResourceId::IdType& outId);
+	void DestroyTextureCube(RendererResourceId::IdType& id);
+	bool CreateTextureCubeRenderTarget(uint32_t width, uint32_t height, TextureCubeRenderTargetIds& outTextureCubeRenderTargetIds);
+	void RenderHDRCubemap(uint32_t cubemapResolution, RendererResourceId::IdType HDRTexture2DResourceId, RendererResourceId::IdType HDRTextureSamplerId);
 
 	void Render(const LeviathanRenderer::Camera& view, 
 		const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, const size_t numDirectionalLights,

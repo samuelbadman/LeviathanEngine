@@ -5,12 +5,13 @@ namespace LeviathanAssets
 	namespace AssetTypes
 	{
 		struct Texture;
+		struct HDRTexture;
 	}
 
 	namespace TextureImporter
 	{
 		bool LoadTexture(std::string_view filename, AssetTypes::Texture& outTexture);
-		bool LoadHDR(std::string_view filename, AssetTypes::Texture& outTexture);
-		void FreeTextureOrHDR(unsigned char* const data);
+		bool LoadHDRTexture(std::string_view filename, AssetTypes::HDRTexture& outHDRTexture);
+		void FreeTexture(void* const data);
 	}
 }

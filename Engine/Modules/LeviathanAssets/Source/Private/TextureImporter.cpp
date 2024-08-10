@@ -16,15 +16,15 @@ bool LeviathanAssets::TextureImporter::LoadTexture(std::string_view filename, As
 	return (outTexture.Data != nullptr);
 }
 
-bool LeviathanAssets::TextureImporter::LoadHDR(std::string_view filename, AssetTypes::Texture& outTexture)
+bool LeviathanAssets::TextureImporter::LoadHDRTexture(std::string_view filename, AssetTypes::HDRTexture& outHDRTexture)
 {
-	outTexture = {};
+	outHDRTexture = {};
 	stbi_set_flip_vertically_on_load(1);
-	outTexture.Data = stbi_load(filename.data(), &outTexture.Width, &outTexture.Height, &outTexture.Num8BitComponentsPerPixel, 0);
-	return (outTexture.Data != nullptr);
+	outHDRTexture.Data = stbi_loadf(filename.data(), &outHDRTexture.Width, &outHDRTexture.Height, &outHDRTexture.NumComponentsPerPixel, 0);
+	return (outHDRTexture.Data != nullptr);
 }
 
-void LeviathanAssets::TextureImporter::FreeTextureOrHDR(unsigned char* data)
+void LeviathanAssets::TextureImporter::FreeTexture(void* const data)
 {
-	stbi_image_free(static_cast<void*>(data));
+	stbi_image_free(data);
 }

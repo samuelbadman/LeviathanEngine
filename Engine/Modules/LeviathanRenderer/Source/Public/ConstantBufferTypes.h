@@ -65,5 +65,16 @@ namespace LeviathanRenderer
 			float CosineOuterConeAngle = 0.0f;
 			char Padding2[4 * 3] = { 0 };
 		};
+
+		struct EquirectangularToCubemapConstantBuffer
+		{
+			float ViewProjectionMatrix[4 * 4] =
+			{
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f
+			};
+		};
 	}
 }

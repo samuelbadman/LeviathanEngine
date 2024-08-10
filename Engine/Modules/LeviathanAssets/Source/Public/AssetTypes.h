@@ -24,5 +24,13 @@ namespace LeviathanAssets
 
 			void FlipGreenChannel();
 		};
+
+		struct HDRTexture
+		{
+			int Width = 0;
+			int Height = 0;
+			int NumComponentsPerPixel = 0;
+			float* Data = nullptr;
+		};
 	}
 }

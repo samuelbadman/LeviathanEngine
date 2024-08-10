@@ -16,14 +16,18 @@ namespace LeviathanRenderer
 		bool CreateIndexBuffer(const unsigned int* indexData, unsigned int indexCount, RendererResourceId::IdType& outId);
 		void DestroyVertexBuffer(RendererResourceId::IdType& resourceID);
 		void DestroyIndexBuffer(RendererResourceId::IdType& resourceID);
-		bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, bool generateMips, RendererResourceId::IdType& outID);
+		bool CreateTexture2D(uint32_t width, uint32_t height, const void* data, uint32_t rowPitchBytes, bool sRGB, bool HDR, bool generateMips, RendererResourceId::IdType& outID);
 		void DestroyTexture(RendererResourceId::IdType& resourceID);
 		bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, const uint32_t anisotropy, RendererResourceId::IdType& outID);
 		void DestroySampler(RendererResourceId::IdType& resourceID);
-		bool CreateCubeTexture(RendererResourceId::IdType& outId);
-		//void DestroyCubeTexture();
+		bool CreateTextureCube(RendererResourceId::IdType& outId);
+		void DestroyTextureCube(RendererResourceId::IdType& resourceID);
+		bool CreateTextureCubeRenderTarget(uint32_t width, uint32_t height, RendererResourceId::IdType** outRenderTargetIds, RendererResourceId::IdType& outShaderResourceId);
+		void DestroyTextureCubeRenderTarget(RendererResourceId::IdType* renderTargetIds, RendererResourceId::IdType& shaderResourceId);
 
 		// Render commands.
+		void SetEquirectangularToCubemapPipeline(RendererResourceId::IdType HDRTexture2DResourceId, RendererResourceId::IdType HDRTextureSamplerId);
+
 		void ClearScreenRenderTarget(const float* clearColor);
 		void ClearSceneRenderTarget(const float* clearColor);
 		void ClearDepthStencil(float clearDepth, unsigned char clearStencil);
@@ -46,6 +50,7 @@ namespace LeviathanRenderer
 		void SetDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled();
 		void SetBlendStateAdditive();
 		void SetBlendStateBlendDisabled();
+		void SetViewport(uint32_t width, uint32_t height);
 
 		void SetEnvironmentTextureCubeResource(RendererResourceId::IdType textureCubeId);
 

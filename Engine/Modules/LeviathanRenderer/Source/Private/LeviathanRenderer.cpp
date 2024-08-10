@@ -11,6 +11,8 @@ namespace LeviathanRenderer
 	static uint32_t gScreenQuadIndexCount = 0;
 	static RendererResourceId::IdType gScreenQuadVertexBufferResourceId = RendererResourceId::InvalidId;
 	static RendererResourceId::IdType gScreenQuadIndexBufferResourceId = RendererResourceId::InvalidId;
+	static int renderWidth = 0;
+	static int renderHeight = 0;
 
 #ifdef LEVIATHAN_WITH_TOOLS
 	static LeviathanCore::Callback<RenderImGuiCallbackType> RenderImGuiCallback = {};
@@ -19,11 +21,12 @@ namespace LeviathanRenderer
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
 	{
 		bool success = Renderer::ResizeWindowResources(renderAreaWidth, renderAreaHeight);
-
 		if (!success)
 		{
 			LEVIATHAN_LOG("Failed to resize runtime window renderer resources.");
 		}
+		renderWidth = renderAreaWidth;
+		renderHeight = renderAreaHeight;
 	}
 
 #ifdef LEVIATHAN_WITH_TOOLS
@@ -100,15 +103,13 @@ namespace LeviathanRenderer
 
 		// Initialize renderer api.
 		void* platformHandle = LeviathanCore::Core::GetRuntimeWindowPlatformHandle();
-		int width = 0;
-		int height = 0;
 
-		if (!LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(width, height))
+		if (!LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(renderWidth, renderHeight))
 		{
 			return false;
 		}
 
-		if (!Renderer::InitializeRendererApi(static_cast<unsigned int>(width), static_cast<unsigned int>(height), platformHandle, vsync, bufferCount))
+		if (!Renderer::InitializeRendererApi(static_cast<unsigned int>(renderWidth), static_cast<unsigned int>(renderHeight), platformHandle, vsync, bufferCount))
 		{
 			return false;
 		}
@@ -181,7 +182,7 @@ namespace LeviathanRenderer
 				return false;
 			}
 		}
-		return Renderer::CreateTexture2D(description.Width, description.Height, description.Data, description.RowSizeBytes, description.sRGB, description.GenerateMipmaps, outID);
+		return Renderer::CreateTexture2D(description.Width, description.Height, description.Data, description.RowSizeBytes, description.sRGB, description.HDR, description.GenerateMipmaps, outID);
 	}
 
 	void DestroyTexture2D(RendererResourceId::IdType& id)
@@ -199,9 +200,46 @@ namespace LeviathanRenderer
 		Renderer::DestroySampler(id);
 	}
 
-	bool CreateCubeTexture(RendererResourceId::IdType& outId)
+	bool CreateTextureCube(RendererResourceId::IdType& outId)
 	{
-		return Renderer::CreateCubeTexture(outId);
+		return Renderer::CreateTextureCube(outId);
+	}
+
+	void DestroyTextureCube(RendererResourceId::IdType& id)
+	{
+		Renderer::DestroyTextureCube(id);
+	}
+
+	bool CreateTextureCubeRenderTarget(uint32_t width, uint32_t height, TextureCubeRenderTargetIds& outTextureCubeRenderTargetIds)
+	{
+		RendererResourceId::IdType* renderTargetIds = outTextureCubeRenderTargetIds.FaceRenderTargetIds.data();
+		return Renderer::CreateTextureCubeRenderTarget(width, height, &renderTargetIds, outTextureCubeRenderTargetIds.ShaderResourceId);
+	}
+
+	void RenderHDRCubemap(uint32_t cubemapResolution, RendererResourceId::IdType HDRTexture2DResourceId, RendererResourceId::IdType HDRTextureSamplerId)
+	{
+		static const LeviathanCore::MathTypes::Matrix4x4 captureProjection = 
+			LeviathanCore::MathTypes::Matrix4x4::PerspectiveProjection(LeviathanCore::MathLibrary::DegreesToRadians(90.0f), 1.0f, 0.1f, 10.0f);
+
+		static const std::array<LeviathanCore::MathTypes::Matrix4x4, 6> captureViews =
+		{
+			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(0.0f, 0.0f, 0.0f)), // Forward
+			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(0.0f, LeviathanCore::MathLibrary::HalfPi, 0.0f)), // Right
+			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(0.0f, LeviathanCore::MathLibrary::TwoPi, 0.0f)), // Backward
+			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(0.0f, -LeviathanCore::MathLibrary::HalfPi, 0.0f)), // Left
+			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::HalfPi, 0.0f, 0.0f)), // Bottom
+			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(-LeviathanCore::MathLibrary::HalfPi, 0.0f, 0.0f))  // Top
+		};
+
+		// Set viewport to cubemap resolution.
+		Renderer::SetViewport(cubemapResolution, cubemapResolution);
+
+		// Convert HDR equirectangular texture to cubemap.
+		Renderer::SetEquirectangularToCubemapPipeline(HDRTexture2DResourceId, HDRTextureSamplerId);
+		
+
+		// Reset viewport to render width and height.
+		Renderer::SetViewport(renderWidth, renderHeight);
 	}
 
 	void Render([[maybe_unused]] const LeviathanRenderer::Camera& view,

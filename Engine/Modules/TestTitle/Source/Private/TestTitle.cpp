@@ -68,7 +68,9 @@ namespace TestTitle
 	static std::vector<LeviathanRenderer::LightTypes::PointLight> gScenePointLights = {};
 	static std::vector<LeviathanRenderer::LightTypes::SpotLight> gSceneSpotLights = {};
 
-	static LeviathanRenderer::RendererResourceId::IdType gEnvironmentTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gHDRTextureResourceId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gEnvironmentTextureCubeId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::TextureCubeRenderTargetIds gCubeTextureRenderTargetIds = {};
 
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -301,7 +303,7 @@ namespace TestTitle
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
-			gEnvironmentTextureId, gAnisotropicTextureSamplerId,
+			/*gEnvironmentTextureId*/ gCubeTextureRenderTargetIds.ShaderResourceId, gAnisotropicTextureSamplerId,
 			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gAnisotropicTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
@@ -443,6 +445,30 @@ namespace TestTitle
 		}
 
 		// Import HDR environment texture and convert equirectangular to cubemap.
+		// Import HDR environment texture. Imported image is in equirectangular format.
+		LeviathanAssets::AssetTypes::HDRTexture hdrEnvTexture = {};
+		if (!LeviathanAssets::TextureImporter::LoadHDRTexture("blocky_photo_studio_4k.hdr", hdrEnvTexture))
+		{
+			LEVIATHAN_LOG("Failed to load HDR environment texture from disk.");
+		}
+
+		// Create texture resource for equirectangular format.
+		static constexpr uint32_t hdrBytesPerPixel = 4;
+
+		LeviathanRenderer::Texture2DDescription HDRTexture2DResourceDesc = {};
+		HDRTexture2DResourceDesc.Width = hdrEnvTexture.Width;
+		HDRTexture2DResourceDesc.Height = hdrEnvTexture.Height;
+		HDRTexture2DResourceDesc.Data = static_cast<void*>(hdrEnvTexture.Data);
+		HDRTexture2DResourceDesc.RowSizeBytes = hdrBytesPerPixel * hdrEnvTexture.Width;
+		HDRTexture2DResourceDesc.HDR = true;
+		if (!LeviathanRenderer::CreateTexture2D(HDRTexture2DResourceDesc, gHDRTextureResourceId))
+		{
+			LEVIATHAN_LOG("Failed to create HDR texture 2D resource.");
+		}
+
+		// Convert HDR texture to cubemap.
+
+
 		// Create unit cube geometry.
 		LeviathanAssets::AssetTypes::Mesh unitCubeMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
 
@@ -474,17 +500,21 @@ namespace TestTitle
 			return false;
 		}
 
-		// Import HRD environment texture. Imported image is in equirectangular format.
-		LeviathanAssets::AssetTypes::Texture hdrEnvTexture = {};
-		if (!LeviathanAssets::TextureImporter::LoadHDR("blocky_photo_studio_4k.hdr", hdrEnvTexture))
-		{
-			LEVIATHAN_LOG("Failed to load HDR environment texture from disk.");
-		}
-
 		// Render the equirectangular map projected onto each face of a unit cube into separate render targets (6 render targets).
+		// Create 6 render targets. Each render target view points to a face of the cubemap. Render directly into the cubemap using the equirectangular to cubemap pipeline.
+
 
 		// Use each render target as the texture for a face of a cubemap texture.
 
+		if (!LeviathanRenderer::CreateTextureCubeRenderTarget(512, 512, gCubeTextureRenderTargetIds))
+		{
+			return false;
+		}
+
+		//if (!LeviathanRenderer::CreateTextureCube(gEnvironmentTextureId))
+		//{
+		//	LEVIATHAN_LOG("Failed to create cube texture.");
+		//}
 
 		// Import textures.
 		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};
@@ -507,11 +537,6 @@ namespace TestTitle
 
 		// Create texture resources.
 		static constexpr uint32_t bytesPerPixel = 4;
-
-		if (!LeviathanRenderer::CreateCubeTexture(gEnvironmentTextureId))
-		{
-			LEVIATHAN_LOG("Failed to create cube texture.");
-		}
 
 		LeviathanRenderer::Texture2DDescription brickDiffuseTextureDesc = {};
 		if (brickDiffuseTexture.Data)
