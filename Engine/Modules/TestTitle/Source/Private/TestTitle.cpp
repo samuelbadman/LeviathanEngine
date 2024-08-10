@@ -70,7 +70,7 @@ namespace TestTitle
 
 	static LeviathanRenderer::RendererResourceId::IdType gHDRTextureResourceId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gEnvironmentTextureCubeId = LeviathanRenderer::RendererResourceId::InvalidId;
-	static LeviathanRenderer::TextureCubeRenderTargetIds gCubeTextureRenderTargetIds = {};
+	static LeviathanRenderer::TextureCubeRenderTargetIds gTextureCubeRenderTargetIds = {};
 
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -79,6 +79,7 @@ namespace TestTitle
 	static LeviathanRenderer::RendererResourceId::IdType gNormalTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 
 	static LeviathanRenderer::RendererResourceId::IdType gAnisotropicTextureSamplerId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gLinearTextureSamplerId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gPointTextureSamplerId = LeviathanRenderer::RendererResourceId::InvalidId;
 
 	static void OnRuntimeWindowResized(int renderAreaWidth, int renderAreaHeight)
@@ -303,7 +304,7 @@ namespace TestTitle
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
-			/*gEnvironmentTextureId*/ gCubeTextureRenderTargetIds.ShaderResourceId, gAnisotropicTextureSamplerId,
+			/*gEnvironmentTextureId*/ gTextureCubeRenderTargetIds.ShaderResourceId, gAnisotropicTextureSamplerId,
 			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gAnisotropicTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
@@ -444,6 +445,32 @@ namespace TestTitle
 			}
 		}
 
+		// Create texture samplers.
+		LeviathanRenderer::TextureSamplerDescription anisotropicSamplerDesc = {};
+		anisotropicSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Anisotropic;
+		anisotropicSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
+		anisotropicSamplerDesc.AnisotropyLevel = 16;
+		if (!LeviathanRenderer::CreateTextureSampler(anisotropicSamplerDesc, gAnisotropicTextureSamplerId))
+		{
+			LEVIATHAN_LOG("Failed to create anisotropic texture sampler.");
+		}
+
+		LeviathanRenderer::TextureSamplerDescription linearSamplerDesc = {};
+		linearSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Linear;
+		linearSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
+		if (!LeviathanRenderer::CreateTextureSampler(linearSamplerDesc, gLinearTextureSamplerId))
+		{
+			LEVIATHAN_LOG("Failed to create linear texture sampler.");
+		}
+
+		LeviathanRenderer::TextureSamplerDescription pointSamplerDesc = {};
+		pointSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Point;
+		pointSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
+		if (!LeviathanRenderer::CreateTextureSampler(pointSamplerDesc, gPointTextureSamplerId))
+		{
+			LEVIATHAN_LOG("Failed to create point texture sampler.");
+		}
+
 		// Import HDR environment texture and convert equirectangular to cubemap.
 		// Import HDR environment texture. Imported image is in equirectangular format.
 		LeviathanAssets::AssetTypes::HDRTexture hdrEnvTexture = {};
@@ -465,9 +492,6 @@ namespace TestTitle
 		{
 			LEVIATHAN_LOG("Failed to create HDR texture 2D resource.");
 		}
-
-		// Convert HDR texture to cubemap.
-
 
 		// Create unit cube geometry.
 		LeviathanAssets::AssetTypes::Mesh unitCubeMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
@@ -500,13 +524,8 @@ namespace TestTitle
 			return false;
 		}
 
-		// Render the equirectangular map projected onto each face of a unit cube into separate render targets (6 render targets).
-		// Create 6 render targets. Each render target view points to a face of the cubemap. Render directly into the cubemap using the equirectangular to cubemap pipeline.
-
-
-		// Use each render target as the texture for a face of a cubemap texture.
-
-		if (!LeviathanRenderer::CreateTextureCubeRenderTarget(512, 512, gCubeTextureRenderTargetIds))
+		// Create cubemap render targets and shader resource.
+		if (!LeviathanRenderer::CreateTextureCubeRenderTarget(512, 512, gTextureCubeRenderTargetIds))
 		{
 			return false;
 		}
@@ -515,6 +534,9 @@ namespace TestTitle
 		//{
 		//	LEVIATHAN_LOG("Failed to create cube texture.");
 		//}
+
+		// Convert HDR texture to cubemap.
+		LeviathanRenderer::RenderHDRCubemap(512, gTextureCubeRenderTargetIds, gHDRTextureResourceId, gLinearTextureSamplerId, gUnitCubeVertexBufferId, gUnitCubeIndexBufferId);
 
 		// Import textures.
 		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};
@@ -631,24 +653,6 @@ namespace TestTitle
 		if (!LeviathanRenderer::CreateTexture2D(brickNormalTextureDesc, gNormalTextureId))
 		{
 			LEVIATHAN_LOG("Failed to create brick normal texture resource.");
-		}
-
-		// Create texture samplers.
-		LeviathanRenderer::TextureSamplerDescription anisotropicSamplerDesc = {};
-		anisotropicSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Anisotropic;
-		anisotropicSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
-		anisotropicSamplerDesc.AnisotropyLevel = 16;
-		if (!LeviathanRenderer::CreateTextureSampler(anisotropicSamplerDesc, gAnisotropicTextureSamplerId))
-		{
-			LEVIATHAN_LOG("Failed to create anisotropic texture sampler.");
-		}
-
-		LeviathanRenderer::TextureSamplerDescription pointSamplerDesc = {};
-		pointSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Point;
-		pointSamplerDesc.BorderMode = LeviathanRenderer::TextureSamplerBorderMode::Wrap;
-		if (!LeviathanRenderer::CreateTextureSampler(pointSamplerDesc, gPointTextureSamplerId))
-		{
-			LEVIATHAN_LOG("Failed to create point texture sampler.");
 		}
 
 		// Define object transform.

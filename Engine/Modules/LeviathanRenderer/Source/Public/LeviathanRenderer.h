@@ -90,7 +90,9 @@ namespace LeviathanRenderer
 	bool CreateTextureCube(RendererResourceId::IdType& outId);
 	void DestroyTextureCube(RendererResourceId::IdType& id);
 	bool CreateTextureCubeRenderTarget(uint32_t width, uint32_t height, TextureCubeRenderTargetIds& outTextureCubeRenderTargetIds);
-	void RenderHDRCubemap(uint32_t cubemapResolution, RendererResourceId::IdType HDRTexture2DResourceId, RendererResourceId::IdType HDRTextureSamplerId);
+	bool RenderHDRCubemap(uint32_t cubemapResolution, const TextureCubeRenderTargetIds& textureCubeRenderTargetIds,
+		RendererResourceId::IdType hdrTexture2DResourceId, RendererResourceId::IdType hdrTextureSamplerId,
+		RendererResourceId::IdType unitCubeVertexBufferId, RendererResourceId::IdType unitCubeIndexBufferId);
 
 	void Render(const LeviathanRenderer::Camera& view, 
 		const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, const size_t numDirectionalLights,

@@ -216,7 +216,9 @@ namespace LeviathanRenderer
 		return Renderer::CreateTextureCubeRenderTarget(width, height, &renderTargetIds, outTextureCubeRenderTargetIds.ShaderResourceId);
 	}
 
-	void RenderHDRCubemap(uint32_t cubemapResolution, RendererResourceId::IdType HDRTexture2DResourceId, RendererResourceId::IdType HDRTextureSamplerId)
+	bool RenderHDRCubemap(uint32_t cubemapResolution, const TextureCubeRenderTargetIds& textureCubeRenderTargetIds,
+		RendererResourceId::IdType hdrTexture2DResourceId, RendererResourceId::IdType hdrTextureSamplerId, 
+		RendererResourceId::IdType unitCubeVertexBufferId, RendererResourceId::IdType unitCubeIndexBufferId)
 	{
 		static const LeviathanCore::MathTypes::Matrix4x4 captureProjection = 
 			LeviathanCore::MathTypes::Matrix4x4::PerspectiveProjection(LeviathanCore::MathLibrary::DegreesToRadians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -231,15 +233,49 @@ namespace LeviathanRenderer
 			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(-LeviathanCore::MathLibrary::HalfPi, 0.0f, 0.0f))  // Top
 		};
 
+		static const std::array<LeviathanCore::MathTypes::Matrix4x4, 6> captureViewProjectionMatrices =
+		{
+			captureViews[0] * captureProjection,
+			captureViews[1] * captureProjection,
+			captureViews[2] * captureProjection,
+			captureViews[3] * captureProjection,
+			captureViews[4] * captureProjection,
+			captureViews[5] * captureProjection
+		};
+
 		// Set viewport to cubemap resolution.
 		Renderer::SetViewport(cubemapResolution, cubemapResolution);
 
 		// Convert HDR equirectangular texture to cubemap.
-		Renderer::SetEquirectangularToCubemapPipeline(HDRTexture2DResourceId, HDRTextureSamplerId);
-		
+		Renderer::SetEquirectangularToCubemapPipeline(hdrTexture2DResourceId, hdrTextureSamplerId);
+		// Render each face to cubemap face render target.
+		for (size_t i = 0; i < 6; ++i)
+		{
+			// Update constant buffer data.
+			LeviathanRenderer::ConstantBufferTypes::EquirectangularToCubemapConstantBuffer bufferData = {};
+			memcpy(bufferData.ViewProjectionMatrix, captureViewProjectionMatrices[i].Data(), sizeof(float) * 16);
+			if (!Renderer::UpdateEquirectangularToCubemapBufferData(0, static_cast<const void*>(&bufferData), sizeof(LeviathanRenderer::ConstantBufferTypes::EquirectangularToCubemapConstantBuffer)))
+			{
+				return false;
+			}
+
+			// Set render target for cube face.
+			const RendererResourceId::IdType renderTargetId = textureCubeRenderTargetIds.FaceRenderTargetIds[i];
+
+			Renderer::SetRenderTarget(renderTargetId);
+
+			// Clear render target.
+			static constexpr float renderTargetClearColor[4] = { 0.0f };
+			Renderer::ClearRenderTarget(renderTargetId, renderTargetClearColor);
+
+			// Render cube face.
+			Renderer::DrawIndexed(6, sizeof(LeviathanRenderer::VertexTypes::VertexPos3), unitCubeVertexBufferId, unitCubeIndexBufferId);
+		}
 
 		// Reset viewport to render width and height.
 		Renderer::SetViewport(renderWidth, renderHeight);
+
+		return true;
 	}
 
 	void Render([[maybe_unused]] const LeviathanRenderer::Camera& view,

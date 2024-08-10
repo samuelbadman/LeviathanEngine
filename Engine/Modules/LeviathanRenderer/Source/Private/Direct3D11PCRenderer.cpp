@@ -1285,6 +1285,11 @@ namespace LeviathanRenderer
 		gD3D11DeviceContext->PSSetSamplers(0, 1, gSamplerStates.at(HDRTextureSamplerId).GetAddressOf());
 	}
 
+	bool Renderer::UpdateEquirectangularToCubemapBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+	{
+		return UpdateConstantBuffer(gEquirectangularToCubemapBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
+	}
+
 	void Renderer::ClearScreenRenderTarget(const float* clearColor)
 	{
 		gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
@@ -1293,6 +1298,11 @@ namespace LeviathanRenderer
 	void Renderer::ClearSceneRenderTarget(const float* clearColor)
 	{
 		gD3D11DeviceContext->ClearRenderTargetView(gSceneTextureRenderTargetView.Get(), clearColor);
+	}
+
+	void Renderer::ClearRenderTarget(RendererResourceId::IdType renderTarget, const float* clearColor)
+	{
+		gD3D11DeviceContext->ClearRenderTargetView(gRenderTargetViews.at(renderTarget).Get(), clearColor);
 	}
 
 	void Renderer::ClearDepthStencil(float clearDepth, unsigned char clearStencil)
@@ -1308,6 +1318,11 @@ namespace LeviathanRenderer
 	void Renderer::SetSceneRenderTarget()
 	{
 		gD3D11DeviceContext->OMSetRenderTargets(1, gSceneTextureRenderTargetView.GetAddressOf(), gDepthStencilView.Get());
+	}
+
+	void Renderer::SetRenderTarget(const RendererResourceId::IdType renderTargetId)
+	{
+		gD3D11DeviceContext->OMSetRenderTargets(1, gRenderTargetViews.at(renderTargetId).GetAddressOf(), nullptr);
 	}
 
 	void Renderer::SetAmbientLightPipeline()

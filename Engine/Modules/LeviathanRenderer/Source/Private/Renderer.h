@@ -27,12 +27,15 @@ namespace LeviathanRenderer
 
 		// Render commands.
 		void SetEquirectangularToCubemapPipeline(RendererResourceId::IdType HDRTexture2DResourceId, RendererResourceId::IdType HDRTextureSamplerId);
+		bool UpdateEquirectangularToCubemapBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
 		void ClearScreenRenderTarget(const float* clearColor);
 		void ClearSceneRenderTarget(const float* clearColor);
+		void ClearRenderTarget(RendererResourceId::IdType renderTarget, const float* clearColor);
 		void ClearDepthStencil(float clearDepth, unsigned char clearStencil);
 		void SetScreenRenderTarget();
 		void SetSceneRenderTarget();
+		void SetRenderTarget(const RendererResourceId::IdType renderTargetId);
 		void SetAmbientLightPipeline();
 		void SetDirectionalLightPipeline();
 		void SetPointLightPipeline();
