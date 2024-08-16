@@ -57,12 +57,13 @@ namespace TestTitle
 	static LeviathanRenderer::RendererResourceId::IdType gVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
 
-	static LeviathanRenderer::RendererResourceId::IdType gUnitCubeVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
-	static LeviathanRenderer::RendererResourceId::IdType gUnitCubeIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gSkyboxVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gSkyboxIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
 
 	static Transform gObjectTransform = {};
 
 	static LeviathanRenderer::Camera gSceneCamera = {};
+	static LeviathanRenderer::Camera gSkyboxCamera = {};
 
 	static std::vector<LeviathanRenderer::LightTypes::DirectionalLight> gSceneDirectionalLights = {};
 	static std::vector<LeviathanRenderer::LightTypes::PointLight> gScenePointLights = {};
@@ -70,7 +71,7 @@ namespace TestTitle
 
 	static LeviathanRenderer::RendererResourceId::IdType gHDRTextureResourceId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gEnvironmentTextureCubeId = LeviathanRenderer::RendererResourceId::InvalidId;
-	static LeviathanRenderer::TextureCubeRenderTargetIds gTextureCubeRenderTargetIds = {};
+	static LeviathanRenderer::TextureCubeRenderTargetIds gEnvironmentTextureCubeRenderTargetIds = {};
 
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -86,6 +87,9 @@ namespace TestTitle
 	{
 		gSceneCamera.UpdateProjectionMatrix(renderAreaWidth, renderAreaHeight);
 		gSceneCamera.UpdateViewProjectionMatrix();
+
+		gSkyboxCamera.UpdateProjectionMatrix(renderAreaWidth, renderAreaHeight);
+		gSkyboxCamera.UpdateViewProjectionMatrix();
 	}
 
 	static void OnRuntimeWindowMouseInput(LeviathanCore::InputKey key, float data)
@@ -100,8 +104,9 @@ namespace TestTitle
 			case LeviathanCore::InputKey::Keys::MouseXAxis:
 			{
 				// Add yaw rotation to the camera.
-				const float yawDeltaDegrees = data * cameraYawAbsoluteRotationRate;
-				gSceneCamera.AddYawRotation(LeviathanCore::MathLibrary::DegreesToRadians(yawDeltaDegrees));
+				const float yawDeltaRadians = LeviathanCore::MathLibrary::DegreesToRadians(data * cameraYawAbsoluteRotationRate);
+				gSceneCamera.AddYawRotation(yawDeltaRadians);
+				gSkyboxCamera.AddYawRotation(yawDeltaRadians);
 
 				break;
 			}
@@ -109,8 +114,9 @@ namespace TestTitle
 			case LeviathanCore::InputKey::Keys::MouseYAxis:
 			{
 				// Add pitch rotation to the camera.
-				const float pitchDeltaDegrees = data * cameraPitchAbsoluteRotationRate;
-				gSceneCamera.AddPitchRotation(LeviathanCore::MathLibrary::RadiansToDegrees(pitchDeltaDegrees));
+				const float pitchDeltaRadians = LeviathanCore::MathLibrary::RadiansToDegrees(data * cameraPitchAbsoluteRotationRate);
+				gSceneCamera.AddPitchRotation(pitchDeltaRadians);
+				gSkyboxCamera.AddPitchRotation(pitchDeltaRadians);
 
 				break;
 			}
@@ -300,11 +306,12 @@ namespace TestTitle
 
 	static void OnRender()
 	{
-		LeviathanRenderer::Render(gSceneCamera,
+		LeviathanRenderer::Render(gSceneCamera, gSkyboxCamera,
+			gSkyboxVertexBufferId, gSkyboxIndexBufferId,
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
-			/*gEnvironmentTextureId*/ gTextureCubeRenderTargetIds.ShaderResourceId, gAnisotropicTextureSamplerId,
+			gEnvironmentTextureCubeId /*gTextureCubeRenderTargetIds.ShaderResourceId*/, gAnisotropicTextureSamplerId,
 			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gAnisotropicTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
@@ -445,6 +452,38 @@ namespace TestTitle
 			}
 		}
 
+		// Create skybox geometry.
+		LeviathanAssets::AssetTypes::Mesh skyboxMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(5.0f);
+
+		std::vector<LeviathanRenderer::VertexTypes::VertexPos3> skyboxRenderMesh = {};
+		skyboxRenderMesh.reserve(skyboxMesh.Positions.size());
+		const size_t skyboxVertexCount = skyboxMesh.Positions.size();
+		for (size_t i = 0; i < skyboxVertexCount; ++i)
+		{
+			skyboxRenderMesh.emplace_back(LeviathanRenderer::VertexTypes::VertexPos3
+				{
+					.Position = { skyboxMesh.Positions[i].X(), skyboxMesh.Positions[i].Y(), skyboxMesh.Positions[i].Z() }
+				});
+		}
+		if (!LeviathanRenderer::CreateVertexBuffer(skyboxRenderMesh.data(), static_cast<unsigned int>(skyboxRenderMesh.size()),
+			sizeof(LeviathanRenderer::VertexTypes::VertexPos3), gSkyboxVertexBufferId))
+		{
+			return false;
+		}
+
+		std::vector<uint32_t> skyboxRenderMeshIndices = {};
+		skyboxRenderMeshIndices.reserve(skyboxMesh.Indices.size());
+		const size_t skyboxIndexCount = skyboxMesh.Indices.size();
+		for (size_t i = 0; i < skyboxIndexCount; ++i)
+		{
+			skyboxRenderMeshIndices.emplace_back(skyboxMesh.Indices[i]);
+		}
+		std::reverse(skyboxRenderMeshIndices.begin(), skyboxRenderMeshIndices.end());
+		if (!LeviathanRenderer::CreateIndexBuffer(skyboxRenderMeshIndices.data(), static_cast<unsigned int>(skyboxRenderMeshIndices.size()), gSkyboxIndexBufferId))
+		{
+			return false;
+		}
+
 		// Create texture samplers.
 		LeviathanRenderer::TextureSamplerDescription anisotropicSamplerDesc = {};
 		anisotropicSamplerDesc.Filter = LeviathanRenderer::TextureSamplerFilter::Anisotropic;
@@ -493,13 +532,23 @@ namespace TestTitle
 			LEVIATHAN_LOG("Failed to create HDR texture 2D resource.");
 		}
 
+		// Create cubemap render targets and shader resource.
+		if (!LeviathanRenderer::CreateTextureCubeRenderTarget(512, 512, gEnvironmentTextureCubeRenderTargetIds))
+		{
+			return false;
+		}
+
 		// Create unit cube geometry.
 		LeviathanAssets::AssetTypes::Mesh unitCubeMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
+
+		LeviathanRenderer::RendererResourceId::IdType unitCubeVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
+		LeviathanRenderer::RendererResourceId::IdType unitCubeIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
 
 		// Create unit cube render geometry.
 		std::vector<LeviathanRenderer::VertexTypes::VertexPos3> unitCubeRenderMesh = {};
 		unitCubeRenderMesh.reserve(unitCubeMesh.Positions.size());
-		for (size_t i = 0; i < unitCubeMesh.Positions.size(); ++i)
+		const size_t unitCubeVertexCount = unitCubeMesh.Positions.size();
+		for (size_t i = 0; i < unitCubeVertexCount; ++i)
 		{
 			unitCubeRenderMesh.emplace_back(LeviathanRenderer::VertexTypes::VertexPos3
 				{
@@ -509,34 +558,38 @@ namespace TestTitle
 
 		std::vector<uint32_t> unitCubeRenderMeshIndices = {};
 		unitCubeRenderMeshIndices.reserve(unitCubeMesh.Indices.size());
-		for (size_t i = 0; i < unitCubeMesh.Indices.size(); ++i)
+		const size_t unitCubeIndexCount = unitCubeMesh.Indices.size();
+		for (size_t i = 0; i < unitCubeIndexCount; ++i)
 		{
-				unitCubeRenderMeshIndices.emplace_back(unitCubeMesh.Indices[i]);
+			unitCubeRenderMeshIndices.emplace_back(unitCubeMesh.Indices[i]);
 		}
 
-		if (!LeviathanRenderer::CreateVertexBuffer(unitCubeRenderMesh.data(), static_cast<unsigned int>(unitCubeRenderMesh.size()), sizeof(LeviathanRenderer::VertexTypes::VertexPos3), gUnitCubeVertexBufferId))
-		{
-			return false;
-		}
-
-		if (!LeviathanRenderer::CreateIndexBuffer(unitCubeRenderMeshIndices.data(), static_cast<unsigned int>(unitCubeRenderMesh.size()), gUnitCubeIndexBufferId))
+		if (!LeviathanRenderer::CreateVertexBuffer(unitCubeRenderMesh.data(), static_cast<unsigned int>(unitCubeRenderMesh.size()),
+			sizeof(LeviathanRenderer::VertexTypes::VertexPos3), unitCubeVertexBufferId))
 		{
 			return false;
 		}
 
-		// Create cubemap render targets and shader resource.
-		if (!LeviathanRenderer::CreateTextureCubeRenderTarget(512, 512, gTextureCubeRenderTargetIds))
+		if (!LeviathanRenderer::CreateIndexBuffer(unitCubeRenderMeshIndices.data(), static_cast<unsigned int>(unitCubeRenderMeshIndices.size()), unitCubeIndexBufferId))
 		{
 			return false;
 		}
-
-		//if (!LeviathanRenderer::CreateTextureCube(gEnvironmentTextureId))
-		//{
-		//	LEVIATHAN_LOG("Failed to create cube texture.");
-		//}
 
 		// Convert HDR texture to cubemap.
-		LeviathanRenderer::RenderHDRCubemap(512, gTextureCubeRenderTargetIds, gHDRTextureResourceId, gLinearTextureSamplerId, gUnitCubeVertexBufferId, gUnitCubeIndexBufferId);
+		if (!LeviathanRenderer::RenderHDRCubemap(512, gEnvironmentTextureCubeRenderTargetIds, gHDRTextureResourceId, gLinearTextureSamplerId,
+			unitCubeVertexBufferId, unitCubeIndexBufferId))
+		{
+			LEVIATHAN_LOG("Failed to render HDR cubemap.");
+		}
+
+		// TODO: Implement cubemapping to implement environment map viewer pipeline. Finish implementing environment map viewer pipeline to test HDR texture cubemap render.
+
+
+		// Create test cubemap. To be deleted later.
+		if (!LeviathanRenderer::CreateTextureCube(gEnvironmentTextureCubeId))
+		{
+			LEVIATHAN_LOG("Failed to create cube texture.");
+		}
 
 		// Import textures.
 		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};
@@ -658,10 +711,7 @@ namespace TestTitle
 		// Define object transform.
 		gObjectTransform = {};
 
-		// Define scene camera.
-		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.5f));
-		gSceneCamera.UpdateViewMatrix();
-
+		// Define cameras.
 		int windowWidth = 0;
 		int windowHeight = 0;
 		if (!LeviathanCore::Core::GetRuntimeWindowRenderAreaDimensions(windowWidth, windowHeight))
@@ -669,8 +719,17 @@ namespace TestTitle
 			return false;
 		}
 
+		// Define scene camera.
+		gSceneCamera.SetPosition(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, -2.5f));
+		gSceneCamera.UpdateViewMatrix();
+
 		gSceneCamera.UpdateProjectionMatrix(windowWidth, windowHeight);
 		gSceneCamera.UpdateViewProjectionMatrix();
+
+		// Define skybox camera.
+		gSkyboxCamera.UpdateViewMatrix();
+		gSkyboxCamera.UpdateProjectionMatrix(windowWidth, windowHeight);
+		gSkyboxCamera.UpdateViewProjectionMatrix();
 
 		// Define scene lights.
 		gSceneDirectionalLights =
@@ -696,12 +755,12 @@ namespace TestTitle
 			//	.Direction = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 0.0f }.AsNormalizedSafe()
 			//},
 
-			LeviathanRenderer::LightTypes::DirectionalLight
-			{
-				.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
-				.Brightness = 1.0f,
-				.Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 1.0f }.AsNormalizedSafe()
-			}
+			//LeviathanRenderer::LightTypes::DirectionalLight
+			//{
+			//	.Color = LeviathanCore::MathTypes::Vector3{ 1.0f, 1.0f, 1.0f },
+			//	.Brightness = 1.0f,
+			//	.Direction = LeviathanCore::MathTypes::Vector3{ -1.0f, -1.0f, 1.0f }.AsNormalizedSafe()
+			//}
 		};
 
 		gScenePointLights =

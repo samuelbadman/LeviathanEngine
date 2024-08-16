@@ -94,14 +94,15 @@ namespace LeviathanRenderer
 		RendererResourceId::IdType hdrTexture2DResourceId, RendererResourceId::IdType hdrTextureSamplerId,
 		RendererResourceId::IdType unitCubeVertexBufferId, RendererResourceId::IdType unitCubeIndexBufferId);
 
-	void Render(const LeviathanRenderer::Camera& view, 
+	void Render(const LeviathanRenderer::Camera& view, const LeviathanRenderer::Camera& skyboxView,
+		RendererResourceId::IdType skyboxVertexBufferId, RendererResourceId::IdType skyboxIndexBufferId,
 		const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, const size_t numDirectionalLights,
 		const LeviathanRenderer::LightTypes::PointLight* const pScenePointLights, const size_t numPointLights,
 		const LeviathanRenderer::LightTypes::SpotLight* const pSceneSpotLights, const size_t numSpotLights,
 		const RendererResourceId::IdType environmentTextureResourceId, const RendererResourceId::IdType environmentTextureSamplerId,
-		/*TODO: Temporary parameters. Make a material/object solution.*/ RendererResourceId::IdType colorTextureResourceId, RendererResourceId::IdType metallicTextureResourceId, 
+		RendererResourceId::IdType colorTextureResourceId, RendererResourceId::IdType metallicTextureResourceId,
 		RendererResourceId::IdType roughnessTextureResourceId, RendererResourceId::IdType normalTextureResourceId, RendererResourceId::IdType samplerResourceId,
-		const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix, const uint32_t objectIndexCount, RendererResourceId::IdType vertexBufferResourceId, 
+		const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix, const uint32_t objectIndexCount, RendererResourceId::IdType vertexBufferResourceId,
 		RendererResourceId::IdType indexBufferResourceId);
 	void Present();
 }

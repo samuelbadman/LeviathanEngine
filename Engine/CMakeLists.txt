@@ -16,10 +16,6 @@ set(BUILD_RENDERER_API_VULKAN OFF)
 # Configure engine build options.
 set(BUILD_WITH_LEVIATHAN_TOOLS ON)
 
-# Set SDK directories.
-# TODO: Remove hard coded file path.
-set(VULKAN_SDK_DIRECTORY_PATH "C:/SDKs/Vulkan_SDK_1.3.268.0")
-
 # Set project configuration types.
 set(CMAKE_CONFIGURATION_TYPES Debug;Release;RelWithDebInfo;MinSizeRel;Master)
 

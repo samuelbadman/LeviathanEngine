@@ -330,6 +330,7 @@ namespace LeviathanRenderer
 	// Depth/stencil states.
 	static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled = {};
 	static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled = {};
+	static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateNoWriteDepthDepthFuncLessStencilDisabled = {};
 	static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateDepthStencilDisabled = {};
 
 	// Blend states.
@@ -343,6 +344,7 @@ namespace LeviathanRenderer
 
 	// Pipelines.
 	static Pipeline gEquirectangularToCubemapPipeline = {};
+	static Pipeline gSkyboxPipeline = {};
 	static Pipeline gEnvironmentLightPipeline = {};
 	static Pipeline gDirectionalLightPipeline = {};
 	static Pipeline gPointLightPipeline = {};
@@ -361,6 +363,7 @@ namespace LeviathanRenderer
 
 	// Shader constant buffers.
 	static Microsoft::WRL::ComPtr<ID3D11Buffer> gEquirectangularToCubemapBuffer = {};
+	static Microsoft::WRL::ComPtr<ID3D11Buffer> gSkyboxBuffer = {};
 	static Microsoft::WRL::ComPtr<ID3D11Buffer> gDirectionalLightBuffer = {};
 	static Microsoft::WRL::ComPtr<ID3D11Buffer> gPointLightBuffer = {};
 	static Microsoft::WRL::ComPtr<ID3D11Buffer> gSpotLightBuffer = {};
@@ -550,6 +553,25 @@ namespace LeviathanRenderer
 
 		bool success = gEquirectangularToCubemapPipeline.Create("EquirectToCubemapPipeline", { .SourceCodeFile = "EquirectToCubemapVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
 			equirectToCubemapInputLayoutDesc.data(), static_cast<UINT>(equirectToCubemapInputLayoutDesc.size()), { .SourceCodeFile = "EquirectToCubemapPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr });
+		if (!success) { return false; }
+
+		// Skybox.
+		static constexpr std::array<D3D11_INPUT_ELEMENT_DESC, 1> skyboxInputLayoutDesc =
+		{
+			D3D11_INPUT_ELEMENT_DESC
+			{
+				.SemanticName = "POSITION",
+				.SemanticIndex = 0,
+				.Format = DXGI_FORMAT_R32G32B32_FLOAT,
+				.InputSlot = 0,
+				.AlignedByteOffset = 0,
+				.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA,
+				.InstanceDataStepRate = 0
+			}
+		};
+
+		success = gSkyboxPipeline.Create("SkyboxPipeline", { .SourceCodeFile = "SkyboxVertexShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr },
+			skyboxInputLayoutDesc.data(), static_cast<UINT>(skyboxInputLayoutDesc.size()), { .SourceCodeFile = "SkyboxPixelShader.hlsl", .EntryPointName = "main", .ShaderMacros = nullptr });
 		if (!success) { return false; }
 
 		// Lighting passes.
@@ -814,6 +836,14 @@ namespace LeviathanRenderer
 		hr = gD3D11Device->CreateDepthStencilState(&depthStencilStateNoWriteDepthDepthFuncEqualStencilDisabledDesc, &gDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled);
 		if (FAILED(hr)) { return false; };
 
+		D3D11_DEPTH_STENCIL_DESC depthStencilStateNoWriteDepthDepthFuncLessStencilDisabledDesc = {};
+		depthStencilStateNoWriteDepthDepthFuncLessStencilDisabledDesc.DepthEnable = TRUE;
+		depthStencilStateNoWriteDepthDepthFuncLessStencilDisabledDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		depthStencilStateNoWriteDepthDepthFuncLessStencilDisabledDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		depthStencilStateNoWriteDepthDepthFuncLessStencilDisabledDesc.StencilEnable = FALSE;
+		hr = gD3D11Device->CreateDepthStencilState(&depthStencilStateNoWriteDepthDepthFuncLessStencilDisabledDesc, &gDepthStencilStateNoWriteDepthDepthFuncLessStencilDisabled);
+		if (FAILED(hr)) { return false; };
+
 		D3D11_DEPTH_STENCIL_DESC depthStencilStateDepthStencilDisabledDesc = {};
 		depthStencilStateDepthStencilDisabledDesc.DepthEnable = FALSE;
 		depthStencilStateDepthStencilDisabledDesc.StencilEnable = FALSE;
@@ -875,10 +905,15 @@ namespace LeviathanRenderer
 		}
 
 		// Create pipelines.
-		CreatePipelines();
+		if (!CreatePipelines())
+		{
+			return false;
+		}
 
 		// Create constant buffers.
 		success = CreateDefaultConstantBuffer<ConstantBufferTypes::EquirectangularToCubemapConstantBuffer>(&gEquirectangularToCubemapBuffer);
+		if (!success) { return false; }
+		success = CreateDefaultConstantBuffer<ConstantBufferTypes::SkyboxConstantBuffer>(&gSkyboxBuffer);
 		if (!success) { return false; }
 		success = CreateDefaultConstantBuffer<ConstantBufferTypes::DirectionalLightConstantBuffer>(&gDirectionalLightBuffer);
 		if (!success) { return false; }
@@ -921,6 +956,8 @@ namespace LeviathanRenderer
 		gBlendStateAdditive.Reset();
 		gViewport = {};
 
+		gEquirectangularToCubemapPipeline.Destroy();
+		gSkyboxPipeline.Destroy();
 		gEnvironmentLightPipeline.Destroy();
 		gDirectionalLightPipeline.Destroy();
 		gPointLightPipeline.Destroy();
@@ -928,6 +965,7 @@ namespace LeviathanRenderer
 		gPostProcessPipeline.Destroy();
 
 		gEquirectangularToCubemapBuffer.Reset();
+		gSkyboxBuffer.Reset();
 		gDirectionalLightBuffer.Reset();
 		gPointLightBuffer.Reset();
 		gSpotLightBuffer.Reset();
@@ -1290,6 +1328,21 @@ namespace LeviathanRenderer
 		return UpdateConstantBuffer(gEquirectangularToCubemapBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
 	}
 
+	void Renderer::SetSkyboxPipeline(RendererResourceId::IdType skyboxTextureCubeId, RendererResourceId::IdType skyboxTextureCubeSamplerId)
+	{
+		gD3D11DeviceContext->IASetInputLayout(gSkyboxPipeline.GetInputLayout());
+		gD3D11DeviceContext->VSSetShader(gSkyboxPipeline.GetVertexShader(), nullptr, 0);
+		gD3D11DeviceContext->PSSetShader(gSkyboxPipeline.GetPixelShader(), nullptr, 0);
+		gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gSkyboxBuffer.GetAddressOf());
+		gD3D11DeviceContext->PSSetShaderResources(0, 1, gShaderResourceViews.at(skyboxTextureCubeId).GetAddressOf());
+		gD3D11DeviceContext->PSSetSamplers(0, 1, gSamplerStates.at(skyboxTextureCubeSamplerId).GetAddressOf());
+	}
+
+	bool Renderer::UpdateSkyboxBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth)
+	{
+		return UpdateConstantBuffer(gSkyboxBuffer.Get(), byteOffsetIntoBuffer, pNewData, byteWidth);
+	}
+
 	void Renderer::ClearScreenRenderTarget(const float* clearColor)
 	{
 		gD3D11DeviceContext->ClearRenderTargetView(gBackBufferRenderTargetView.Get(), clearColor);
@@ -1435,6 +1488,11 @@ namespace LeviathanRenderer
 	void Renderer::SetDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled()
 	{
 		gD3D11DeviceContext->OMSetDepthStencilState(gDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled.Get(), 0);
+	}
+
+	void Renderer::SetDepthStencilStateNoWriteDepthDepthFuncLessStencilDisabled()
+	{
+		gD3D11DeviceContext->OMSetDepthStencilState(gDepthStencilStateNoWriteDepthDepthFuncLessStencilDisabled.Get(), 0);
 	}
 
 	void Renderer::SetBlendStateAdditive()

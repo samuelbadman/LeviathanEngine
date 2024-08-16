@@ -29,6 +29,9 @@ namespace LeviathanRenderer
 		void SetEquirectangularToCubemapPipeline(RendererResourceId::IdType HDRTexture2DResourceId, RendererResourceId::IdType HDRTextureSamplerId);
 		bool UpdateEquirectangularToCubemapBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 
+		void SetSkyboxPipeline(RendererResourceId::IdType skyboxTextureCubeId, RendererResourceId::IdType skyboxTextureCubeSamplerId);
+		bool UpdateSkyboxBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
+
 		void ClearScreenRenderTarget(const float* clearColor);
 		void ClearSceneRenderTarget(const float* clearColor);
 		void ClearRenderTarget(RendererResourceId::IdType renderTarget, const float* clearColor);
@@ -51,6 +54,7 @@ namespace LeviathanRenderer
 		void SetDepthStencilStateWriteDepthDepthFuncLessStencilDisabled();
 		void SetDepthStencilStateDepthStencilDisabled();
 		void SetDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled();
+		void SetDepthStencilStateNoWriteDepthDepthFuncLessStencilDisabled();
 		void SetBlendStateAdditive();
 		void SetBlendStateBlendDisabled();
 		void SetViewport(uint32_t width, uint32_t height);
