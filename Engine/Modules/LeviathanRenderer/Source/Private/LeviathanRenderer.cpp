@@ -265,7 +265,7 @@ namespace LeviathanRenderer
 			Renderer::SetRenderTarget(renderTargetId);
 
 			// Clear render target.
-			static constexpr float renderTargetClearColor[4] = { 0.0f };
+			static constexpr float renderTargetClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 			Renderer::ClearRenderTarget(renderTargetId, renderTargetClearColor);
 
 			// Render cube face.
@@ -283,6 +283,7 @@ namespace LeviathanRenderer
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, [[maybe_unused]] const size_t numDirectionalLights,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::PointLight* const pScenePointLights, [[maybe_unused]] const size_t numPointLights,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::SpotLight* const pSceneSpotLights, [[maybe_unused]] const size_t numSpotLights,
+		[[maybe_unused]] const RendererResourceId::IdType skyboxTextureCubeResourceId, [[maybe_unused]] const RendererResourceId::IdType skyboxTextureCubeSamplerId,
 		[[maybe_unused]] const RendererResourceId::IdType environmentTextureCubeResourceId, [[maybe_unused]] const RendererResourceId::IdType environmentTextureCubeSamplerId,
 		[[maybe_unused]] RendererResourceId::IdType colorTextureResourceId, [[maybe_unused]] RendererResourceId::IdType metallicTextureResourceId,
 		[[maybe_unused]] RendererResourceId::IdType roughnessTextureResourceId, [[maybe_unused]] RendererResourceId::IdType normalTextureResourceId,
@@ -309,9 +310,10 @@ namespace LeviathanRenderer
 		// Disable depth writes with less than depth tests.
 		Renderer::SetDepthStencilStateNoWriteDepthDepthFuncLessStencilDisabled();
 
+		// TODO: Draw skybox last. See bottom of https://learnopengl.com/Advanced-OpenGL/Cubemaps
 		// Draw skybox.
 		// Set skybox pipeline.
-		Renderer::SetSkyboxPipeline(environmentTextureCubeResourceId, environmentTextureCubeSamplerId);
+		Renderer::SetSkyboxPipeline(skyboxTextureCubeResourceId, skyboxTextureCubeSamplerId);
 
 		// Update constant buffer data.
 		LeviathanRenderer::ConstantBufferTypes::SkyboxConstantBuffer skyboxBufferData = {};

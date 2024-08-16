@@ -18,7 +18,5 @@ float2 SampleSphericalMap(float3 inVector)
 
 float4 main(PixelInput input) : SV_TARGET
 {
-    const float2 texCoord = SampleSphericalMap(normalize(input.PositionLocalSpace));
-    const float3 color = EquirectangularMap.Sample(EquirectangularMapSampler, texCoord).rgb;
-    return float4(color, 1.0f);
+    return float4(EquirectangularMap.Sample(EquirectangularMapSampler, SampleSphericalMap(normalize(input.PositionLocalSpace))).rgb, 1.0f);
 }

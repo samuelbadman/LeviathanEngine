@@ -16,7 +16,6 @@ struct VertexInput
 struct VertexOutput
 {
     float4 PositionClipSpace : SV_POSITION;
-    float3 PositionLocalSpace : LOCAL_SPACE_POSITION;
     float2 TexCoord : TEXTURE_COORD;
 };
 
@@ -24,7 +23,6 @@ VertexOutput main(VertexInput input)
 {
     VertexOutput output;
     output.PositionClipSpace = mul(WorldViewProjectionMatrix, float4(input.Position.xyz, 1.0f));
-    output.PositionLocalSpace = input.Position;
     output.TexCoord = input.UV;
     return output;
 }

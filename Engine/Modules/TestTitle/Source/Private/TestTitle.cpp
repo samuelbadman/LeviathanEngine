@@ -311,8 +311,9 @@ namespace TestTitle
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
-			gEnvironmentTextureCubeId /*gEnvironmentTextureCubeRenderTargetIds.ShaderResourceId*/, gAnisotropicTextureSamplerId,
-			/*gColorTextureId*/ gHDRTexture2DResourceId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gAnisotropicTextureSamplerId,
+			gEnvironmentTextureCubeId, gAnisotropicTextureSamplerId, // Skybox
+			gEnvironmentTextureCubeId, gAnisotropicTextureSamplerId, // Environment lighting map
+			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gAnisotropicTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
 
@@ -520,7 +521,7 @@ namespace TestTitle
 		// Import HDR environment texture and convert equirectangular to cubemap.
 		// Import HDR environment texture. Imported image is in equirectangular format.
 		LeviathanAssets::AssetTypes::HDRTexture hdrEnvTexture = {};
-		if (!LeviathanAssets::TextureImporter::LoadHDRTexture("meadow_4k.hdr", hdrEnvTexture))
+		if (!LeviathanAssets::TextureImporter::LoadHDRTexture("blocky_photo_studio_4k.hdr", hdrEnvTexture))
 		{
 			LEVIATHAN_LOG("Failed to load HDR environment texture from disk.");
 		}
@@ -539,6 +540,7 @@ namespace TestTitle
 			LEVIATHAN_LOG("Failed to create HDR texture 2D resource.");
 		}
 
+		// TODO: Fix equirectangular to cubemap procedure.
 		//// Create cubemap render targets and shader resource.
 		//if (!LeviathanRenderer::CreateTextureCubeRenderTarget(512, 512, gEnvironmentTextureCubeRenderTargetIds))
 		//{
@@ -575,6 +577,8 @@ namespace TestTitle
 		//{
 		//	unitCubeRenderMeshIndices.emplace_back(unitCubeMesh.Indices[i]);
 		//}
+		//// Flip the winding order of the cube faces so that the front faces are culled with back face culling enabled.
+		//std::reverse(unitCubeRenderMeshIndices.begin(), unitCubeRenderMeshIndices.end());
 		//if (!LeviathanRenderer::CreateIndexBuffer(unitCubeRenderMeshIndices.data(), static_cast<unsigned int>(unitCubeRenderMeshIndices.size()), unitCubeIndexBufferId))
 		//{
 		//	return false;

@@ -20,7 +20,6 @@ VertexOutput main(VertexInput input)
 
     const float4 clipPos = mul(ViewProjectionMatrix, float4(input.Position.xyz, 1.0f));
 
-    //output.PositionClipSpace = clipPos.xyww;
     output.PositionClipSpace = clipPos;
     output.PositionLocalSpace = input.Position;
 

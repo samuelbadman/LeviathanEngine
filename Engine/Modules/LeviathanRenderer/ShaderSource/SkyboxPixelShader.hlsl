@@ -9,5 +9,5 @@ SamplerState SkyboxCubemapSampler : register(s0);
 
 float4 main(PixelInput input) : SV_Target
 {
-    return float4(SkyboxCubemap.Sample(SkyboxCubemapSampler, input.PositionLocalSpace).rgb, 1.0f);
+    return float4(SkyboxCubemap.Sample(SkyboxCubemapSampler, normalize(input.PositionLocalSpace)).rgb, 1.0f);
 }

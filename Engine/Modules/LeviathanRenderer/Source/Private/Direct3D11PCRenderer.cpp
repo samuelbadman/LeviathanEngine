@@ -1200,7 +1200,7 @@ namespace LeviathanRenderer
 		faceDesc.Height = 1;
 		faceDesc.MipLevels = 1;
 		faceDesc.ArraySize = 6;
-		faceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		faceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO: Same format decision for srgb textures as texture 2D creation.
 		faceDesc.CPUAccessFlags = 0;
 		faceDesc.SampleDesc.Count = 1;
 		faceDesc.SampleDesc.Quality = 0;
@@ -1223,7 +1223,7 @@ namespace LeviathanRenderer
 			// Pointer to the pixel data.
 			data[cubemapFaceIndex].pSysMem = &textureColor;
 			// Line width in bytes.
-			data[cubemapFaceIndex].SysMemPitch = faceDesc.Width * 4; // Texture width X bytes per pixel.
+			data[cubemapFaceIndex].SysMemPitch = faceDesc.Width * 4; // Texture width * bytes per pixel.
 			// Only used for 3D textures.
 			data[cubemapFaceIndex].SysMemSlicePitch = 0;
 		}
