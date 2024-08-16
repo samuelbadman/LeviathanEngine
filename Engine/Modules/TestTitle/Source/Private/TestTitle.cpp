@@ -69,7 +69,7 @@ namespace TestTitle
 	static std::vector<LeviathanRenderer::LightTypes::PointLight> gScenePointLights = {};
 	static std::vector<LeviathanRenderer::LightTypes::SpotLight> gSceneSpotLights = {};
 
-	static LeviathanRenderer::RendererResourceId::IdType gHDRTextureResourceId = LeviathanRenderer::RendererResourceId::InvalidId;
+	static LeviathanRenderer::RendererResourceId::IdType gHDRTexture2DResourceId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gEnvironmentTextureCubeId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::TextureCubeRenderTargetIds gEnvironmentTextureCubeRenderTargetIds = {};
 
@@ -311,8 +311,8 @@ namespace TestTitle
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
-			gEnvironmentTextureCubeId /*gTextureCubeRenderTargetIds.ShaderResourceId*/, gAnisotropicTextureSamplerId,
-			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gAnisotropicTextureSamplerId,
+			gEnvironmentTextureCubeId /*gEnvironmentTextureCubeRenderTargetIds.ShaderResourceId*/, gAnisotropicTextureSamplerId,
+			/*gColorTextureId*/ gHDRTexture2DResourceId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gAnisotropicTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
 
@@ -478,6 +478,7 @@ namespace TestTitle
 		{
 			skyboxRenderMeshIndices.emplace_back(skyboxMesh.Indices[i]);
 		}
+		// Flip the winding order of the cube faces so that the front faces are culled with back face culling enabled.
 		std::reverse(skyboxRenderMeshIndices.begin(), skyboxRenderMeshIndices.end());
 		if (!LeviathanRenderer::CreateIndexBuffer(skyboxRenderMeshIndices.data(), static_cast<unsigned int>(skyboxRenderMeshIndices.size()), gSkyboxIndexBufferId))
 		{
@@ -510,16 +511,22 @@ namespace TestTitle
 			LEVIATHAN_LOG("Failed to create point texture sampler.");
 		}
 
+		// Create test cubemap. To be deleted later.
+		if (!LeviathanRenderer::CreateTextureCube(gEnvironmentTextureCubeId))
+		{
+			LEVIATHAN_LOG("Failed to create cube texture.");
+		}
+
 		// Import HDR environment texture and convert equirectangular to cubemap.
 		// Import HDR environment texture. Imported image is in equirectangular format.
 		LeviathanAssets::AssetTypes::HDRTexture hdrEnvTexture = {};
-		if (!LeviathanAssets::TextureImporter::LoadHDRTexture("blocky_photo_studio_4k.hdr", hdrEnvTexture))
+		if (!LeviathanAssets::TextureImporter::LoadHDRTexture("meadow_4k.hdr", hdrEnvTexture))
 		{
 			LEVIATHAN_LOG("Failed to load HDR environment texture from disk.");
 		}
 
 		// Create texture resource for equirectangular format.
-		static constexpr uint32_t hdrBytesPerPixel = 4;
+		static constexpr uint32_t hdrBytesPerPixel = 16;
 
 		LeviathanRenderer::Texture2DDescription HDRTexture2DResourceDesc = {};
 		HDRTexture2DResourceDesc.Width = hdrEnvTexture.Width;
@@ -527,69 +534,58 @@ namespace TestTitle
 		HDRTexture2DResourceDesc.Data = static_cast<void*>(hdrEnvTexture.Data);
 		HDRTexture2DResourceDesc.RowSizeBytes = hdrBytesPerPixel * hdrEnvTexture.Width;
 		HDRTexture2DResourceDesc.HDR = true;
-		if (!LeviathanRenderer::CreateTexture2D(HDRTexture2DResourceDesc, gHDRTextureResourceId))
+		if (!LeviathanRenderer::CreateTexture2D(HDRTexture2DResourceDesc, gHDRTexture2DResourceId))
 		{
 			LEVIATHAN_LOG("Failed to create HDR texture 2D resource.");
 		}
 
-		// Create cubemap render targets and shader resource.
-		if (!LeviathanRenderer::CreateTextureCubeRenderTarget(512, 512, gEnvironmentTextureCubeRenderTargetIds))
-		{
-			return false;
-		}
+		//// Create cubemap render targets and shader resource.
+		//if (!LeviathanRenderer::CreateTextureCubeRenderTarget(512, 512, gEnvironmentTextureCubeRenderTargetIds))
+		//{
+		//	return false;
+		//}
 
-		// Create unit cube geometry.
-		LeviathanAssets::AssetTypes::Mesh unitCubeMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
+		//// Create unit cube geometry.
+		//LeviathanAssets::AssetTypes::Mesh unitCubeMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
 
-		LeviathanRenderer::RendererResourceId::IdType unitCubeVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
-		LeviathanRenderer::RendererResourceId::IdType unitCubeIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
+		//// Create unit cube render geometry.
+		//LeviathanRenderer::RendererResourceId::IdType unitCubeVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
+		//LeviathanRenderer::RendererResourceId::IdType unitCubeIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
 
-		// Create unit cube render geometry.
-		std::vector<LeviathanRenderer::VertexTypes::VertexPos3> unitCubeRenderMesh = {};
-		unitCubeRenderMesh.reserve(unitCubeMesh.Positions.size());
-		const size_t unitCubeVertexCount = unitCubeMesh.Positions.size();
-		for (size_t i = 0; i < unitCubeVertexCount; ++i)
-		{
-			unitCubeRenderMesh.emplace_back(LeviathanRenderer::VertexTypes::VertexPos3
-				{
-					.Position = { unitCubeMesh.Positions[i].X(), unitCubeMesh.Positions[i].Y(), unitCubeMesh.Positions[i].Z() }
-				});
-		}
+		//std::vector<LeviathanRenderer::VertexTypes::VertexPos3> unitCubeRenderMesh = {};
+		//unitCubeRenderMesh.reserve(unitCubeMesh.Positions.size());
+		//const size_t unitCubeVertexCount = unitCubeMesh.Positions.size();
+		//for (size_t i = 0; i < unitCubeVertexCount; ++i)
+		//{
+		//	unitCubeRenderMesh.emplace_back(LeviathanRenderer::VertexTypes::VertexPos3
+		//		{
+		//			.Position = { unitCubeMesh.Positions[i].X(), unitCubeMesh.Positions[i].Y(), unitCubeMesh.Positions[i].Z() }
+		//		});
+		//}
+		//if (!LeviathanRenderer::CreateVertexBuffer(unitCubeRenderMesh.data(), static_cast<unsigned int>(unitCubeRenderMesh.size()), 
+		//	sizeof(LeviathanRenderer::VertexTypes::VertexPos3), unitCubeVertexBufferId))
+		//{
+		//	return false;
+		//}
 
-		std::vector<uint32_t> unitCubeRenderMeshIndices = {};
-		unitCubeRenderMeshIndices.reserve(unitCubeMesh.Indices.size());
-		const size_t unitCubeIndexCount = unitCubeMesh.Indices.size();
-		for (size_t i = 0; i < unitCubeIndexCount; ++i)
-		{
-			unitCubeRenderMeshIndices.emplace_back(unitCubeMesh.Indices[i]);
-		}
+		//std::vector<uint32_t> unitCubeRenderMeshIndices = {};
+		//unitCubeRenderMeshIndices.reserve(unitCubeMesh.Indices.size());
+		//const size_t unitCubeIndexCount = unitCubeMesh.Indices.size();
+		//for (size_t i = 0; i < unitCubeIndexCount; ++i)
+		//{
+		//	unitCubeRenderMeshIndices.emplace_back(unitCubeMesh.Indices[i]);
+		//}
+		//if (!LeviathanRenderer::CreateIndexBuffer(unitCubeRenderMeshIndices.data(), static_cast<unsigned int>(unitCubeRenderMeshIndices.size()), unitCubeIndexBufferId))
+		//{
+		//	return false;
+		//}
 
-		if (!LeviathanRenderer::CreateVertexBuffer(unitCubeRenderMesh.data(), static_cast<unsigned int>(unitCubeRenderMesh.size()),
-			sizeof(LeviathanRenderer::VertexTypes::VertexPos3), unitCubeVertexBufferId))
-		{
-			return false;
-		}
-
-		if (!LeviathanRenderer::CreateIndexBuffer(unitCubeRenderMeshIndices.data(), static_cast<unsigned int>(unitCubeRenderMeshIndices.size()), unitCubeIndexBufferId))
-		{
-			return false;
-		}
-
-		// Convert HDR texture to cubemap.
-		if (!LeviathanRenderer::RenderHDRCubemap(512, gEnvironmentTextureCubeRenderTargetIds, gHDRTextureResourceId, gLinearTextureSamplerId,
-			unitCubeVertexBufferId, unitCubeIndexBufferId))
-		{
-			LEVIATHAN_LOG("Failed to render HDR cubemap.");
-		}
-
-		// TODO: Implement cubemapping to implement environment map viewer pipeline. Finish implementing environment map viewer pipeline to test HDR texture cubemap render.
-
-
-		// Create test cubemap. To be deleted later.
-		if (!LeviathanRenderer::CreateTextureCube(gEnvironmentTextureCubeId))
-		{
-			LEVIATHAN_LOG("Failed to create cube texture.");
-		}
+		//// Convert HDR texture to cubemap.
+		//if (!LeviathanRenderer::RenderHDRCubemap(512, gEnvironmentTextureCubeRenderTargetIds, gHDRTexture2DResourceId, gLinearTextureSamplerId,
+		//	unitCubeVertexBufferId, unitCubeIndexBufferId))
+		//{
+		//	LEVIATHAN_LOG("Failed to render HDR cubemap.");
+		//}
 
 		// Import textures.
 		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};

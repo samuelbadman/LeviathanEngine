@@ -99,7 +99,7 @@ namespace LeviathanRenderer
 		const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, const size_t numDirectionalLights,
 		const LeviathanRenderer::LightTypes::PointLight* const pScenePointLights, const size_t numPointLights,
 		const LeviathanRenderer::LightTypes::SpotLight* const pSceneSpotLights, const size_t numSpotLights,
-		const RendererResourceId::IdType environmentTextureResourceId, const RendererResourceId::IdType environmentTextureSamplerId,
+		const RendererResourceId::IdType environmentTextureCubeResourceId, const RendererResourceId::IdType environmentTextureCubeSamplerId,
 		RendererResourceId::IdType colorTextureResourceId, RendererResourceId::IdType metallicTextureResourceId,
 		RendererResourceId::IdType roughnessTextureResourceId, RendererResourceId::IdType normalTextureResourceId, RendererResourceId::IdType samplerResourceId,
 		const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix, const uint32_t objectIndexCount, RendererResourceId::IdType vertexBufferResourceId,

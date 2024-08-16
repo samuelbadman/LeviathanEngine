@@ -1081,7 +1081,7 @@ namespace LeviathanRenderer
 		texture2DDesc.Width = width;
 		texture2DDesc.Height = height;
 		texture2DDesc.ArraySize = 1;
-		texture2DDesc.Format = ((HDR) ? (DXGI_FORMAT_R16G16B16A16_FLOAT) : ((sRGB) ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM));
+		texture2DDesc.Format = ((HDR) ? (DXGI_FORMAT_R32G32B32A32_FLOAT) : ((sRGB) ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM));
 		texture2DDesc.SampleDesc.Count = 1;
 		texture2DDesc.SampleDesc.Quality = 0;
 		texture2DDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -1096,7 +1096,7 @@ namespace LeviathanRenderer
 
 			texture2DDesc.MipLevels = numMipLevels; // 0 generates a full mipmap chain. Values greater than 0 can be used to specify a specific number of mipmap images.
 			texture2DDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; // Must flag to be bound as a render target and shader resource for mipmap generation.
-			texture2DDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // Flag that this resource will have generated mipmaps.
+			texture2DDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // Flag that this resource will have mipmaps generated.
 
 			std::vector<D3D11_SUBRESOURCE_DATA> initDatas(numMipLevels, {});
 			uint32_t mipRowPitchBytes = rowPitchBytes;
@@ -1380,7 +1380,7 @@ namespace LeviathanRenderer
 
 	void Renderer::SetAmbientLightPipeline()
 	{
-		gD3D11DeviceContext->IASetInputLayout(gDirectionalLightPipeline.GetInputLayout());
+		gD3D11DeviceContext->IASetInputLayout(gEnvironmentLightPipeline.GetInputLayout());
 		gD3D11DeviceContext->VSSetShader(gEnvironmentLightPipeline.GetVertexShader(), nullptr, 0);
 		gD3D11DeviceContext->PSSetShader(gEnvironmentLightPipeline.GetPixelShader(), nullptr, 0);
 		gD3D11DeviceContext->VSSetConstantBuffers(0, 1, gObjectBuffer.GetAddressOf());

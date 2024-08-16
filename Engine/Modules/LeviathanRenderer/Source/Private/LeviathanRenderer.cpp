@@ -283,7 +283,7 @@ namespace LeviathanRenderer
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, [[maybe_unused]] const size_t numDirectionalLights,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::PointLight* const pScenePointLights, [[maybe_unused]] const size_t numPointLights,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::SpotLight* const pSceneSpotLights, [[maybe_unused]] const size_t numSpotLights,
-		[[maybe_unused]] const RendererResourceId::IdType environmentTextureResourceId, [[maybe_unused]] const RendererResourceId::IdType environmentTextureSamplerId,
+		[[maybe_unused]] const RendererResourceId::IdType environmentTextureCubeResourceId, [[maybe_unused]] const RendererResourceId::IdType environmentTextureCubeSamplerId,
 		[[maybe_unused]] RendererResourceId::IdType colorTextureResourceId, [[maybe_unused]] RendererResourceId::IdType metallicTextureResourceId,
 		[[maybe_unused]] RendererResourceId::IdType roughnessTextureResourceId, [[maybe_unused]] RendererResourceId::IdType normalTextureResourceId,
 		[[maybe_unused]] RendererResourceId::IdType samplerResourceId, [[maybe_unused]] const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix,
@@ -311,7 +311,7 @@ namespace LeviathanRenderer
 
 		// Draw skybox.
 		// Set skybox pipeline.
-		Renderer::SetSkyboxPipeline(environmentTextureResourceId, environmentTextureSamplerId);
+		Renderer::SetSkyboxPipeline(environmentTextureCubeResourceId, environmentTextureCubeSamplerId);
 
 		// Update constant buffer data.
 		LeviathanRenderer::ConstantBufferTypes::SkyboxConstantBuffer skyboxBufferData = {};
@@ -331,9 +331,9 @@ namespace LeviathanRenderer
 		// TODO: Implement fallback base lighting pass if HDRI is not present or being used. Possibly just a depth pass to write to the depth buffer.
 		Renderer::SetAmbientLightPipeline();
 		{
-			Renderer::SetEnvironmentTextureCubeResource(environmentTextureResourceId);
+			Renderer::SetEnvironmentTextureCubeResource(environmentTextureCubeResourceId);
+			Renderer::SetEnvironmentTextureSampler(environmentTextureCubeSamplerId);
 			Renderer::SetColorTexture2DResource(colorTextureResourceId);
-			Renderer::SetEnvironmentTextureSampler(environmentTextureSamplerId);
 			Renderer::SetColorTextureSampler(samplerResourceId);
 
 			const LeviathanCore::MathTypes::Matrix4x4 worldMatrix = objectTransformMatrix;

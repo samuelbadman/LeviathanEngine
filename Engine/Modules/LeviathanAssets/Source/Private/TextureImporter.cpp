@@ -19,8 +19,14 @@ bool LeviathanAssets::TextureImporter::LoadTexture(std::string_view filename, As
 bool LeviathanAssets::TextureImporter::LoadHDRTexture(std::string_view filename, AssetTypes::HDRTexture& outHDRTexture)
 {
 	outHDRTexture = {};
+	if (!stbi_is_hdr(filename.data()))
+	{
+		return false;
+	}
 	stbi_set_flip_vertically_on_load(1);
-	outHDRTexture.Data = stbi_loadf(filename.data(), &outHDRTexture.Width, &outHDRTexture.Height, &outHDRTexture.NumComponentsPerPixel, 0);
+	// stb_image.h automatically maps the HDR values to a list of floating point values : 32 bits per channel and 3 channels per color by default. This is 12 bytes per pixel.
+	// Load data formatted to a 4 channel color per pixel with STBI_rgb_alpha gives an extra 32 bit channel to each pixel. This is 16 bytes per pixel.
+	outHDRTexture.Data = stbi_loadf(filename.data(), &outHDRTexture.Width, &outHDRTexture.Height, &outHDRTexture.NumComponentsPerPixel, STBI_rgb_alpha);
 	return (outHDRTexture.Data != nullptr);
 }
 
