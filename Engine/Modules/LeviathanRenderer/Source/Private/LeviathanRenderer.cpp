@@ -417,7 +417,6 @@ namespace LeviathanRenderer
 		// Disable depth writes with less than depth tests.
 		Renderer::SetDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabled();
 
-		// TODO: Draw skybox last. See bottom of https://learnopengl.com/Advanced-OpenGL/Cubemaps
 		// Draw skybox.
 		// Set skybox pipeline.
 		Renderer::SetSkyboxPipeline(skyboxTextureCubeResourceId, skyboxTextureCubeSamplerId);
