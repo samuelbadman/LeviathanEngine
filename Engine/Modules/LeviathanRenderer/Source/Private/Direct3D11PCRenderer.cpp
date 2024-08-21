@@ -329,6 +329,7 @@ namespace LeviathanRenderer
 
 	// Depth/stencil states.
 	static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled = {};
+	static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabled = {};
 	static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled = {};
 	static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateNoWriteDepthDepthFuncLessStencilDisabled = {};
 	static Microsoft::WRL::ComPtr<ID3D11DepthStencilState> gDepthStencilStateDepthStencilDisabled = {};
@@ -820,12 +821,20 @@ namespace LeviathanRenderer
 		if (FAILED(hr)) { return false; }
 
 		// Create depth stencil states.
-		D3D11_DEPTH_STENCIL_DESC gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc = {};
-		gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.DepthEnable = TRUE;
-		gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.DepthFunc = D3D11_COMPARISON_LESS;
-		gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.StencilEnable = FALSE;
-		hr = gD3D11Device->CreateDepthStencilState(&gepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc, &gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled);
+		D3D11_DEPTH_STENCIL_DESC gDepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc = {};
+		gDepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.DepthEnable = TRUE;
+		gDepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		gDepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		gDepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc.StencilEnable = FALSE;
+		hr = gD3D11Device->CreateDepthStencilState(&gDepthStencilStateWriteDepthDepthFuncLessStencilDisabledDesc, &gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled);
+		if (FAILED(hr)) { return false; };
+
+		D3D11_DEPTH_STENCIL_DESC gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabledDesc = {};
+		gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabledDesc.DepthEnable = TRUE;
+		gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabledDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabledDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+		gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabledDesc.StencilEnable = FALSE;
+		hr = gD3D11Device->CreateDepthStencilState(&gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabledDesc, &gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabled);
 		if (FAILED(hr)) { return false; };
 
 		D3D11_DEPTH_STENCIL_DESC depthStencilStateNoWriteDepthDepthFuncEqualStencilDisabledDesc = {};
@@ -950,6 +959,7 @@ namespace LeviathanRenderer
 		gSceneTextureSamplerState.Reset();
 
 		gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled.Reset();
+		gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabled.Reset();
 		gDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled.Reset();
 		gDepthStencilStateDepthStencilDisabled.Reset();
 		gRasterizerState.Reset();
@@ -1192,7 +1202,7 @@ namespace LeviathanRenderer
 
 	bool Renderer::CreateTextureCube(RendererResourceId::IdType& outId)
 	{
-		static const LeviathanRenderer::LinearColor textureColor(15, 15, 15, 0);
+		static const LeviathanRenderer::LinearColor textureColor(255, 15, 15, 0);
 
 		// TODO: Take in texture data for each face
 		D3D11_TEXTURE2D_DESC faceDesc = {};
@@ -1247,70 +1257,6 @@ namespace LeviathanRenderer
 	{
 		gShaderResourceViews.erase(resourceID);
 		resourceID = RendererResourceId::InvalidId;
-	}
-
-	bool Renderer::CreateTextureCubeRenderTarget(uint32_t width, uint32_t height, RendererResourceId::IdType** outRenderTargetIds, RendererResourceId::IdType& outShaderResourceId)
-	{
-		D3D11_TEXTURE2D_DESC faceDesc = {};
-		faceDesc.Width = static_cast<UINT>(width);
-		faceDesc.Height = static_cast<UINT>(height);
-		faceDesc.MipLevels = 1;
-		faceDesc.ArraySize = 6;
-		faceDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-		faceDesc.CPUAccessFlags = 0;
-		faceDesc.SampleDesc.Count = 1;
-		faceDesc.SampleDesc.Quality = 0;
-		faceDesc.Usage = D3D11_USAGE_DEFAULT;
-		faceDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-		faceDesc.CPUAccessFlags = 0;
-		faceDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
-
-		// Texture cube render target view description.
-		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-		rtvDesc.Format = faceDesc.Format;
-		rtvDesc.Texture2DArray.ArraySize = 1;
-		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-
-		// Texture cube shader resource view description.
-		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Format = faceDesc.Format;
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-		srvDesc.TextureCube.MipLevels = faceDesc.MipLevels;
-		srvDesc.TextureCube.MostDetailedMip = 0;
-
-		// Create texture resource.
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> tex = {};
-		HRESULT hr = gD3D11Device->CreateTexture2D(&faceDesc, nullptr, &tex);
-		if (FAILED(hr)) { return false; }
-
-		// Create the render target view of each face of the cubemap to render to.
-		for (UINT i = 0; i < 6; ++i)
-		{
-			RendererResourceId::IdType rtId = RendererResourceId::GetAvailableId();
-			(*outRenderTargetIds)[i] = rtId;
-			gRenderTargetViews.emplace(rtId, nullptr);
-			rtvDesc.Texture2DArray.FirstArraySlice = D3D11CalcSubresource(0, i, 1);
-			hr = gD3D11Device->CreateRenderTargetView(tex.Get(), &rtvDesc, gRenderTargetViews.at(rtId).GetAddressOf());
-			if (FAILED(hr)) { return false; }
-		}
-
-		// Create the shader resource view of the resource to use in shaders.
-		outShaderResourceId = RendererResourceId::GetAvailableId();
-		gShaderResourceViews.emplace(outShaderResourceId, nullptr);
-
-		hr = gD3D11Device->CreateShaderResourceView(tex.Get(), &srvDesc, gShaderResourceViews.at(outShaderResourceId).GetAddressOf());
-		if (FAILED(hr)) { return false; }
-
-		return true;
-	}
-
-	void Renderer::DestroyTextureCubeRenderTarget(RendererResourceId::IdType* renderTargetIds, RendererResourceId::IdType& shaderResourceId)
-	{
-		for (size_t i = 0; i < 6; ++i)
-		{
-			gRenderTargetViews.erase(renderTargetIds[i]);
-		}
-		gShaderResourceViews.erase(shaderResourceId);
 	}
 
 	void Renderer::SetEquirectangularToCubemapPipeline(RendererResourceId::IdType HDRTexture2DResourceId, RendererResourceId::IdType HDRTextureSamplerId)
@@ -1478,6 +1424,11 @@ namespace LeviathanRenderer
 	void Renderer::SetDepthStencilStateWriteDepthDepthFuncLessStencilDisabled()
 	{
 		gD3D11DeviceContext->OMSetDepthStencilState(gDepthStencilStateWriteDepthDepthFuncLessStencilDisabled.Get(), 0);
+	}
+
+	void Renderer::SetDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabled()
+	{
+		gD3D11DeviceContext->OMSetDepthStencilState(gDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabled.Get(), 0);
 	}
 
 	void Renderer::SetDepthStencilStateDepthStencilDisabled()

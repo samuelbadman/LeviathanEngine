@@ -210,81 +210,12 @@ namespace LeviathanRenderer
 		Renderer::DestroyTextureCube(id);
 	}
 
-	bool CreateTextureCubeRenderTarget(uint32_t width, uint32_t height, TextureCubeRenderTargetIds& outTextureCubeRenderTargetIds)
-	{
-		RendererResourceId::IdType* renderTargetIds = outTextureCubeRenderTargetIds.FaceRenderTargetIds.data();
-		return Renderer::CreateTextureCubeRenderTarget(width, height, &renderTargetIds, outTextureCubeRenderTargetIds.ShaderResourceId);
-	}
-
-	bool RenderHDRCubemap(uint32_t cubemapResolution, const TextureCubeRenderTargetIds& textureCubeRenderTargetIds,
-		RendererResourceId::IdType hdrTexture2DResourceId, RendererResourceId::IdType hdrTextureSamplerId, 
-		RendererResourceId::IdType unitCubeVertexBufferId, RendererResourceId::IdType unitCubeIndexBufferId)
-	{
-		static const LeviathanCore::MathTypes::Matrix4x4 captureProjection = 
-			LeviathanCore::MathTypes::Matrix4x4::PerspectiveProjection(LeviathanCore::MathLibrary::DegreesToRadians(90.0f), 1.0f, 0.1f, 10.0f);
-
-		static const std::array<LeviathanCore::MathTypes::Matrix4x4, 6> captureViews =
-		{
-			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(0.0f, 0.0f, 0.0f)), // Forward
-			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(0.0f, LeviathanCore::MathLibrary::HalfPi, 0.0f)), // Right
-			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(0.0f, LeviathanCore::MathLibrary::TwoPi, 0.0f)), // Backward
-			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(0.0f, -LeviathanCore::MathLibrary::HalfPi, 0.0f)), // Left
-			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(LeviathanCore::MathLibrary::HalfPi, 0.0f, 0.0f)), // Bottom
-			LeviathanCore::MathTypes::Matrix4x4::View(LeviathanCore::MathTypes::Vector3(0.0f, 0.0f, 0.0f), LeviathanCore::MathTypes::Euler(-LeviathanCore::MathLibrary::HalfPi, 0.0f, 0.0f))  // Top
-		};
-
-		static const std::array<LeviathanCore::MathTypes::Matrix4x4, 6> captureViewProjectionMatrices =
-		{
-			captureViews[0] * captureProjection,
-			captureViews[1] * captureProjection,
-			captureViews[2] * captureProjection,
-			captureViews[3] * captureProjection,
-			captureViews[4] * captureProjection,
-			captureViews[5] * captureProjection
-		};
-
-		// Set viewport to cubemap resolution.
-		Renderer::SetViewport(cubemapResolution, cubemapResolution);
-
-		// Convert HDR equirectangular texture to cubemap.
-		Renderer::SetEquirectangularToCubemapPipeline(hdrTexture2DResourceId, hdrTextureSamplerId);
-		// Render each face to cubemap face render target.
-		for (size_t i = 0; i < 6; ++i)
-		{
-			// Update constant buffer data.
-			LeviathanRenderer::ConstantBufferTypes::EquirectangularToCubemapConstantBuffer bufferData = {};
-			memcpy(bufferData.ViewProjectionMatrix, captureViewProjectionMatrices[i].Data(), sizeof(float) * 16);
-			if (!Renderer::UpdateEquirectangularToCubemapBufferData(0, static_cast<const void*>(&bufferData), sizeof(LeviathanRenderer::ConstantBufferTypes::EquirectangularToCubemapConstantBuffer)))
-			{
-				return false;
-			}
-
-			// Set render target for cube face.
-			const RendererResourceId::IdType renderTargetId = textureCubeRenderTargetIds.FaceRenderTargetIds[i];
-
-			Renderer::SetRenderTarget(renderTargetId);
-
-			// Clear render target.
-			static constexpr float renderTargetClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-			Renderer::ClearRenderTarget(renderTargetId, renderTargetClearColor);
-
-			// Render cube face.
-			Renderer::DrawIndexed(36, sizeof(LeviathanRenderer::VertexTypes::VertexPos3), unitCubeVertexBufferId, unitCubeIndexBufferId);
-		}
-
-		// Reset viewport to render width and height.
-		Renderer::SetViewport(renderWidth, renderHeight);
-
-		return true;
-	}
-
 	void Render([[maybe_unused]] const LeviathanRenderer::Camera& sceneView, [[maybe_unused]] const LeviathanRenderer::Camera& skyboxView,
 		[[maybe_unused]] RendererResourceId::IdType skyboxVertexBufferId, [[maybe_unused]] RendererResourceId::IdType skyboxIndexBufferId,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, [[maybe_unused]] const size_t numDirectionalLights,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::PointLight* const pScenePointLights, [[maybe_unused]] const size_t numPointLights,
 		[[maybe_unused]] const LeviathanRenderer::LightTypes::SpotLight* const pSceneSpotLights, [[maybe_unused]] const size_t numSpotLights,
 		[[maybe_unused]] const RendererResourceId::IdType skyboxTextureCubeResourceId, [[maybe_unused]] const RendererResourceId::IdType skyboxTextureCubeSamplerId,
-		[[maybe_unused]] const RendererResourceId::IdType environmentTextureCubeResourceId, [[maybe_unused]] const RendererResourceId::IdType environmentTextureCubeSamplerId,
 		[[maybe_unused]] RendererResourceId::IdType colorTextureResourceId, [[maybe_unused]] RendererResourceId::IdType metallicTextureResourceId,
 		[[maybe_unused]] RendererResourceId::IdType roughnessTextureResourceId, [[maybe_unused]] RendererResourceId::IdType normalTextureResourceId,
 		[[maybe_unused]] RendererResourceId::IdType samplerResourceId, [[maybe_unused]] const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix,
@@ -294,7 +225,7 @@ namespace LeviathanRenderer
 		// Begin frame.
 
 		// Clear screen render target, scene render target and depth/stencil buffer.
-		static constexpr float clearColor[] = { 0.5f, 0.0f, 0.5f, 0.0f };
+		static constexpr float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		Renderer::ClearScreenRenderTarget(clearColor);
 		Renderer::ClearSceneRenderTarget(clearColor);
 		static constexpr float clearDepth = 1.0f;
@@ -307,34 +238,16 @@ namespace LeviathanRenderer
 		// Disable blending.
 		Renderer::SetBlendStateBlendDisabled();
 
-		// Disable depth writes with less than depth tests.
-		Renderer::SetDepthStencilStateNoWriteDepthDepthFuncLessStencilDisabled();
-
-		// TODO: Draw skybox last. See bottom of https://learnopengl.com/Advanced-OpenGL/Cubemaps
-		// Draw skybox.
-		// Set skybox pipeline.
-		Renderer::SetSkyboxPipeline(skyboxTextureCubeResourceId, skyboxTextureCubeSamplerId);
-
-		// Update constant buffer data.
-		LeviathanRenderer::ConstantBufferTypes::SkyboxConstantBuffer skyboxBufferData = {};
-		memcpy(skyboxBufferData.ViewProjectionMatrix, skyboxView.GetViewProjectionMatrix().Data(), sizeof(float) * 16);
-		if (!Renderer::UpdateSkyboxBufferData(0, static_cast<const void*>(&skyboxBufferData), sizeof(LeviathanRenderer::ConstantBufferTypes::SkyboxConstantBuffer)))
-		{
-			LEVIATHAN_LOG("Failed to update skybox buffer data during render.");
-		}
-
-		// Draw cube at world origin.
-		Renderer::DrawIndexed(36, sizeof(LeviathanRenderer::VertexTypes::VertexPos3), skyboxVertexBufferId, skyboxIndexBufferId);
-
 		// Enable depth writes and less than depth tests.
 		Renderer::SetDepthStencilStateWriteDepthDepthFuncLessStencilDisabled();
 
-		// Ambient light pass. TODO: Replace with HDRI image based lighting.
+		// Ambient indirect lighting pass. 
+		// TODO: Replace with HDRI image based lighting.
 		// TODO: Implement fallback base lighting pass if HDRI is not present or being used. Possibly just a depth pass to write to the depth buffer.
 		Renderer::SetAmbientLightPipeline();
 		{
-			Renderer::SetEnvironmentTextureCubeResource(environmentTextureCubeResourceId);
-			Renderer::SetEnvironmentTextureSampler(environmentTextureCubeSamplerId);
+			Renderer::SetEnvironmentTextureCubeResource(skyboxTextureCubeResourceId);
+			Renderer::SetEnvironmentTextureSampler(skyboxTextureCubeSamplerId);
 			Renderer::SetColorTexture2DResource(colorTextureResourceId);
 			Renderer::SetColorTextureSampler(samplerResourceId);
 
@@ -497,6 +410,28 @@ namespace LeviathanRenderer
 			// Draw.
 			Renderer::DrawIndexed(objectIndexCount, sizeof(LeviathanRenderer::VertexTypes::VertexPos3Norm3UV2Tang3), objectVertexBufferResourceId, objectIndexBufferResourceId);
 		}
+
+		// Disable blending.
+		Renderer::SetBlendStateBlendDisabled();
+
+		// Disable depth writes with less than depth tests.
+		Renderer::SetDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabled();
+
+		// TODO: Draw skybox last. See bottom of https://learnopengl.com/Advanced-OpenGL/Cubemaps
+		// Draw skybox.
+		// Set skybox pipeline.
+		Renderer::SetSkyboxPipeline(skyboxTextureCubeResourceId, skyboxTextureCubeSamplerId);
+
+		// Update constant buffer data.
+		LeviathanRenderer::ConstantBufferTypes::SkyboxConstantBuffer skyboxBufferData = {};
+		memcpy(skyboxBufferData.ViewProjectionMatrix, skyboxView.GetViewProjectionMatrix().Data(), sizeof(float) * 16);
+		if (!Renderer::UpdateSkyboxBufferData(0, static_cast<const void*>(&skyboxBufferData), sizeof(LeviathanRenderer::ConstantBufferTypes::SkyboxConstantBuffer)))
+		{
+			LEVIATHAN_LOG("Failed to update skybox buffer data during render.");
+		}
+
+		// Draw large cube with front facing faces facing inwards at world origin.
+		Renderer::DrawIndexed(36, sizeof(LeviathanRenderer::VertexTypes::VertexPos3), skyboxVertexBufferId, skyboxIndexBufferId);
 
 		// Disable blending.
 		Renderer::SetBlendStateBlendDisabled();

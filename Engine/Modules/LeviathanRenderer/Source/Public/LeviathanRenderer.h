@@ -65,12 +65,6 @@ namespace LeviathanRenderer
 		uint32_t AnisotropyLevel = 1;
 	};
 
-	struct TextureCubeRenderTargetIds
-	{
-		std::array<RendererResourceId::IdType, 6> FaceRenderTargetIds = { RendererResourceId::InvalidId };
-		RendererResourceId::IdType ShaderResourceId = RendererResourceId::InvalidId;
-	};
-
 	[[nodiscard]] bool Initialize();
 	bool Shutdown();
 
@@ -89,18 +83,12 @@ namespace LeviathanRenderer
 	void DestroyTextureSampler(RendererResourceId::IdType& id);
 	bool CreateTextureCube(RendererResourceId::IdType& outId);
 	void DestroyTextureCube(RendererResourceId::IdType& id);
-	bool CreateTextureCubeRenderTarget(uint32_t width, uint32_t height, TextureCubeRenderTargetIds& outTextureCubeRenderTargetIds);
-	bool RenderHDRCubemap(uint32_t cubemapResolution, const TextureCubeRenderTargetIds& textureCubeRenderTargetIds,
-		RendererResourceId::IdType hdrTexture2DResourceId, RendererResourceId::IdType hdrTextureSamplerId,
-		RendererResourceId::IdType unitCubeVertexBufferId, RendererResourceId::IdType unitCubeIndexBufferId);
-
 	void Render(const LeviathanRenderer::Camera& view, const LeviathanRenderer::Camera& skyboxView,
 		RendererResourceId::IdType skyboxVertexBufferId, RendererResourceId::IdType skyboxIndexBufferId,
 		const LeviathanRenderer::LightTypes::DirectionalLight* const pSceneDirectionalLights, const size_t numDirectionalLights,
 		const LeviathanRenderer::LightTypes::PointLight* const pScenePointLights, const size_t numPointLights,
 		const LeviathanRenderer::LightTypes::SpotLight* const pSceneSpotLights, const size_t numSpotLights, 
 		const RendererResourceId::IdType skyboxTextureCubeResourceId, const RendererResourceId::IdType skyboxTextureCubeSamplerId,
-		const RendererResourceId::IdType environmentTextureCubeResourceId, const RendererResourceId::IdType environmentTextureCubeSamplerId,
 		RendererResourceId::IdType colorTextureResourceId, RendererResourceId::IdType metallicTextureResourceId,
 		RendererResourceId::IdType roughnessTextureResourceId, RendererResourceId::IdType normalTextureResourceId, RendererResourceId::IdType samplerResourceId,
 		const LeviathanCore::MathTypes::Matrix4x4& objectTransformMatrix, const uint32_t objectIndexCount, RendererResourceId::IdType vertexBufferResourceId,

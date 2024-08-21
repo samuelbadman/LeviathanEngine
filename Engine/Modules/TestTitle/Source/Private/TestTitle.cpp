@@ -71,7 +71,6 @@ namespace TestTitle
 
 	static LeviathanRenderer::RendererResourceId::IdType gHDRTexture2DResourceId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gEnvironmentTextureCubeId = LeviathanRenderer::RendererResourceId::InvalidId;
-	static LeviathanRenderer::TextureCubeRenderTargetIds gEnvironmentTextureCubeRenderTargetIds = {};
 
 	static LeviathanRenderer::RendererResourceId::IdType gColorTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
 	static LeviathanRenderer::RendererResourceId::IdType gRoughnessTextureId = LeviathanRenderer::RendererResourceId::InvalidId;
@@ -311,8 +310,7 @@ namespace TestTitle
 			gSceneDirectionalLights.data(), gSceneDirectionalLights.size(),
 			gScenePointLights.data(), gScenePointLights.size(),
 			gSceneSpotLights.data(), gSceneSpotLights.size(),
-			gEnvironmentTextureCubeId, gAnisotropicTextureSamplerId, // Skybox
-			gEnvironmentTextureCubeId, gAnisotropicTextureSamplerId, // Environment lighting map
+			gEnvironmentTextureCubeId, gAnisotropicTextureSamplerId,
 			gColorTextureId, gMetallicTextureId, gRoughnessTextureId, gNormalTextureId, gAnisotropicTextureSamplerId,
 			gObjectTransform.Matrix(), gIndexCount, gVertexBufferId, gIndexBufferId);
 	}
@@ -453,8 +451,8 @@ namespace TestTitle
 			}
 		}
 
-		// Create skybox geometry.
-		LeviathanAssets::AssetTypes::Mesh skyboxMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(5.0f);
+		// Create skybox geometry (unit cube).
+		LeviathanAssets::AssetTypes::Mesh skyboxMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
 
 		std::vector<LeviathanRenderer::VertexTypes::VertexPos3> skyboxRenderMesh = {};
 		skyboxRenderMesh.reserve(skyboxMesh.Positions.size());
@@ -479,7 +477,7 @@ namespace TestTitle
 		{
 			skyboxRenderMeshIndices.emplace_back(skyboxMesh.Indices[i]);
 		}
-		// Flip the winding order of the cube faces so that the front faces are culled with back face culling enabled.
+		// Flip the winding order of the cube faces so that the front faces are facing inwards.
 		std::reverse(skyboxRenderMeshIndices.begin(), skyboxRenderMeshIndices.end());
 		if (!LeviathanRenderer::CreateIndexBuffer(skyboxRenderMeshIndices.data(), static_cast<unsigned int>(skyboxRenderMeshIndices.size()), gSkyboxIndexBufferId))
 		{
@@ -539,57 +537,6 @@ namespace TestTitle
 		{
 			LEVIATHAN_LOG("Failed to create HDR texture 2D resource.");
 		}
-
-		// TODO: Fix equirectangular to cubemap procedure.
-		//// Create cubemap render targets and shader resource.
-		//if (!LeviathanRenderer::CreateTextureCubeRenderTarget(512, 512, gEnvironmentTextureCubeRenderTargetIds))
-		//{
-		//	return false;
-		//}
-
-		//// Create unit cube geometry.
-		//LeviathanAssets::AssetTypes::Mesh unitCubeMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
-
-		//// Create unit cube render geometry.
-		//LeviathanRenderer::RendererResourceId::IdType unitCubeVertexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
-		//LeviathanRenderer::RendererResourceId::IdType unitCubeIndexBufferId = LeviathanRenderer::RendererResourceId::InvalidId;
-
-		//std::vector<LeviathanRenderer::VertexTypes::VertexPos3> unitCubeRenderMesh = {};
-		//unitCubeRenderMesh.reserve(unitCubeMesh.Positions.size());
-		//const size_t unitCubeVertexCount = unitCubeMesh.Positions.size();
-		//for (size_t i = 0; i < unitCubeVertexCount; ++i)
-		//{
-		//	unitCubeRenderMesh.emplace_back(LeviathanRenderer::VertexTypes::VertexPos3
-		//		{
-		//			.Position = { unitCubeMesh.Positions[i].X(), unitCubeMesh.Positions[i].Y(), unitCubeMesh.Positions[i].Z() }
-		//		});
-		//}
-		//if (!LeviathanRenderer::CreateVertexBuffer(unitCubeRenderMesh.data(), static_cast<unsigned int>(unitCubeRenderMesh.size()), 
-		//	sizeof(LeviathanRenderer::VertexTypes::VertexPos3), unitCubeVertexBufferId))
-		//{
-		//	return false;
-		//}
-
-		//std::vector<uint32_t> unitCubeRenderMeshIndices = {};
-		//unitCubeRenderMeshIndices.reserve(unitCubeMesh.Indices.size());
-		//const size_t unitCubeIndexCount = unitCubeMesh.Indices.size();
-		//for (size_t i = 0; i < unitCubeIndexCount; ++i)
-		//{
-		//	unitCubeRenderMeshIndices.emplace_back(unitCubeMesh.Indices[i]);
-		//}
-		//// Flip the winding order of the cube faces so that the front faces are culled with back face culling enabled.
-		//std::reverse(unitCubeRenderMeshIndices.begin(), unitCubeRenderMeshIndices.end());
-		//if (!LeviathanRenderer::CreateIndexBuffer(unitCubeRenderMeshIndices.data(), static_cast<unsigned int>(unitCubeRenderMeshIndices.size()), unitCubeIndexBufferId))
-		//{
-		//	return false;
-		//}
-
-		//// Convert HDR texture to cubemap.
-		//if (!LeviathanRenderer::RenderHDRCubemap(512, gEnvironmentTextureCubeRenderTargetIds, gHDRTexture2DResourceId, gLinearTextureSamplerId,
-		//	unitCubeVertexBufferId, unitCubeIndexBufferId))
-		//{
-		//	LEVIATHAN_LOG("Failed to render HDR cubemap.");
-		//}
 
 		// Import textures.
 		LeviathanAssets::AssetTypes::Texture brickDiffuseTexture = {};

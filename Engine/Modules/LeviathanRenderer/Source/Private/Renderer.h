@@ -22,8 +22,6 @@ namespace LeviathanRenderer
 		void DestroySampler(RendererResourceId::IdType& resourceID);
 		bool CreateTextureCube(RendererResourceId::IdType& outId);
 		void DestroyTextureCube(RendererResourceId::IdType& resourceID);
-		bool CreateTextureCubeRenderTarget(uint32_t width, uint32_t height, RendererResourceId::IdType** outRenderTargetIds, RendererResourceId::IdType& outShaderResourceId);
-		void DestroyTextureCubeRenderTarget(RendererResourceId::IdType* renderTargetIds, RendererResourceId::IdType& shaderResourceId);
 
 		// Render commands.
 		void SetEquirectangularToCubemapPipeline(RendererResourceId::IdType HDRTexture2DResourceId, RendererResourceId::IdType HDRTextureSamplerId);
@@ -52,6 +50,7 @@ namespace LeviathanRenderer
 		bool UpdateSpotLightBufferData(size_t byteOffsetIntoBuffer, const void* pNewData, size_t byteWidth);
 		void UnbindShaderResources();
 		void SetDepthStencilStateWriteDepthDepthFuncLessStencilDisabled();
+		void SetDepthStencilStateWriteDepthDepthFuncLessEqualStencilDisabled();
 		void SetDepthStencilStateDepthStencilDisabled();
 		void SetDepthStencilStateNoWriteDepthDepthFuncEqualStencilDisabled();
 		void SetDepthStencilStateNoWriteDepthDepthFuncLessStencilDisabled();
