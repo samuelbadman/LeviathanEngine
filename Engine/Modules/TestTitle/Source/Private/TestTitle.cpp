@@ -123,6 +123,9 @@ namespace TestTitle
 
 			gSceneCamera.UpdateViewMatrix();
 			gSceneCamera.UpdateViewProjectionMatrix();
+
+			gSkyboxCamera.UpdateViewMatrix();
+			gSkyboxCamera.UpdateViewProjectionMatrix();
 		}
 	}
 
@@ -511,7 +514,8 @@ namespace TestTitle
 		}
 
 		// Create test cubemap. To be deleted later.
-		if (!LeviathanRenderer::CreateTextureCube(gEnvironmentTextureCubeId))
+		LeviathanRenderer::TextureCubeDescription textureCubeDesc = {};
+		if (!LeviathanRenderer::CreateTextureCube(textureCubeDesc, gEnvironmentTextureCubeId))
 		{
 			LEVIATHAN_LOG("Failed to create cube texture.");
 		}

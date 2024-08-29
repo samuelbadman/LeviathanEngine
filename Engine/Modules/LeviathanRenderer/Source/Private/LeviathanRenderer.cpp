@@ -200,7 +200,7 @@ namespace LeviathanRenderer
 		Renderer::DestroySampler(id);
 	}
 
-	bool CreateTextureCube(RendererResourceId::IdType& outId)
+	bool CreateTextureCube([[maybe_unused]] const TextureCubeDescription& description, RendererResourceId::IdType& outId)
 	{
 		return Renderer::CreateTextureCube(outId);
 	}

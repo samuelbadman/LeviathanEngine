@@ -1202,7 +1202,15 @@ namespace LeviathanRenderer
 
 	bool Renderer::CreateTextureCube(RendererResourceId::IdType& outId)
 	{
-		static const LeviathanRenderer::LinearColor textureColor(255, 15, 15, 0);
+		static const LeviathanRenderer::LinearColor faceColors[6]
+		{
+			LeviathanRenderer::LinearColor(255, 0, 0, 0),
+			LeviathanRenderer::LinearColor(0, 255, 0, 0),
+			LeviathanRenderer::LinearColor(0, 0, 255, 0),
+			LeviathanRenderer::LinearColor(0, 0, 0, 0),
+			LeviathanRenderer::LinearColor(255, 255, 255, 0),
+			LeviathanRenderer::LinearColor(255, 255, 0, 0)
+		};
 
 		// TODO: Take in texture data for each face
 		D3D11_TEXTURE2D_DESC faceDesc = {};
@@ -1231,7 +1239,7 @@ namespace LeviathanRenderer
 		for (size_t cubemapFaceIndex = 0; cubemapFaceIndex < 6; ++cubemapFaceIndex)
 		{
 			// Pointer to the pixel data.
-			data[cubemapFaceIndex].pSysMem = &textureColor;
+			data[cubemapFaceIndex].pSysMem = &faceColors[cubemapFaceIndex];
 			// Line width in bytes.
 			data[cubemapFaceIndex].SysMemPitch = faceDesc.Width * 4; // Texture width * bytes per pixel.
 			// Only used for 3D textures.

@@ -81,7 +81,7 @@ namespace LeviathanRenderer
 	void DestroyTexture2D(RendererResourceId::IdType& id);
 	bool CreateTextureSampler(const TextureSamplerDescription& description, RendererResourceId::IdType& outID);
 	void DestroyTextureSampler(RendererResourceId::IdType& id);
-	bool CreateTextureCube(RendererResourceId::IdType& outId);
+	bool CreateTextureCube(const TextureCubeDescription& description, RendererResourceId::IdType& outId);
 	void DestroyTextureCube(RendererResourceId::IdType& id);
 	void Render(const LeviathanRenderer::Camera& view, const LeviathanRenderer::Camera& skyboxView,
 		RendererResourceId::IdType skyboxVertexBufferId, RendererResourceId::IdType skyboxIndexBufferId,
