@@ -202,7 +202,7 @@ namespace LeviathanRenderer
 
 	bool CreateTextureCube(const TextureCubeDescription& description, RendererResourceId::IdType& outId)
 	{
-		return Renderer::CreateTextureCube(description.FaceWidth, description.sRGB, outId);
+		return Renderer::CreateTextureCube(description.FaceWidth, description.FaceTextureData.data(), description.sRGB, outId);
 	}
 
 	void DestroyTextureCube(RendererResourceId::IdType& id)

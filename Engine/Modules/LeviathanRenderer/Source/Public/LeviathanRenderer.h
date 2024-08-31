@@ -53,6 +53,8 @@ namespace LeviathanRenderer
 	struct TextureCubeDescription
 	{
 		uint32_t FaceWidth = 0;
+		// Array of pointers to 2D texture data for each face. Array pointers are in the order +X, -X, +Y, -Y, +Z, -Z.
+		std::array<const void*, 6> FaceTextureData = { nullptr };
 		bool sRGB = false;
 	};
 

@@ -514,8 +514,24 @@ namespace TestTitle
 		}
 
 		// Create test cubemap.
+		static const LeviathanRenderer::LinearColor faceColors[6]
+		{
+			LeviathanRenderer::LinearColor(255, 0, 0, 0), // +X
+			LeviathanRenderer::LinearColor(0, 255, 0, 0), // -X
+			LeviathanRenderer::LinearColor(0, 0, 255, 0), // +Y
+			LeviathanRenderer::LinearColor(0, 0, 0, 0), // -Y
+			LeviathanRenderer::LinearColor(255, 255, 255, 0), // +Z
+			LeviathanRenderer::LinearColor(255, 255, 0, 0) // -Z
+		};
+
 		LeviathanRenderer::TextureCubeDescription textureCubeDesc = {};
 		textureCubeDesc.FaceWidth = 1;
+		textureCubeDesc.FaceTextureData[0] = &faceColors[0];
+		textureCubeDesc.FaceTextureData[1] = &faceColors[1];
+		textureCubeDesc.FaceTextureData[2] = &faceColors[2];
+		textureCubeDesc.FaceTextureData[3] = &faceColors[3];
+		textureCubeDesc.FaceTextureData[4] = &faceColors[4];
+		textureCubeDesc.FaceTextureData[5] = &faceColors[5];
 		textureCubeDesc.sRGB = true;
 		if (!LeviathanRenderer::CreateTextureCube(textureCubeDesc, gEnvironmentTextureCubeId))
 		{
