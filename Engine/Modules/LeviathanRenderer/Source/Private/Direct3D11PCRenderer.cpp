@@ -1204,12 +1204,12 @@ namespace LeviathanRenderer
 	{
 		static const LeviathanRenderer::LinearColor faceColors[6]
 		{
-			LeviathanRenderer::LinearColor(255, 0, 0, 0),
-			LeviathanRenderer::LinearColor(0, 255, 0, 0),
-			LeviathanRenderer::LinearColor(0, 0, 255, 0),
-			LeviathanRenderer::LinearColor(0, 0, 0, 0),
-			LeviathanRenderer::LinearColor(255, 255, 255, 0),
-			LeviathanRenderer::LinearColor(255, 255, 0, 0)
+			LeviathanRenderer::LinearColor(255, 0, 0, 0), // +X
+			LeviathanRenderer::LinearColor(0, 255, 0, 0), // -X
+			LeviathanRenderer::LinearColor(0, 0, 255, 0), // +Y
+			LeviathanRenderer::LinearColor(0, 0, 0, 0), // -Y
+			LeviathanRenderer::LinearColor(255, 255, 255, 0), // +Z
+			LeviathanRenderer::LinearColor(255, 255, 0, 0) // -Z
 		};
 
 		// TODO: Take in texture data for each face

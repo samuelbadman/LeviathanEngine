@@ -456,6 +456,8 @@ namespace TestTitle
 
 		// Create skybox geometry (unit cube).
 		LeviathanAssets::AssetTypes::Mesh skyboxMesh = LeviathanAssets::ModelImporter::CreateCubePrimitive(0.5f);
+		// Flip the winding order of the mesh positions so that the front faces are facing inwards.
+		std::reverse(skyboxMesh.Positions.begin(), skyboxMesh.Positions.end());
 
 		std::vector<LeviathanRenderer::VertexTypes::VertexPos3> skyboxRenderMesh = {};
 		skyboxRenderMesh.reserve(skyboxMesh.Positions.size());
@@ -480,8 +482,6 @@ namespace TestTitle
 		{
 			skyboxRenderMeshIndices.emplace_back(skyboxMesh.Indices[i]);
 		}
-		// Flip the winding order of the cube faces so that the front faces are facing inwards.
-		std::reverse(skyboxRenderMeshIndices.begin(), skyboxRenderMeshIndices.end());
 		if (!LeviathanRenderer::CreateIndexBuffer(skyboxRenderMeshIndices.data(), static_cast<unsigned int>(skyboxRenderMeshIndices.size()), gSkyboxIndexBufferId))
 		{
 			return false;
