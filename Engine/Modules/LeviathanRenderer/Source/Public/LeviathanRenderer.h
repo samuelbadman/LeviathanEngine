@@ -52,7 +52,8 @@ namespace LeviathanRenderer
 
 	struct TextureCubeDescription
 	{
-
+		uint32_t FaceWidth = 0;
+		bool sRGB = false;
 	};
 
 	struct TextureSamplerDescription

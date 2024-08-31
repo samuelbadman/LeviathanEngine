@@ -513,8 +513,10 @@ namespace TestTitle
 			LEVIATHAN_LOG("Failed to create point texture sampler.");
 		}
 
-		// Create test cubemap. To be deleted later.
+		// Create test cubemap.
 		LeviathanRenderer::TextureCubeDescription textureCubeDesc = {};
+		textureCubeDesc.FaceWidth = 1;
+		textureCubeDesc.sRGB = true;
 		if (!LeviathanRenderer::CreateTextureCube(textureCubeDesc, gEnvironmentTextureCubeId))
 		{
 			LEVIATHAN_LOG("Failed to create cube texture.");

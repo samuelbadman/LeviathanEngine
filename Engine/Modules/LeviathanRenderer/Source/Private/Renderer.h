@@ -20,7 +20,7 @@ namespace LeviathanRenderer
 		void DestroyTexture(RendererResourceId::IdType& resourceID);
 		bool CreateSampler(TextureSamplerFilter filter, TextureSamplerBorderMode borderMode, const float* borderColor, const uint32_t anisotropy, RendererResourceId::IdType& outID);
 		void DestroySampler(RendererResourceId::IdType& resourceID);
-		bool CreateTextureCube(RendererResourceId::IdType& outId);
+		bool CreateTextureCube(uint32_t faceWidth, bool sRGB, RendererResourceId::IdType& outId);
 		void DestroyTextureCube(RendererResourceId::IdType& resourceID);
 
 		// Render commands.

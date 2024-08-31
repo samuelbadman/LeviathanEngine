@@ -1200,8 +1200,9 @@ namespace LeviathanRenderer
 		resourceID = RendererResourceId::InvalidId;
 	}
 
-	bool Renderer::CreateTextureCube(RendererResourceId::IdType& outId)
+	bool Renderer::CreateTextureCube(uint32_t faceWidth, bool sRGB, RendererResourceId::IdType& outId)
 	{
+		// TODO: Take 6 texture descriptions for each face
 		static const LeviathanRenderer::LinearColor faceColors[6]
 		{
 			LeviathanRenderer::LinearColor(255, 0, 0, 0), // +X
@@ -1212,13 +1213,12 @@ namespace LeviathanRenderer
 			LeviathanRenderer::LinearColor(255, 255, 0, 0) // -Z
 		};
 
-		// TODO: Take in texture data for each face
 		D3D11_TEXTURE2D_DESC faceDesc = {};
-		faceDesc.Width = 1;
-		faceDesc.Height = 1;
+		faceDesc.Width = faceWidth;
+		faceDesc.Height = faceWidth;
 		faceDesc.MipLevels = 1;
 		faceDesc.ArraySize = 6;
-		faceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO: Same format decision for srgb textures as texture 2D creation.
+		faceDesc.Format = ((sRGB) ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM); 
 		faceDesc.CPUAccessFlags = 0;
 		faceDesc.SampleDesc.Count = 1;
 		faceDesc.SampleDesc.Quality = 0;
